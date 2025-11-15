@@ -15,7 +15,17 @@
           Quasar App
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <div class="q-gutter-sm">
+          <q-btn
+            v-if="authStore.isLoggedIn"
+            flat
+            dense
+            icon="logout"
+            label="Logout"
+            @click="handleLogout"
+          />
+          <span v-else>Quasar v{{ $q.version }}</span>
+        </div>
       </q-toolbar>
     </q-header>
 
@@ -47,7 +57,14 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import EssentialLink from 'components/EssentialLink.vue'
+import { useAuthStore } from 'stores/auth-store'
+
+const router = useRouter()
+const $q = useQuasar()
+const authStore = useAuthStore()
 
 const linksList = [
   {
@@ -98,5 +115,15 @@ const leftDrawerOpen = ref(false)
 
 function toggleLeftDrawer () {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+async function handleLogout () {
+  await authStore.logout()
+  $q.notify({
+    type: 'info',
+    message: 'Logged out successfully',
+    position: 'top'
+  })
+  router.push('/login')
 }
 </script>

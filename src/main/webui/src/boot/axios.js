@@ -7,7 +7,53 @@ import axios from 'axios'
 // good idea to move this instance creation inside of the
 // "export default () => {}" function below (which runs individually
 // for each client)
-const api = axios.create({ baseURL: 'https://api.example.com' })
+
+// Determine base URL based on environment
+const getBaseURL = () => {
+  if (process.env.DEV) {
+    // In development, Quinoa proxies API requests to Quarkus backend
+    return '/api'
+  }
+  // In production, use the same origin
+  return '/api'
+}
+
+const api = axios.create({ 
+  baseURL: getBaseURL(),
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// Add request interceptor to include auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
+// Add response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear auth data on unauthorized
+      localStorage.removeItem('auth_token')
+      // Redirect to login if not already there
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
 
 export default defineBoot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api

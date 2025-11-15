@@ -26,5 +26,21 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 
+  // Route guard for authentication
+  Router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('auth_token')
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+
+    if (requiresAuth && !token) {
+      // Redirect to login if route requires auth and user is not authenticated
+      next('/login')
+    } else if (to.path === '/login' && token) {
+      // Redirect to home if user is already logged in
+      next('/')
+    } else {
+      next()
+    }
+  })
+
   return Router
 })

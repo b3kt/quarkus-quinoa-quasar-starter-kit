@@ -2,6 +2,8 @@ package com.github.b3kt.infrastructure.repository;
 
 import com.github.b3kt.domain.model.User;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Alternative;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -11,26 +13,34 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In-memory implementation of UserRepository.
- * This is a demo implementation. In production, replace with database implementation.
+ * This is a demo implementation. Use JpaUserRepository for database persistence.
+ * To use this, set: app.repository.type=memory
  */
+@Alternative
 @ApplicationScoped
 public class InMemoryUserRepository implements UserRepository {
+
+    @ConfigProperty(name = "app.repository.type", defaultValue = "jpa")
+    String repositoryType;
 
     private final Map<String, User> users = new ConcurrentHashMap<>();
 
     public InMemoryUserRepository() {
-        // Initialize with demo user
-        Set<String> roles = new HashSet<>();
-        roles.add("user");
-        roles.add("admin");
-        
-        User demoUser = new User(
-            "admin",
-            "admin@example.com",
-            "admin123", // In production, this should be hashed
-            roles
-        );
-        users.put("admin", demoUser);
+        // Only initialize if this repository is active
+        if ("memory".equalsIgnoreCase(repositoryType)) {
+            // Initialize with demo user
+            Set<String> roles = new HashSet<>();
+            roles.add("user");
+            roles.add("admin");
+            
+            User demoUser = new User(
+                "admin",
+                "admin@example.com",
+                "admin123", // In production, this should be hashed
+                roles
+            );
+            users.put("admin", demoUser);
+        }
     }
 
     @Override

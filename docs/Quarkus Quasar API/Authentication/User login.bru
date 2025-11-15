@@ -12,7 +12,11 @@ post {
 
 body:json {
   {
-    "username": "",
-    "password": ""
+    "username": "admin",
+    "password": "admin123"
   }
+}
+
+vars:post-response {
+  accessToken: "$.data.token"
 }

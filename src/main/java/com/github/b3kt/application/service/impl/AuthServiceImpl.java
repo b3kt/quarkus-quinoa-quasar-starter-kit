@@ -1,8 +1,9 @@
-package com.github.b3kt.application.service;
+package com.github.b3kt.application.service.impl;
 
 import com.github.b3kt.application.dto.LoginResponse;
 import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.application.mapper.UserMapper;
+import com.github.b3kt.application.service.AuthService;
 import com.github.b3kt.domain.exception.AuthenticationException;
 import com.github.b3kt.domain.model.User;
 import com.github.b3kt.infrastructure.repository.UserRepository;

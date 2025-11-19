@@ -1,22 +1,19 @@
 <template>
-  <q-item
-    clickable
-    tag="a"
-    target="_blank"
-    :href="props.link"
-  >
-    <q-item-section
-      v-if="props.icon"
-      avatar
-    >
-      <q-icon :name="props.icon" />
-    </q-item-section>
-
-    <q-item-section>
-      <q-item-label>{{ props.title }}</q-item-label>
-      <q-item-label caption>{{ props.caption }}</q-item-label>
-    </q-item-section>
-  </q-item>
+  <q-expansion-item expand-separator :icon="props.icon" :label="props.title" :caption="props.caption" default-opened>
+    <q-item>
+      <q-item-section>
+        <q-list>
+          <q-item v-for="link in props.children" :key="link.title" v-bind="link"
+            :to="link.link">
+            <q-item-section>
+              <q-item-label>{{ link.title }}</q-item-label>
+              <q-item-label caption>{{ link.caption }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-item-section>
+    </q-item>
+  </q-expansion-item>
 </template>
 
 <script setup>
@@ -35,10 +32,13 @@ const props = defineProps({
     type: String,
     default: '#'
   },
-
   icon: {
     type: String,
     default: ''
+  },
+  children: {
+    type: Array,
+    default: new Array()
   }
 })
 </script>

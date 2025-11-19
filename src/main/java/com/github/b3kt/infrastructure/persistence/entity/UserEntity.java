@@ -34,6 +34,14 @@ public class UserEntity {
     @Column(name = "role")
     private Set<String> roles = new HashSet<>();
 
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "user_roles_rbac",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RoleEntity> rbacRoles = new HashSet<>();
+
     @Column(nullable = false)
     private boolean active = true;
 
@@ -121,6 +129,14 @@ public class UserEntity {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public Set<RoleEntity> getRbacRoles() {
+        return rbacRoles;
+    }
+
+    public void setRbacRoles(Set<RoleEntity> rbacRoles) {
+        this.rbacRoles = rbacRoles != null ? new HashSet<>(rbacRoles) : new HashSet<>();
     }
 }
 

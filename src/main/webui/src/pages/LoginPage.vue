@@ -77,7 +77,6 @@ const onSubmit = async () => {
 
   try {
     const result = await authStore.login(username.value, password.value)
-    console.log(result)
     if(result) {
       if (result.success) {
         $q.notify({

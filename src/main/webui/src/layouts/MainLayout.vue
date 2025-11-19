@@ -12,7 +12,7 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          {{ $t('app.constant.app_name') }}
         </q-toolbar-title>
 
         <div class="q-gutter-sm">
@@ -61,53 +61,99 @@ import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useAuthStore } from 'stores/auth-store'
+import { useI18n } from 'vue-i18n'
+
 
 const router = useRouter()
 const $q = useQuasar()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const linksList = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
+    title: t('app.menu.master.title'),
+    caption: t('app.menu.master.caption'),
+    icon: 'warehouse',
+    children: [
+      {
+        title: t('app.menu.master.user.title'),
+        caption: t('app.menu.master.user.caption'),
+        icon: 'warehouse',
+        link: '/master/users'
+      },
+      {
+        title: t('app.menu.master.role.title'),
+        caption: t('app.menu.master.role.caption'),
+        icon: 'warehouse',
+        link: '/master/roles'
+      },
+      {
+        title: t('app.menu.master.product.title'),
+        caption: t('app.menu.master.product.caption'),
+        icon: 'warehouse',
+        link: '/master/products'
+      },
+      {
+        title: t('app.menu.master.service.title'),
+        caption: t('app.menu.master.service.caption'),
+        icon: 'warehouse',
+        link: '/master/services'
+      },
+    ]
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
+    title: t('app.menu.process.title'),
+    caption: t('app.menu.process.caption'),
+    icon: 'conveyor_belt',
+    link: 'https://quasar.dev',
+    children: [
+      {
+        title: t('app.menu.master.product.title'),
+        caption: t('app.menu.master.product.caption'),
+        icon: 'warehouse',
+      },
+      {
+        title: t('app.menu.master.service.title'),
+        caption: t('app.menu.master.service.caption'),
+        icon: 'warehouse',
+      },
+    ]
   },
   {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
+    title: t('app.menu.sales.title'),
+    caption: t('app.menu.sales.caption'),
+    icon: 'trolley',
+    link: 'https://quasar.dev',
+    children: [
+      {
+        title: t('app.menu.master.product.title'),
+        caption: t('app.menu.master.product.caption'),
+        icon: 'warehouse',
+      },
+      {
+        title: t('app.menu.master.service.title'),
+        caption: t('app.menu.master.service.caption'),
+        icon: 'warehouse',
+      },
+    ]
   },
   {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+    title: t('app.menu.report.title'),
+    caption: t('app.menu.report.caption'),
+    icon: 'assignment',
+    link: 'https://quasar.dev',
+    children: [
+      {
+        title: t('app.menu.master.product.title'),
+        caption: t('app.menu.master.product.caption'),
+        icon: 'warehouse',
+      },
+      {
+        title: t('app.menu.master.service.title'),
+        caption: t('app.menu.master.service.caption'),
+        icon: 'warehouse',
+      },
+    ]
   }
 ]
 

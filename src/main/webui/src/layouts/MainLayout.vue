@@ -91,13 +91,13 @@ const linksList = [
         title: t('app.menu.master.product.title'),
         caption: t('app.menu.master.product.caption'),
         icon: 'warehouse',
-        link: '/master/products'
+        link: '/pazaauto/barang'
       },
       {
         title: t('app.menu.master.service.title'),
         caption: t('app.menu.master.service.caption'),
         icon: 'warehouse',
-        link: '/master/services'
+        link: '/pazaauto/jasa'
       },
     ]
   },

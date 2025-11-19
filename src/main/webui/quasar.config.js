@@ -45,13 +45,13 @@ export default defineConfig((ctx) => {
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
-      // vueRouterBase,
+      vueRouterBase: '/quinoa/',
       // vueDevtools,
       // vueOptionsAPI: false,
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      // publicPath: '/',
+      publicPath: '/quinoa/',
       // analyze: true,
       // env: {},
       // rawDefine: {}
@@ -60,7 +60,12 @@ export default defineConfig((ctx) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf (viteConf) {
+        // Workaround for crypto.hash issue in Node 24
+        if (typeof viteConf.define === 'undefined') {
+          viteConf.define = {}
+        }
+      },
       // viteVuePluginOptions: {},
       
       vitePlugins: [

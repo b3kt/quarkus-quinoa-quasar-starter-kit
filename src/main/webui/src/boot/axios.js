@@ -12,7 +12,7 @@ import axios from 'axios'
 const getBaseURL = () => {
   if (process.env.DEV) {
     // In development, Quinoa proxies API requests to Quarkus backend
-    return '/api'
+    return 'http://localhost:8080'
   }
   // In production, use the same origin
   return '/api'

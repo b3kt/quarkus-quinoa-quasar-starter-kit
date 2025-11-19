@@ -20,7 +20,10 @@ export const useAuthStore = defineStore('auth', {
           password
         })
 
+        console.log(response)
+
         if (response.data.token) {
+
           this.token = response.data.token
           this.user = {
             username: response.data.username,

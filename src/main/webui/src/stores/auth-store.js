@@ -20,14 +20,13 @@ export const useAuthStore = defineStore('auth', {
           password
         })
 
-        console.log(response)
+        const tokenObject = response.data
 
-        if (response.data.token) {
-
-          this.token = response.data.token
+        if (tokenObject.data.token) {
+          this.token = tokenObject.data.token
           this.user = {
-            username: response.data.username,
-            email: response.data.email
+            username: tokenObject.data.username,
+            email: tokenObject.data.email
           }
           this.isAuthenticated = true
 

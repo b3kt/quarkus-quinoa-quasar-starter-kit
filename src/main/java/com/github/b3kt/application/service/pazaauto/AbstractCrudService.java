@@ -1,6 +1,11 @@
 package com.github.b3kt.application.service.pazaauto;
 
+import com.github.b3kt.application.dto.PageRequest;
+import com.github.b3kt.application.dto.PageResponse;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
@@ -20,6 +25,26 @@ public abstract class AbstractCrudService<T, ID> {
 
     public List<T> findAll() {
         return getRepository().listAll();
+    }
+
+    public PageResponse<T> findPaginated(PageRequest pageRequest) {
+        PanacheQuery<T> query = getRepository().findAll();
+
+        // Apply sorting if specified
+        if (pageRequest.getSortBy() != null && !pageRequest.getSortBy().isEmpty()) {
+            Sort sort = pageRequest.isDescending()
+                    ? Sort.descending(pageRequest.getSortBy())
+                    : Sort.ascending(pageRequest.getSortBy());
+            query = getRepository().findAll(sort);
+        }
+
+        // Get total count
+        long totalCount = query.count();
+
+        // Apply pagination
+        List<T> rows = query.page(Page.of(pageRequest.getPage() - 1, pageRequest.getRowsPerPage())).list();
+
+        return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
     }
 
     public T findById(ID id) {
@@ -50,4 +75,3 @@ public abstract class AbstractCrudService<T, ID> {
         }
     }
 }
-

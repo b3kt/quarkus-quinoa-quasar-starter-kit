@@ -33,12 +33,13 @@
         class="my-sticky-header-table"
         flat
         bordered
-        :rows="filteredRows"
+        :rows="rows"
         :columns="columns"
         row-key="id"
         :loading="loading"
-        :pagination="pagination"
+        v-model:pagination="pagination"
         @request="onRequest"
+        binary-state-sort
       >
         <template v-slot:body-cell-active="props">
           <q-td :props="props">
@@ -234,7 +235,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 
@@ -252,6 +253,8 @@ const isEditMode = ref(false)
 const itemToDelete = ref(null)
 
 const pagination = ref({
+  sortBy: null,
+  descending: false,
   page: 1,
   rowsPerPage: 10,
   rowsNumber: 0
@@ -333,26 +336,35 @@ const columns = [
   }
 ]
 
-// Computed
-const filteredRows = computed(() => {
-  if (!searchText.value) {
-    return rows.value
-  }
-  const search = searchText.value.toLowerCase()
-  return rows.value.filter(row => 
-    row.kodeBarang?.toLowerCase().includes(search) ||
-    row.namaBarang?.toLowerCase().includes(search)
-  )
-})
+// Computed - removed filteredRows as we now use server-side filtering
 
 // Methods
-const fetchBarang = async () => {
+const fetchBarang = async (paginationData = pagination.value) => {
   loading.value = true
   try {
-    const response = await api.get('/api/pazaauto/barang')
+    const params = {
+      page: paginationData.page,
+      rowsPerPage: paginationData.rowsPerPage
+    }
+    
+    // Add sorting if specified
+    if (paginationData.sortBy) {
+      params.sortBy = paginationData.sortBy
+      params.descending = paginationData.descending
+    }
+    
+    // Add search if specified
+    if (searchText.value) {
+      params.search = searchText.value
+    }
+    
+    const response = await api.get('/api/pazaauto/barang/paginated', { params })
     if (response.data.success) {
-      rows.value = response.data.data || []
-      pagination.value.rowsNumber = rows.value.length
+      const pageData = response.data.data
+      rows.value = pageData.rows || []
+      pagination.value.rowsNumber = pageData.rowsNumber
+      pagination.value.page = pageData.page
+      pagination.value.rowsPerPage = pageData.rowsPerPage
     }
   } catch (error) {
     $q.notify({
@@ -366,7 +378,12 @@ const fetchBarang = async () => {
 }
 
 const onRequest = (props) => {
-  pagination.value = props.pagination
+  const { page, rowsPerPage, sortBy, descending } = props.pagination
+  pagination.value.page = page
+  pagination.value.rowsPerPage = rowsPerPage
+  pagination.value.sortBy = sortBy
+  pagination.value.descending = descending
+  fetchBarang(pagination.value)
 }
 
 const openCreateDialog = () => {
@@ -468,6 +485,20 @@ const formatCurrency = (value) => {
     minimumFractionDigits: 0
   }).format(value)
 }
+
+// Watchers
+let searchTimeout = null
+watch(searchText, (newVal) => {
+  // Debounce search to avoid too many API calls
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  searchTimeout = setTimeout(() => {
+    // Reset to page 1 when searching
+    pagination.value.page = 1
+    fetchBarang()
+  }, 500)
+})
 
 // Lifecycle
 onMounted(() => {

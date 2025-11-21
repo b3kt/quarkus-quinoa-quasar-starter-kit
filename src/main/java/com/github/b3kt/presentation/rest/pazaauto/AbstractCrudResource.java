@@ -1,6 +1,8 @@
 package com.github.b3kt.presentation.rest.pazaauto;
 
 import com.github.b3kt.application.dto.ApiResponse;
+import com.github.b3kt.application.dto.PageRequest;
+import com.github.b3kt.application.dto.PageResponse;
 import com.github.b3kt.application.service.pazaauto.AbstractCrudService;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,6 +24,24 @@ public abstract class AbstractCrudResource<T, ID> {
     public Response list() {
         List<T> items = getService().findAll();
         return Response.ok(ApiResponse.success(items)).build();
+    }
+
+    @GET
+    @Path("/paginated")
+    public Response listPaginated(
+            @QueryParam("page") @DefaultValue("1") int page,
+            @QueryParam("rowsPerPage") @DefaultValue("10") int rowsPerPage,
+            @QueryParam("sortBy") String sortBy,
+            @QueryParam("descending") @DefaultValue("false") boolean descending,
+            @QueryParam("search") String search) {
+
+        PageRequest pageRequest = new PageRequest(page, rowsPerPage);
+        pageRequest.setSortBy(sortBy);
+        pageRequest.setDescending(descending);
+        pageRequest.setSearch(search);
+
+        PageResponse<T> pageResponse = getService().findPaginated(pageRequest);
+        return Response.ok(ApiResponse.success(pageResponse)).build();
     }
 
     @GET
@@ -51,4 +71,3 @@ public abstract class AbstractCrudResource<T, ID> {
         return Response.ok(ApiResponse.success(getEntityName() + " deleted", null)).build();
     }
 }
-

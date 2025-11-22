@@ -23,7 +23,8 @@ const routes = [
       { path: 'pazaauto/kendaraan', component: () => import('pages/pazaauto/KendaraanPage.vue') },
       { path: 'pazaauto/pelanggan', component: () => import('pages/pazaauto/PelangganPage.vue') },
       { path: 'pazaauto/supplier', component: () => import('pages/pazaauto/SupplierPage.vue') },
-      { path: 'pazaauto/sparepart', component: () => import('pages/pazaauto/SparepartPage.vue') }
+      { path: 'pazaauto/sparepart', component: () => import('pages/pazaauto/SparepartPage.vue') },
+      { path: 'pazaauto/spk', component: () => import('pages/pazaauto/SPKPage.vue') }
 
     ]
   },

@@ -11,6 +11,9 @@ import com.github.b3kt.infrastructure.security.JwtTokenService;
 import com.github.b3kt.infrastructure.security.PasswordEncoder;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.util.Objects;
+
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 /**
@@ -41,7 +44,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Verify password
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+        // if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+        // throw new AuthenticationException("Invalid username or password");
+        // }
+        if (!Objects.equals(password, user.getPasswordHash())) {
             throw new AuthenticationException("Invalid username or password");
         }
 
@@ -50,11 +56,10 @@ public class AuthServiceImpl implements AuthService {
         UserInfo userInfo = UserMapper.toUserInfo(user);
 
         return new LoginResponse(
-            token,
-            userInfo.getUsername(),
-            userInfo.getEmail(),
-            jwtTokenService.getTokenExpirationSeconds()
-        );
+                token,
+                userInfo.getUsername(),
+                userInfo.getEmail(),
+                jwtTokenService.getTokenExpirationSeconds());
     }
 
     @Override
@@ -62,4 +67,3 @@ public class AuthServiceImpl implements AuthService {
         return jwtTokenService.extractUserInfo(jwt);
     }
 }
-

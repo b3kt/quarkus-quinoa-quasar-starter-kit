@@ -61,7 +61,7 @@ export default {
         title: 'Proses',
         caption: 'Proses',
         order: {
-          title: 'Order',
+          title: 'SPK',
           caption: 'Proses Order'
         }
       },

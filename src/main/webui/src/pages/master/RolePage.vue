@@ -55,6 +55,16 @@
               flat 
               dense 
               round 
+              icon="visibility" 
+              color="info"
+              @click="viewRole(props.row)"
+            >
+              <q-tooltip>View Details</q-tooltip>
+            </q-btn>
+            <q-btn 
+              flat 
+              dense 
+              round 
               icon="edit" 
               color="primary"
               @click="openEditDialog(props.row)"
@@ -154,9 +164,11 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 
+const router = useRouter()
 const $q = useQuasar()
 
 // State
@@ -264,6 +276,10 @@ const onRequest = (props) => {
   pagination.value.sortBy = sortBy
   pagination.value.descending = descending
   fetchRoles(pagination.value)
+}
+
+const viewRole = (row) => {
+  router.push(`/roles/${row.id}`)
 }
 
 const openCreateDialog = () => {

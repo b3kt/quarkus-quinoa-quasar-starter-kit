@@ -59,11 +59,23 @@ export default {
       },
       process: {
         title: 'Proses',
-        caption: 'Proses'
+        caption: 'Proses',
+        order: {
+          title: 'Order',
+          caption: 'Proses Order'
+        }
       },
       sales: {
         title: 'Penjualan',
-        caption: 'Penjualan'
+        caption: 'Penjualan',
+        buy: {
+          title: 'Beli',
+          caption: 'Penjualan Beli'
+        },
+        sell: {
+          title: 'Jual',
+          caption: 'Penjualan Jual'
+        }
       },
       report: {
         title: 'Laporan',

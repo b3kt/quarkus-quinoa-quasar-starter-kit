@@ -133,15 +133,10 @@ const linksList = [
     link: 'https://quasar.dev',
     children: [
       {
-        title: t('app.menu.master.product.title'),
-        caption: t('app.menu.master.product.caption'),
+        title: t('app.menu.process.order.title'),
+        caption: t('app.menu.process.order.caption'),
         icon: 'warehouse',
-      },
-      {
-        title: t('app.menu.master.service.title'),
-        caption: t('app.menu.master.service.caption'),
-        icon: 'warehouse',
-      },
+      }
     ]
   },
   {
@@ -151,13 +146,13 @@ const linksList = [
     link: 'https://quasar.dev',
     children: [
       {
-        title: t('app.menu.master.product.title'),
-        caption: t('app.menu.master.product.caption'),
+        title: t('app.menu.sales.buy.title'),
+        caption: t('app.menu.sales.buy.caption'),
         icon: 'warehouse',
       },
       {
-        title: t('app.menu.master.service.title'),
-        caption: t('app.menu.master.service.caption'),
+        title: t('app.menu.sales.sell.title'),
+        caption: t('app.menu.sales.sell.caption'),
         icon: 'warehouse',
       },
     ]

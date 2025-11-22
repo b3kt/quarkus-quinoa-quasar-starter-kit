@@ -136,6 +136,7 @@ const linksList = [
         title: t('app.menu.process.order.title'),
         caption: t('app.menu.process.order.caption'),
         icon: 'warehouse',
+        link: '/pazaauto/spk'
       }
     ]
   },

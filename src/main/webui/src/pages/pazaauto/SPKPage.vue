@@ -90,7 +90,7 @@
 
     <!-- Create/Edit Dialog -->
     <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 600px">
+      <q-card class="dialog-spk">
         <q-card-section>
           <div class="text-h6">{{ isEditMode ? 'Edit SPK' : 'Create SPK' }}</div>
         </q-card-section>
@@ -590,6 +590,8 @@ onMounted(() => {
 </script>
 
 <style lang="sass" scoped>
+.dialog-spk
+  min-width: 840px
 .my-sticky-header-table
   max-height: 70vh
 

@@ -1,5 +1,7 @@
 package com.github.b3kt.presentation.rest.pazaauto;
 
+import java.util.UUID;
+
 import com.github.b3kt.application.service.pazaauto.AbstractCrudService;
 import com.github.b3kt.application.service.pazaauto.TbJasaService;
 import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbJasaEntity;

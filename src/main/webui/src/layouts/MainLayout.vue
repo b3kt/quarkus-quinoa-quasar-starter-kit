@@ -76,18 +76,6 @@ const linksList = [
     icon: 'warehouse',
     children: [
       {
-        title: t('app.menu.master.user.title'),
-        caption: t('app.menu.master.user.caption'),
-        icon: 'warehouse',
-        link: '/master/users'
-      },
-      {
-        title: t('app.menu.master.role.title'),
-        caption: t('app.menu.master.role.caption'),
-        icon: 'warehouse',
-        link: '/master/roles'
-      },
-      {
         title: t('app.menu.master.product.title'),
         caption: t('app.menu.master.product.caption'),
         icon: 'warehouse',
@@ -98,6 +86,43 @@ const linksList = [
         caption: t('app.menu.master.service.caption'),
         icon: 'warehouse',
         link: '/pazaauto/jasa'
+      },
+      {
+        title: t('app.menu.master.supplier.title'),
+        caption: t('app.menu.master.supplier.caption'),
+        icon: 'warehouse',
+        link: '/pazaauto/supplier'
+      },
+      {
+        title: t('app.menu.master.sparepart.title'),
+        caption: t('app.menu.master.sparepart.caption'),
+        icon: 'warehouse',
+        link: '/pazaauto/sparepart'
+      },
+      
+      {
+        title: t('app.menu.master.customer.title'),
+        caption: t('app.menu.master.customer.caption'),
+        icon: 'warehouse',
+        link: '/pazaauto/pelanggan'
+      },
+      {
+        title: t('app.menu.master.vehicle.title'),
+        caption: t('app.menu.master.vehicle.caption'),
+        icon: 'warehouse',
+        link: '/pazaauto/kendaraan'
+      },
+      {
+        title: t('app.menu.master.employee.title'),
+        caption: t('app.menu.master.employee.caption'),
+        icon: 'warehouse',
+        link: '/pazaauto/karyawan'
+      },
+      {
+        title: t('app.menu.master.employee_role.title'),
+        caption: t('app.menu.master.employee_role.caption'),
+        icon: 'warehouse',
+        link: '/pazaauto/karyawan-posisi'
       },
     ]
   },
@@ -152,6 +177,25 @@ const linksList = [
         title: t('app.menu.master.service.title'),
         caption: t('app.menu.master.service.caption'),
         icon: 'warehouse',
+      },
+    ]
+  },
+  {
+    title: t('app.menu.admin.title'),
+    caption: t('app.menu.admin.caption'),
+    icon: 'dashboard',
+    children: [
+      {
+        title: t('app.menu.admin.user.title'),
+        caption: t('app.menu.admin.user.caption'),
+        icon: 'user',
+        link: '/users'
+      },
+      {
+        title: t('app.menu.admin.role.title'),
+        caption: t('app.menu.admin.role.caption'),
+        icon: 'group',
+        link: '/roles'
       },
     ]
   }

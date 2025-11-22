@@ -2,11 +2,25 @@ import { defineStore } from 'pinia'
 import { api } from 'boot/axios'
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    token: localStorage.getItem('auth_token') || null,
-    user: null,
-    isAuthenticated: false
-  }),
+  state: () => {
+    const token = localStorage.getItem('auth_token')
+    const userJson = localStorage.getItem('auth_user')
+    let user = null
+
+    if (userJson) {
+      try {
+        user = JSON.parse(userJson)
+      } catch (e) {
+        console.error('Failed to parse user data from localStorage', e)
+      }
+    }
+
+    return {
+      token: token || null,
+      user: user,
+      isAuthenticated: !!token // Set to true if token exists
+    }
+  },
 
   getters: {
     isLoggedIn: (state) => !!state.token && state.isAuthenticated
@@ -30,8 +44,9 @@ export const useAuthStore = defineStore('auth', {
           }
           this.isAuthenticated = true
 
-          // Store token in localStorage
+          // Store token and user in localStorage
           localStorage.setItem('auth_token', this.token)
+          localStorage.setItem('auth_user', JSON.stringify(this.user))
 
           // Set default authorization header for all requests
           api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
@@ -57,6 +72,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.isAuthenticated = false
         localStorage.removeItem('auth_token')
+        localStorage.removeItem('auth_user')
         delete api.defaults.headers.common['Authorization']
       }
     },
@@ -81,11 +97,15 @@ export const useAuthStore = defineStore('auth', {
       // Restore token from localStorage on app initialization
       if (this.token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
-        // Optionally fetch user info to verify token is still valid
-        this.fetchUserInfo().catch(() => {
-          // Token is invalid, clear it
-          this.logout()
-        })
+
+        // If we don't have user info, fetch it to verify token is still valid
+        if (!this.user) {
+          this.fetchUserInfo().catch(() => {
+            // Token is invalid, clear it
+            console.warn('Token is invalid or expired, logging out')
+            this.logout()
+          })
+        }
       }
     }
   }

@@ -1,15 +1,22 @@
 package com.github.b3kt.infrastructure.persistence.entity.pazaauto;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+import com.github.b3kt.infrastructure.persistence.entity.BaseEntity;
+
 @Entity
 @Table(name = "tb_jasa")
-public class TbJasaEntity {
+@Getter
+@Setter
+public class TbJasaEntity extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tb_jasa_id_seq")
+    @SequenceGenerator(name = "tb_jasa_id_seq", sequenceName = "tb_jasa_id_seq", allocationSize = 1)
     private Long id;
 
     @Column(name = "nama_jasa", length = 100, nullable = false)
@@ -17,21 +24,6 @@ public class TbJasaEntity {
 
     @Column(name = "harga_jasa")
     private Integer hargaJasa;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "created_by")
-    private String createdBy;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "updated_by")
-    private String updatedBy;
-
-    @Column(name = "version")
-    private Integer version;
 
     @Column(name = "deskripsi", length = 500)
     private String deskripsi;
@@ -119,4 +111,3 @@ public class TbJasaEntity {
         this.estimasiWaktu = estimasiWaktu;
     }
 }
-

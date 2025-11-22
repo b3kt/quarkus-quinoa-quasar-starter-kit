@@ -5,7 +5,7 @@
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
         <q-btn 
           flat 
-          label="Create Pelanggan" 
+          :label="$t('create') + ' Pelanggan'" 
           icon="add" 
           color="primary"
           @click="openCreateDialog"
@@ -76,7 +76,7 @@
 
         <q-card-section class="q-pt-none" style="max-height: 70vh; overflow-y: auto">
           <q-form @submit="savePelanggan" class="q-gutter-md">
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.nopol"
@@ -84,6 +84,7 @@
                   outlined
                   dense
                   :rules="[val => !!val || 'Nopol is required']"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -97,7 +98,7 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.email"
@@ -105,6 +106,7 @@
                   outlined
                   dense
                   type="email"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -126,13 +128,14 @@
               rows="2"
             />
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.kota"
                   label="Kota"
                   outlined
                   dense
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -145,7 +148,7 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-select
                   v-model="formData.jenisKelamin"
@@ -160,6 +163,7 @@
                   option-value="value"
                   emit-value
                   map-options
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -174,7 +178,7 @@
             </div>
 
             <div class="text-subtitle2 q-mt-md">Informasi Kendaraan</div>
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.merk"
@@ -182,6 +186,7 @@
                   outlined
                   dense
                   :rules="[val => !!val || 'Merk is required']"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">

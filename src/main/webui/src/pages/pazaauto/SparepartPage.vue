@@ -5,7 +5,7 @@
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
         <q-btn 
           flat 
-          label="Create Sparepart" 
+          :label="$t('create') + ' Sparepart'"
           icon="add" 
           color="primary"
           @click="openCreateDialog"
@@ -112,7 +112,7 @@
               :rules="[val => !!val || 'Nama Sparepart is required']"
             />
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model.number="formData.hargaJual"
@@ -122,6 +122,7 @@
                   type="number"
                   step="0.01"
                   prefix="Rp"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -137,7 +138,7 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-4">
                 <q-input
                   v-model.number="formData.stok"
@@ -145,6 +146,7 @@
                   outlined
                   dense
                   type="number"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-4">
@@ -153,7 +155,8 @@
                   label="Stok Minimal"
                   outlined
                   dense
-                  type="number"
+                  type="number" 
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-4">
@@ -166,13 +169,14 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.merek"
                   label="Merek"
                   outlined
                   dense
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">

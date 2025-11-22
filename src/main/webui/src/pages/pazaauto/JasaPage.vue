@@ -5,7 +5,7 @@
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
         <q-btn 
           flat 
-          label="Create Jasa" 
+          :label="$t('create') + ' Jasa'" 
           icon="add" 
           color="primary"
           @click="openCreateDialog"

@@ -1,5 +1,5 @@
 <template>
-  <q-expansion-item expand-separator :icon="props.icon" :label="props.title" :caption="props.caption" default-opened>
+  <q-expansion-item expand-separator :icon="props.icon" :label="props.title" :caption="props.caption" :default-opened="false">
     <q-item>
       <q-item-section>
         <q-list>

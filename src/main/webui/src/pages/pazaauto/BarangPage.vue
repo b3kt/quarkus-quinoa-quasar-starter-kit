@@ -5,7 +5,7 @@
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
         <q-btn 
           flat 
-          label="Create Barang" 
+          :label="$t('create') + ' Barang'" 
           icon="add" 
           color="primary"
           @click="openCreateDialog"
@@ -113,7 +113,7 @@
               :rules="[val => !!val || 'Nama Barang is required']"
             />
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model.number="formData.hargaJual"
@@ -123,6 +123,7 @@
                   type="number"
                   step="0.01"
                   prefix="Rp"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -138,7 +139,7 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model.number="formData.stok"
@@ -146,6 +147,7 @@
                   outlined
                   dense
                   type="number"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -489,6 +491,7 @@ const formatCurrency = (value) => {
 // Watchers
 let searchTimeout = null
 watch(searchText, (newVal) => {
+  console.log('searchText changed to:', newVal)
   // Debounce search to avoid too many API calls
   if (searchTimeout) {
     clearTimeout(searchTimeout)

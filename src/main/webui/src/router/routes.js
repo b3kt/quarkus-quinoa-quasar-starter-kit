@@ -13,8 +13,8 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', component: () => import('pages/IndexPage.vue') },
-      { path: 'master/users', component: () => import('pages/master/UserPage.vue') },
-      { path: 'master/roles', component: () => import('pages/master/RolePage.vue') },
+      { path: 'users', component: () => import('pages/master/UserPage.vue') },
+      { path: 'roles', component: () => import('pages/master/RolePage.vue') },
       { path: 'pazaauto/barang', component: () => import('pages/pazaauto/BarangPage.vue') },
       { path: 'pazaauto/jasa', component: () => import('pages/pazaauto/JasaPage.vue') },
       { path: 'pazaauto/karyawan', component: () => import('pages/pazaauto/KaryawanPage.vue') },

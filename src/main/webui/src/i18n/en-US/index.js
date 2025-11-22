@@ -2,44 +2,84 @@
 // so you can safely delete all default props below
 
 export default {
-  failed: 'Action failed',
-  success: 'Action was successful',
-  app:{
+  failed: 'Gagal',
+  success: 'Berhasil',
+  create: 'Tambah',
+  edit: 'Ubah',
+  delete: 'Hapus',
+
+  app: {
     constant: {
       app_name: 'Paza Auto'
     },
-    menu:{
+    menu: {
       master: {
         title: 'Master',
         caption: 'Master Data',
         product: {
-          title: 'Product',
-          caption: 'Master Product' 
+          title: 'Barang',
+          caption: 'Master Barang'
         },
         service: {
-          title: 'Service',
-          caption: 'Master Service' 
+          title: 'Jasa',
+          caption: 'Master Jasa'
         },
         user: {
           title: 'Users',
-          caption: 'Master Product' 
+          caption: 'Master Product'
         },
         role: {
           title: 'Roles',
-          caption: 'Master Service' 
+          caption: 'Master Service'
+        },
+        supplier: {
+          title: 'Supplier',
+          caption: 'Master Supplier'
+        },
+        sparepart: {
+          title: 'Sparepart',
+          caption: 'Master Sparepart'
+        },
+        customer: {
+          title: 'Pelanggan',
+          caption: 'Master Pelanggan'
+        },
+        vehicle: {
+          title: 'Kendaraan',
+          caption: 'Master Kendaraan'
+        },
+        employee: {
+          title: 'Karyawan',
+          caption: 'Master Karyawan'
+        },
+        employee_role: {
+          title: 'Posisi',
+          caption: 'Master Posisi'
         }
       },
       process: {
-        title: 'Process',
-        caption: 'Process'
+        title: 'Proses',
+        caption: 'Proses'
       },
       sales: {
-        title: 'Sales',
-        caption: 'Sales'
+        title: 'Penjualan',
+        caption: 'Penjualan'
       },
       report: {
-        title: 'Report',
-        caption: 'Report'
+        title: 'Laporan',
+        caption: 'Laporan'
+      },
+      admin: {
+        title: 'Admin',
+        caption: 'Admin',
+        user: {
+          title: 'Users',
+          caption: 'Master Users'
+        },
+        role: {
+          title: 'Roles',
+          caption: 'Master Roles'
+        }
       }
     }
   }

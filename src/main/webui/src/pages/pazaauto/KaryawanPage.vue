@@ -5,7 +5,7 @@
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
         <q-btn 
           flat 
-          label="Create Karyawan" 
+          :label="$t('create') + ' Karyawan'" 
           icon="add" 
           color="primary"
           @click="openCreateDialog"
@@ -92,7 +92,7 @@
               :rules="[val => !!val || 'Nama Karyawan is required']"
             />
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.email"
@@ -100,6 +100,7 @@
                   outlined
                   dense
                   type="email"
+                  class="q-mr-sm"
                 />
               </div>
               <div class="col-6">
@@ -108,6 +109,7 @@
                   label="No Telepon"
                   outlined
                   dense
+                  class="q-ml-sm"
                 />
               </div>
             </div>
@@ -121,7 +123,7 @@
               rows="2"
             />
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-select
                   v-model="formData.jenisKelamin"
@@ -136,6 +138,7 @@
                   option-value="value"
                   emit-value
                   map-options
+                  class="q-mr-sm"
                 />
               </div>
               <div class="col-6">
@@ -145,11 +148,12 @@
                   outlined
                   dense
                   type="number"
+                  class="q-ml-sm"
                 />
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.tanggalLahir"
@@ -157,6 +161,7 @@
                   outlined
                   dense
                   type="date"
+                  class="q-mr-sm"
                 />
               </div>
               <div class="col-6">
@@ -166,6 +171,7 @@
                   outlined
                   dense
                   type="date"
+                  class="q-ml-sm"
                 />
               </div>
             </div>

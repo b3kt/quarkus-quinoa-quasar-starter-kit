@@ -5,7 +5,7 @@
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
         <q-btn 
           flat 
-          label="Create Supplier" 
+          :label="$t('create') + ' Supplier'" 
           icon="add" 
           color="primary"
           @click="openCreateDialog"
@@ -33,12 +33,13 @@
         class="my-sticky-header-table"
         flat
         bordered
-        :rows="filteredRows"
+        :rows="rows"
         :columns="columns"
         row-key="id"
         :loading="loading"
-        :pagination="pagination"
+        v-model:pagination="pagination"
         @request="onRequest"
+        binary-state-sort
       >
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
@@ -84,7 +85,7 @@
               :rules="[val => !!val || 'Nama Supplier is required']"
             />
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.email"
@@ -92,6 +93,7 @@
                   outlined
                   dense
                   type="email"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -113,13 +115,14 @@
               rows="2"
             />
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.kota"
                   label="Kota"
                   outlined
                   dense
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -132,13 +135,14 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.kontakPerson"
                   label="Kontak Person"
                   outlined
                   dense
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -206,7 +210,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 
@@ -223,6 +227,8 @@ const isEditMode = ref(false)
 const itemToDelete = ref(null)
 
 const pagination = ref({
+  sortBy: null,
+  descending: false,
   page: 1,
   rowsPerPage: 10,
   rowsNumber: 0
@@ -283,24 +289,32 @@ const columns = [
   }
 ]
 
-const filteredRows = computed(() => {
-  if (!searchText.value) {
-    return rows.value
-  }
-  const search = searchText.value.toLowerCase()
-  return rows.value.filter(row => 
-    row.namaSupplier?.toLowerCase().includes(search) ||
-    row.email?.toLowerCase().includes(search)
-  )
-})
+// Removed filteredRows - using server-side filtering
 
-const fetchSupplier = async () => {
+const fetchSupplier = async (paginationData = pagination.value) => {
   loading.value = true
   try {
-    const response = await api.get('/api/pazaauto/supplier')
+    const params = {
+      page: paginationData.page,
+      rowsPerPage: paginationData.rowsPerPage
+    }
+    
+    if (paginationData.sortBy) {
+      params.sortBy = paginationData.sortBy
+      params.descending = paginationData.descending
+    }
+    
+    if (searchText.value) {
+      params.search = searchText.value
+    }
+    
+    const response = await api.get('/api/pazaauto/supplier/paginated', { params })
     if (response.data.success) {
-      rows.value = response.data.data || []
-      pagination.value.rowsNumber = rows.value.length
+      const pageData = response.data.data
+      rows.value = pageData.rows || []
+      pagination.value.rowsNumber = pageData.rowsNumber
+      pagination.value.page = pageData.page
+      pagination.value.rowsPerPage = pageData.rowsPerPage
     }
   } catch (error) {
     $q.notify({
@@ -314,7 +328,12 @@ const fetchSupplier = async () => {
 }
 
 const onRequest = (props) => {
-  pagination.value = props.pagination
+  const { page, rowsPerPage, sortBy, descending } = props.pagination
+  pagination.value.page = page
+  pagination.value.rowsPerPage = rowsPerPage
+  pagination.value.sortBy = sortBy
+  pagination.value.descending = descending
+  fetchSupplier(pagination.value)
 }
 
 const openCreateDialog = () => {
@@ -408,6 +427,18 @@ const deleteSupplier = async () => {
     deleting.value = false
   }
 }
+
+// Watchers
+let searchTimeout = null
+watch(searchText, () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  searchTimeout = setTimeout(() => {
+    pagination.value.page = 1
+    fetchSupplier()
+  }, 500)
+})
 
 onMounted(() => {
   fetchSupplier()

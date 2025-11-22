@@ -5,7 +5,7 @@
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
         <q-btn 
           flat 
-          label="Create Kendaraan" 
+          :label="$t('create') + ' Kendaraan'" 
           icon="add" 
           color="primary"
           @click="openCreateDialog"
@@ -76,7 +76,7 @@
 
         <q-card-section class="q-pt-none">
           <q-form @submit="saveKendaraan" class="q-gutter-md">
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.jenis"
@@ -84,6 +84,7 @@
                   outlined
                   dense
                   :rules="[val => !!val || 'Jenis is required']"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -96,13 +97,14 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter">
               <div class="col-6">
                 <q-input
                   v-model="formData.nomorMesin"
                   label="Nomor Mesin"
                   outlined
                   dense
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">
@@ -115,7 +117,7 @@
               </div>
             </div>
 
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter-">
               <div class="col-6">
                 <q-input
                   v-model="formData.tahunPembuatan"
@@ -123,6 +125,7 @@
                   outlined
                   dense
                   maxlength="4"
+                  class="q-mr-md"
                 />
               </div>
               <div class="col-6">

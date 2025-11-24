@@ -3,23 +3,16 @@
     <div class="q-pa-md">
       <!-- Toolbar with Create button and Search -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn 
-          flat 
-          :label="$t('create') + ' SPK'" 
-          icon="add" 
-          color="primary"
-          @click="openCreateDialog"
-        />
+        <q-btn flat :label="$t('create') + ' SPK'" icon="add" color="white" class="bg-primary"
+          @click="openCreateDialog" />
         <q-space />
+        <div class="col-1">
+          <q-select v-model="filterStatus" multiple :options="statusOptions" label="Status" dense options-dense flat
+            outlined />
+        </div>
         <div class="col-6">
-          <q-input 
-            dense 
-            standout 
-            v-model="searchText" 
-            input-class="search-field text-left" 
-            class="q-ml-md"
-            placeholder="Search by SPK number, nopol, or employee name..."
-          >
+          <q-input dense standout="bg-secondary" v-model="searchText" input-class="search-field text-left"
+            class="q-ml-md" placeholder="Search by SPK number, nopol, or employee name...">
             <template v-slot:append>
               <q-icon v-if="searchText === ''" name="search" />
               <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
@@ -29,18 +22,8 @@
       </q-toolbar>
 
       <!-- Data Table -->
-      <q-table
-        class="my-sticky-header-table"
-        flat
-        bordered
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        :loading="loading"
-        v-model:pagination="pagination"
-        @request="onRequest"
-        binary-state-sort
-      >
+      <q-table class="my-sticky-header-table" flat bordered :rows="rows" :columns="columns" row-key="id"
+        :loading="loading" v-model:pagination="pagination" @request="onRequest" binary-state-sort>
         <template v-slot:body-cell-statusSpk="props">
           <q-td :props="props">
             <q-badge :color="getStatusColor(props.row.statusSpk)">
@@ -63,24 +46,10 @@
 
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="edit" 
-              color="primary"
-              @click="openEditDialog(props.row)"
-            >
+            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
               <q-tooltip>Edit</q-tooltip>
             </q-btn>
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="delete" 
-              color="negative"
-              @click="confirmDelete(props.row)"
-            >
+            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
               <q-tooltip>Delete</q-tooltip>
             </q-btn>
           </q-td>
@@ -92,182 +61,116 @@
     <q-dialog v-model="showDialog" persistent>
       <q-card class="dialog-spk">
         <q-card-section>
-          <div class="text-h6">{{ isEditMode ? 'Edit SPK' : 'Create SPK' }}</div>
+          <div class="text-h6">{{ isEditMode ? 'Edit SPK' : 'Tambah SPK' }}</div>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
           <q-form @submit="saveSpk" class="q-gutter-md">
-            <div class="row q-col-gutter">
+            <q-card class="row col-12" flat bordered>
+              <q-card-section class="col-6 q-pr-none">
+                <div class="q-mb-md">
+                  <span class="text-caption text-bold">Informasi SPK</span>
+                </div>
+                <div class="q-mb-md">
+                  <q-input v-model="formData.tanggalJamSpk" label="Tanggal" outlined dense
+                    placeholder="YYYY-MM-DD HH:mm:ss" disable />
+                </div>
+                <div class="q-mb-md">
+                  <q-input v-model="formData.noSpk" label="No SPK" outlined dense disable />
+                </div>
+                <div class="q-mb-md">
+                  <q-input v-model="formData.nopol" label="No Polisi" outlined dense
+                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+                </div>
+
+                <div class="q-mb-md">
+                  <q-input v-model="formData.namaKaryawan" label="Mekanik" outlined dense
+                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+                </div>
+                <div>
+                  <q-input v-model.number="formData.km" label="KM" outlined dense type="number"
+                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+                </div>
+                <!-- <div class="q-mb-md">
+                  <q-input v-model.number="formData.noAntrian" label="No Antrian" outlined dense type="number" />
+                </div> -->
+              </q-card-section>
+
+              <q-card-section class="col-6">
+                <div class="q-mb-md">
+                  <span class="text-caption text-bold">Informasi Pelanggan</span>
+                </div>
+                <div class="q-mb-md">
+                  <q-input label="Nama" outlined dense readonly />
+                </div>
+                <div class="q-mb-md">
+                  <q-input label="Alamat" outlined dense readonly type="textarea" rows="4" />
+                </div>
+                <div class="q-mb-md">
+                  <q-input label="Kendaraan" outlined dense readonly />
+                </div>
+                <div class="row q-col-gutter-sm">
+                  <div class="q-mb-md col-6">
+                    <q-input label="Merk" outlined dense readonly />
+                  </div>
+                  <div class="q-mb-md col-6">
+                    <q-input label="Jenis" outlined dense readonly />
+                  </div>
+
+                </div>
+              </q-card-section>
+            </q-card>
+
+            <!-- <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input
-                  v-model="formData.noSpk"
-                  label="No SPK *"
-                  outlined
-                  dense
-                  :rules="[val => !!val || 'No SPK is required']"
-                  class="q-mr-md"
-                />
+                <q-input v-model.number="formData.km" label="KM" outlined dense type="number" class="q-mr-md" />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model.number="formData.noAntrian"
-                  label="No Antrian"
-                  outlined
-                  dense
-                  type="number"
-                />
+                <q-input v-model.number="formData.kmSaatIni" label="KM Saat Ini" outlined dense type="number" />
+              </div>
+            </div> 
+
+            <div class="row q-col-gutter">
+              <div class="col-6">
+                <q-input v-model="formData.statusSpk" label="Status SPK" outlined dense class="q-mr-md" />
+              </div>
+              <div class="col-6">
+                <q-input v-model="formData.status" label="Status" outlined dense />
               </div>
             </div>
 
             <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input
-                  v-model="formData.tanggalJamSpk"
-                  label="Tanggal/Jam SPK"
-                  outlined
-                  dense
-                  placeholder="YYYY-MM-DD HH:mm:ss"
-                  class="q-mr-md"
-                />
+                <q-input v-model.number="formData.diskon" label="Diskon" outlined dense type="number" step="0.01"
+                  prefix="Rp" class="q-mr-md" />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model="formData.nopol"
-                  label="Nopol"
-                  outlined
-                  dense
-                />
-              </div>
-            </div>
-
-            <q-input
-              v-model="formData.namaKaryawan"
-              label="Nama Karyawan"
-              outlined
-              dense
-            />
-
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input
-                  v-model.number="formData.km"
-                  label="KM"
-                  outlined
-                  dense
-                  type="number"
-                  class="q-mr-md"
-                />
-              </div>
-              <div class="col-6">
-                <q-input
-                  v-model.number="formData.kmSaatIni"
-                  label="KM Saat Ini"
-                  outlined
-                  dense
-                  type="number"
-                />
+                <q-input v-model.number="formData.ppn" label="PPN" outlined dense type="number" step="0.01"
+                  prefix="Rp" />
               </div>
             </div>
 
             <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input
-                  v-model="formData.statusSpk"
-                  label="Status SPK"
-                  outlined
-                  dense
-                  class="q-mr-md"
-                />
+                <q-input v-model.number="formData.csId" label="CS ID" outlined dense type="number" class="q-mr-md" />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model="formData.status"
-                  label="Status"
-                  outlined
-                  dense
-                />
+                <q-input v-model.number="formData.mekanikId" label="Mekanik ID" outlined dense type="number" />
               </div>
             </div>
 
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input
-                  v-model.number="formData.diskon"
-                  label="Diskon"
-                  outlined
-                  dense
-                  type="number"
-                  step="0.01"
-                  prefix="Rp"
-                  class="q-mr-md"
-                />
-              </div>
-              <div class="col-6">
-                <q-input
-                  v-model.number="formData.ppn"
-                  label="PPN"
-                  outlined
-                  dense
-                  type="number"
-                  step="0.01"
-                  prefix="Rp"
-                />
-              </div>
-            </div>
+            -->
 
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input
-                  v-model.number="formData.csId"
-                  label="CS ID"
-                  outlined
-                  dense
-                  type="number"
-                  class="q-mr-md"
-                />
-              </div>
-              <div class="col-6">
-                <q-input
-                  v-model.number="formData.mekanikId"
-                  label="Mekanik ID"
-                  outlined
-                  dense
-                  type="number"
-                />
-              </div>
-            </div>
+            <q-input v-model="formData.keluhan" label="Keluhan" outlined dense type="textarea" rows="5"
+              :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
 
-            <q-input
-              v-model="formData.keluhan"
-              label="Keluhan"
-              outlined
-              dense
-              type="textarea"
-              rows="3"
-            />
-
-            <q-input
-              v-model="formData.keterangan"
-              label="Keterangan"
-              outlined
-              dense
-              type="textarea"
-              rows="3"
-            />
+            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="5"
+              :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
 
             <div class="row justify-end q-gutter-sm">
-              <q-btn 
-                flat 
-                label="Cancel" 
-                color="primary" 
-                @click="closeDialog"
-              />
-              <q-btn 
-                label="Save" 
-                type="submit" 
-                color="primary"
-                :loading="saving"
-              />
+              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+              <q-btn label="Save" type="submit" color="primary" :loading="saving"
+                v-if="formData.statusSpk != 'SELESAI'" />
             </div>
           </q-form>
         </q-card-section>
@@ -287,13 +190,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn 
-            flat 
-            label="Delete" 
-            color="negative" 
-            @click="deleteSpk"
-            :loading="deleting"
-          />
+          <q-btn flat label="Delete" color="negative" @click="deleteSpk" :loading="deleting" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -307,20 +204,52 @@ import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 
+// LocalStorage key for filter persistence
+const FILTER_STORAGE_KEY = 'spk_status_filter'
+
+// Load filter from localStorage
+const loadFilterFromStorage = () => {
+  try {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    console.error('Failed to load filter from storage:', error)
+    return []
+  }
+}
+
+// Save filter to localStorage
+const saveFilterToStorage = (filter) => {
+  try {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filter))
+  } catch (error) {
+    console.error('Failed to save filter to storage:', error)
+  }
+}
+
 // State
 const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 const searchText = ref('')
+const filterStatus = ref(loadFilterFromStorage())
 const rows = ref([])
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
 const itemToDelete = ref(null)
 
+// Status options for filter
+const statusOptions = ref([
+  'OPEN',
+  'PROSES',
+  'SELESAI',
+  'BATAL'
+])
+
 const pagination = ref({
-  sortBy: null,
-  descending: false,
+  sortBy: "noSpk",
+  descending: true,
   page: 1,
   rowsPerPage: 10,
   rowsNumber: 0
@@ -414,18 +343,23 @@ const fetchSpk = async (paginationData = pagination.value) => {
       page: paginationData.page,
       rowsPerPage: paginationData.rowsPerPage
     }
-    
+
     // Add sorting if specified
     if (paginationData.sortBy) {
       params.sortBy = paginationData.sortBy
       params.descending = paginationData.descending
     }
-    
+
     // Add search if specified
     if (searchText.value) {
       params.search = searchText.value
     }
-    
+
+    // Add status filter if specified
+    if (filterStatus.value && filterStatus.value.length > 0) {
+      params.statusFilter = filterStatus.value.join(',')
+    }
+
     const response = await api.get('/api/pazaauto/spk/paginated', { params })
     if (response.data.success) {
       const pageData = response.data.data
@@ -445,6 +379,21 @@ const fetchSpk = async (paginationData = pagination.value) => {
   }
 }
 
+const fetchNextSpkNumber = async () => {
+  try {
+    const response = await api.get('/api/pazaauto/spk/get-next-spk-number')
+    if (response.data.success) {
+      formData.value.noSpk = response.data.data
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to fetch SPK data',
+      caption: error.response?.data?.message || error.message
+    })
+  }
+}
+
 const onRequest = (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination
   pagination.value.page = page
@@ -457,6 +406,7 @@ const onRequest = (props) => {
 const openCreateDialog = () => {
   isEditMode.value = false
   resetForm()
+  initNoSpk()
   showDialog.value = true
 }
 
@@ -490,6 +440,11 @@ const resetForm = () => {
     csId: null,
     mekanikId: null
   }
+}
+
+const initNoSpk = () => {
+  formData.value.tanggalJamSpk = new Date().toISOString()
+  fetchNextSpkNumber()
 }
 
 const saveSpk = async () => {
@@ -582,6 +537,16 @@ watch(searchText, (newVal) => {
     fetchSpk()
   }, 500)
 })
+
+// Watch filter status changes
+watch(filterStatus, (newVal) => {
+  console.log('filterStatus changed to:', newVal)
+  // Save to localStorage
+  saveFilterToStorage(newVal)
+  // Reset to page 1 when filtering
+  pagination.value.page = 1
+  fetchSpk()
+}, { deep: true })
 
 // Lifecycle
 onMounted(() => {

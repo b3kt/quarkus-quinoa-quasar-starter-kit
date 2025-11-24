@@ -16,6 +16,7 @@ const routes = [
       { path: 'users', component: () => import('pages/master/UserPage.vue') },
       { path: 'roles', component: () => import('pages/master/RolePage.vue') },
       { path: 'roles/:id', component: () => import('pages/master/RoleViewPage.vue') },
+      { path: 'system-parameters', component: () => import('pages/master/SystemParameterPage.vue') },
       { path: 'pazaauto/barang', component: () => import('pages/pazaauto/BarangPage.vue') },
       { path: 'pazaauto/jasa', component: () => import('pages/pazaauto/JasaPage.vue') },
       { path: 'pazaauto/karyawan', component: () => import('pages/pazaauto/KaryawanPage.vue') },

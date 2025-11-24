@@ -3,23 +3,12 @@
     <div class="q-pa-md">
       <!-- Toolbar with Create button and Search -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn 
-          flat 
-          :label="$t('create') + ' User'" 
-          icon="add" 
-          color="primary"
-          @click="openCreateDialog"
-        />
+        <q-btn flat :label="$t('create') + ' User'" icon="add" color="white" class="bg-primary"
+          @click="openCreateDialog" />
         <q-space />
         <div class="col-6">
-          <q-input 
-            dense 
-            standout 
-            v-model="searchText" 
-            input-class="search-field text-left" 
-            class="q-ml-md"
-            placeholder="Search by username or email..."
-          >
+          <q-input dense standout="bg-secondary" v-model="searchText" input-class="search-field text-left"
+            class="q-ml-md" placeholder="Search by username or email...">
             <template v-slot:append>
               <q-icon v-if="searchText === ''" name="search" />
               <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
@@ -29,18 +18,8 @@
       </q-toolbar>
 
       <!-- Data Table -->
-      <q-table
-        class="my-sticky-header-table"
-        flat
-        bordered
-        :rows="rows"
-        :columns="columns"
-        row-key="id"
-        :loading="loading"
-        v-model:pagination="pagination"
-        @request="onRequest"
-        binary-state-sort
-      >
+      <q-table class="my-sticky-header-table" flat bordered :rows="rows" :columns="columns" row-key="id"
+        :loading="loading" v-model:pagination="pagination" @request="onRequest" binary-state-sort>
         <template v-slot:body-cell-active="props">
           <q-td :props="props">
             <q-badge :color="props.row.active ? 'green' : 'red'">
@@ -51,24 +30,10 @@
 
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="edit" 
-              color="primary"
-              @click="openEditDialog(props.row)"
-            >
+            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
               <q-tooltip>Edit</q-tooltip>
             </q-btn>
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="delete" 
-              color="negative"
-              @click="confirmDelete(props.row)"
-            >
+            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
               <q-tooltip>Delete</q-tooltip>
             </q-btn>
           </q-td>
@@ -85,58 +50,37 @@
 
         <q-card-section class="q-pt-none">
           <q-form @submit="saveUser" class="q-gutter-md">
-            <q-input
-              v-model="formData.username"
-              label="Username *"
-              outlined
-              dense
-              :rules="[val => !!val || 'Username is required']"
-            />
+            <q-input v-model="formData.username" label="Username *" outlined dense
+              :rules="[val => !!val || 'Username is required']" />
 
-            <q-input
-              v-model="formData.email"
-              label="Email *"
-              outlined
-              dense
-              type="email"
-              :rules="[val => !!val || 'Email is required']"
-            />
+            <q-input v-model="formData.email" label="Email *" outlined dense type="email"
+              :rules="[val => !!val || 'Email is required']" />
 
-            <q-input
-              v-model="formData.passwordHash"
-              label="Password *"
-              outlined
-              dense
-              :type="showPassword ? 'text' : 'password'"
-              :rules="[val => !!val || 'Password is required']"
-            >
+            <q-input v-model="formData.passwordHash" label="Password *" outlined dense
+              :type="showPassword ? 'text' : 'password'" :rules="[val => !!val || 'Password is required']">
               <template v-slot:append>
-                <q-icon
-                  :name="showPassword ? 'visibility_off' : 'visibility'"
-                  class="cursor-pointer"
-                  @click="showPassword = !showPassword"
-                />
+                <q-icon :name="showPassword ? 'visibility_off' : 'visibility'" class="cursor-pointer"
+                  @click="showPassword = !showPassword" />
               </template>
             </q-input>
 
-            <q-checkbox
-              v-model="formData.active"
-              label="Active"
-            />
+            <q-select v-model="formData.karyawanId" :options="filteredKaryawanOptions" option-value="id"
+              option-label="namaKaryawan" emit-value map-options label="Pilih Karyawan" outlined dense use-input
+              input-debounce="300" @filter="filterKaryawan" clearable>
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No results
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+
+            <q-checkbox v-model="formData.active" label="Active" />
 
             <div class="row justify-end q-gutter-sm">
-              <q-btn 
-                flat 
-                label="Cancel" 
-                color="primary" 
-                @click="closeDialog"
-              />
-              <q-btn 
-                label="Save" 
-                type="submit" 
-                color="primary"
-                :loading="saving"
-              />
+              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -156,13 +100,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn 
-            flat 
-            label="Delete" 
-            color="negative" 
-            @click="deleteUser"
-            :loading="deleting"
-          />
+          <q-btn flat label="Delete" color="negative" @click="deleteUser" :loading="deleting" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -185,6 +123,8 @@ const rows = ref([])
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
+const karyawanOptions = ref([])
+const filteredKaryawanOptions = ref([])
 const itemToDelete = ref(null)
 const showPassword = ref(false)
 
@@ -202,6 +142,7 @@ const formData = ref({
   username: '',
   email: '',
   passwordHash: '',
+  karyawanId: null,
   active: true
 })
 
@@ -246,18 +187,18 @@ const fetchUsers = async (paginationData = pagination.value) => {
       page: paginationData.page,
       rowsPerPage: paginationData.rowsPerPage
     }
-    
+
     // Add sorting if specified
     if (paginationData.sortBy) {
       params.sortBy = paginationData.sortBy
       params.descending = paginationData.descending
     }
-    
+
     // Add search if specified
     if (searchText.value) {
       params.search = searchText.value
     }
-    
+
     const response = await api.get('/api/users/paginated', { params })
     if (response.data.success) {
       const pageData = response.data.data
@@ -286,15 +227,42 @@ const onRequest = (props) => {
   fetchUsers(pagination.value)
 }
 
-const openCreateDialog = () => {
+const fetchKaryawan = async () => {
+  try {
+    const response = await api.get('/api/pazaauto/karyawan')
+    if (response.data.success) {
+      karyawanOptions.value = response.data.data || []
+      filteredKaryawanOptions.value = karyawanOptions.value
+    }
+  } catch (error) {
+    console.error('Failed to fetch karyawan:', error)
+  }
+}
+
+const filterKaryawan = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredKaryawanOptions.value = karyawanOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      filteredKaryawanOptions.value = karyawanOptions.value.filter(
+        v => v.namaKaryawan.toLowerCase().indexOf(needle) > -1
+      )
+    }
+  })
+}
+
+const openCreateDialog = async () => {
   isEditMode.value = false
   resetForm()
+  await fetchKaryawan()
   showDialog.value = true
 }
 
-const openEditDialog = (row) => {
+const openEditDialog = async (row) => {
   isEditMode.value = true
   formData.value = { ...row }
+  await fetchKaryawan()
   showDialog.value = true
 }
 
@@ -309,6 +277,7 @@ const resetForm = () => {
     username: '',
     email: '',
     passwordHash: '',
+    karyawanId: null,
     active: true
   }
   showPassword.value = false

@@ -33,14 +33,45 @@ public class TbBarangService extends AbstractCrudService<TbBarangEntity, Long> {
     public PageResponse<TbBarangEntity> findPaginated(PageRequest pageRequest) {
         PanacheQuery<TbBarangEntity> query;
 
+        // Build query with filters
+        String queryString = "1=1";
+        Object[] params = new Object[0];
+        int paramIndex = 1;
+
         // Apply search filter if specified
         if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
             String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
-            query = repository.find(
-                    "lower(kodeBarang) like ?1 or lower(namaBarang) like ?1",
-                    searchPattern);
+            queryString += " and (lower(kodeBarang) like ?" + paramIndex + " or lower(namaBarang) like ?" + paramIndex
+                    + ")";
+            params = new Object[] { searchPattern };
+            paramIndex++;
+        }
+
+        // Apply status filter if specified
+        if (pageRequest.getStatusFilter() != null && !pageRequest.getStatusFilter().isEmpty()) {
+            String[] statuses = pageRequest.getStatusFilter().split(",");
+            StringBuilder statusQuery = new StringBuilder(" and (");
+
+            for (int i = 0; i < statuses.length; i++) {
+                if (i > 0) {
+                    statusQuery.append(" or ");
+                }
+                String status = statuses[i].trim();
+                if ("AVAILABLE".equals(status)) {
+                    statusQuery.append("stok > 0");
+                } else if ("OUT_OF_STOCK".equals(status)) {
+                    statusQuery.append("stok <= 0");
+                }
+            }
+            statusQuery.append(")");
+            queryString += statusQuery.toString();
+        }
+
+        // Create query
+        if (params.length > 0) {
+            query = repository.find(queryString, params);
         } else {
-            query = repository.findAll();
+            query = repository.find(queryString);
         }
 
         // Apply sorting if specified
@@ -48,17 +79,12 @@ public class TbBarangService extends AbstractCrudService<TbBarangEntity, Long> {
             Sort sort = pageRequest.isDescending()
                     ? Sort.descending(pageRequest.getSortBy())
                     : Sort.ascending(pageRequest.getSortBy());
-            query = query.page(Page.of(0, Integer.MAX_VALUE)); // Reset pagination for sorting
 
             // Re-apply query with sorting
-            if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
-                String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
-                query = repository.find(
-                        "lower(kodeBarang) like ?1 or lower(namaBarang) like ?1",
-                        sort,
-                        searchPattern);
+            if (params.length > 0) {
+                query = repository.find(queryString, sort, params);
             } else {
-                query = repository.findAll(sort);
+                query = repository.find(queryString, sort);
             }
         }
 

@@ -1,62 +1,50 @@
-package com.github.b3kt.application.service.pazaauto;
+package com.github.b3kt.application.service;
 
 import com.github.b3kt.application.dto.PageRequest;
 import com.github.b3kt.application.dto.PageResponse;
-import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbKaryawanEntity;
-import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbKaryawanPosisiEntity;
-import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbKaryawanPosisiRepository;
-import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbKaryawanRepository;
+import com.github.b3kt.application.service.pazaauto.AbstractCrudService;
+import com.github.b3kt.infrastructure.persistence.entity.SystemParameterEntity;
+import com.github.b3kt.infrastructure.persistence.repository.SystemParameterEntityRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
-import java.util.Objects;
 
 @ApplicationScoped
-public class TbKaryawanService extends AbstractCrudService<TbKaryawanEntity, Long> {
+public class SystemParameterService extends AbstractCrudService<SystemParameterEntity, Long> {
 
     @Inject
-    TbKaryawanRepository repository;
-
-    @Inject
-    TbKaryawanPosisiRepository karyawanPosisiRepository;
+    SystemParameterEntityRepository repository;
 
     @Override
-    protected PanacheRepositoryBase<TbKaryawanEntity, Long> getRepository() {
+    protected PanacheRepositoryBase<SystemParameterEntity, Long> getRepository() {
         return repository;
     }
 
     @Override
-    protected void setRelationships(TbKaryawanEntity entity) {
-        if (Objects.nonNull(entity.getIdPosisi())) {
-            karyawanPosisiRepository.findByIdOptional(entity.getIdPosisi())
-                    .ifPresent(posisi -> entity.setNamePosisi(posisi.getPosisi()));
-        }
-    }
-
-    @Override
-    protected void setEntityId(TbKaryawanEntity entity, Long id) {
+    protected void setEntityId(SystemParameterEntity entity, Long id) {
         entity.setId(id);
     }
 
     @Override
-    public PageResponse<TbKaryawanEntity> findPaginated(PageRequest pageRequest) {
-        PanacheQuery<TbKaryawanEntity> query;
+    public PageResponse<SystemParameterEntity> findPaginated(PageRequest pageRequest) {
+        PanacheQuery<SystemParameterEntity> query;
 
+        // Apply search filter if specified
         if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
             String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
             query = repository.find(
-                    "lower(namaKaryawan) like ?1 or lower(email) like ?1",
+                    "lower(name) like ?1 or lower(value) like ?1",
                     searchPattern);
         } else {
             query = repository.findAll();
         }
 
+        // Apply sorting if specified
         if (pageRequest.getSortBy() != null && !pageRequest.getSortBy().isEmpty()) {
             Sort sort = pageRequest.isDescending()
                     ? Sort.descending(pageRequest.getSortBy())
@@ -66,7 +54,7 @@ public class TbKaryawanService extends AbstractCrudService<TbKaryawanEntity, Lon
             if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
                 String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
                 query = repository.find(
-                        "lower(namaKaryawan) like ?1 or lower(email) like ?1",
+                        "lower(name) like ?1 or lower(value) like ?1",
                         sort,
                         searchPattern);
             } else {
@@ -75,7 +63,7 @@ public class TbKaryawanService extends AbstractCrudService<TbKaryawanEntity, Lon
         }
 
         long totalCount = query.count();
-        List<TbKaryawanEntity> rows = query.page(Page.of(pageRequest.getPage() - 1, pageRequest.getRowsPerPage()))
+        List<SystemParameterEntity> rows = query.page(Page.of(pageRequest.getPage() - 1, pageRequest.getRowsPerPage()))
                 .list();
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);

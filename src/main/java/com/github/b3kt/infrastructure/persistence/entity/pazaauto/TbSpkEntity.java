@@ -230,4 +230,3 @@ public class TbSpkEntity {
         this.mekanikId = mekanikId;
     }
 }
-

@@ -9,6 +9,7 @@ public class PageRequest {
     private String sortBy;
     private boolean descending = false;
     private String search;
+    private String statusFilter;
 
     public PageRequest() {
     }
@@ -56,6 +57,14 @@ public class PageRequest {
 
     public void setSearch(String search) {
         this.search = search;
+    }
+
+    public String getStatusFilter() {
+        return statusFilter;
+    }
+
+    public void setStatusFilter(String statusFilter) {
+        this.statusFilter = statusFilter;
     }
 
     public int getOffset() {

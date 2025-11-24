@@ -3,14 +3,7 @@
     <div class="q-pa-md">
       <!-- Header with Back Button -->
       <div class="row items-center q-mb-lg">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          color="primary"
-          @click="goBack"
-        >
+        <q-btn flat round dense icon="arrow_back" color="primary" @click="goBack">
           <q-tooltip>Back to Roles</q-tooltip>
         </q-btn>
         <div class="text-h5 q-ml-md">Role Details</div>
@@ -52,13 +45,7 @@
                   {{ availableUsers.length }}
                 </q-chip>
               </div>
-              <q-input
-                v-model="searchAvailable"
-                dense
-                outlined
-                placeholder="Search users..."
-                class="q-mt-sm"
-              >
+              <q-input v-model="searchAvailable" dense outlined placeholder="Search users..." class="q-mt-sm">
                 <template v-slot:prepend>
                   <q-icon name="search" />
                 </template>
@@ -67,17 +54,9 @@
             <q-separator />
             <q-card-section class="user-list-container">
               <q-list bordered separator>
-                <q-item
-                  v-for="user in filteredAvailableUsers"
-                  :key="user.id"
-                  clickable
-                  v-ripple
-                  draggable="true"
-                  @dragstart="onDragStart($event, user, 'available')"
-                  @dragend="onDragEnd"
-                  class="user-item"
-                  :class="{ 'dragging': draggingUser?.id === user.id }"
-                >
+                <q-item v-for="user in filteredAvailableUsers" :key="user.id" clickable v-ripple draggable="true"
+                  @dragstart="onDragStart($event, user, 'available')" @dragend="onDragEnd" class="user-item"
+                  :class="{ 'dragging': draggingUser?.id === user.id }">
                   <q-item-section avatar>
                     <q-avatar color="primary" text-color="white">
                       {{ user.username.charAt(0).toUpperCase() }}
@@ -88,15 +67,7 @@
                     <q-item-label caption>{{ user.email }}</q-item-label>
                   </q-item-section>
                   <q-item-section side>
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="arrow_forward"
-                      color="primary"
-                      size="sm"
-                      @click="assignUser(user)"
-                    >
+                    <q-btn flat dense round icon="arrow_forward" color="primary" size="sm" @click="assignUser(user)">
                       <q-tooltip>Assign to role</q-tooltip>
                     </q-btn>
                   </q-item-section>
@@ -113,13 +84,8 @@
 
         <!-- Assigned Users -->
         <div class="col-12 col-md-6">
-          <q-card
-            @drop="onDrop($event, 'assigned')"
-            @dragover.prevent
-            @dragenter="onDragEnter('assigned')"
-            @dragleave="onDragLeave('assigned')"
-            :class="{ 'drop-zone-active': dropZone === 'assigned' }"
-          >
+          <q-card @drop="onDrop($event, 'assigned')" @dragover.prevent @dragenter="onDragEnter('assigned')"
+            @dragleave="onDragLeave('assigned')" :class="{ 'drop-zone-active': dropZone === 'assigned' }">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center">
                 <div class="text-subtitle1 col">Assigned Users</div>
@@ -127,14 +93,7 @@
                   {{ assignedUsers.length }}
                 </q-chip>
               </div>
-              <q-input
-                v-model="searchAssigned"
-                dense
-                outlined
-                dark
-                placeholder="Search users..."
-                class="q-mt-sm"
-              >
+              <q-input v-model="searchAssigned" dense outlined dark placeholder="Search users..." class="q-mt-sm">
                 <template v-slot:prepend>
                   <q-icon name="search" />
                 </template>
@@ -143,17 +102,9 @@
             <q-separator />
             <q-card-section class="user-list-container">
               <q-list bordered separator>
-                <q-item
-                  v-for="user in filteredAssignedUsers"
-                  :key="user.id"
-                  clickable
-                  v-ripple
-                  draggable="true"
-                  @dragstart="onDragStart($event, user, 'assigned')"
-                  @dragend="onDragEnd"
-                  class="user-item"
-                  :class="{ 'dragging': draggingUser?.id === user.id }"
-                >
+                <q-item v-for="user in filteredAssignedUsers" :key="user.id" clickable v-ripple draggable="true"
+                  @dragstart="onDragStart($event, user, 'assigned')" @dragend="onDragEnd" class="user-item"
+                  :class="{ 'dragging': draggingUser?.id === user.id }">
                   <q-item-section avatar>
                     <q-avatar color="primary" text-color="white">
                       {{ user.username.charAt(0).toUpperCase() }}
@@ -164,15 +115,7 @@
                     <q-item-label caption>{{ user.email }}</q-item-label>
                   </q-item-section>
                   <q-item-section side>
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="close"
-                      color="negative"
-                      size="sm"
-                      @click="unassignUser(user)"
-                    >
+                    <q-btn flat dense round icon="close" color="negative" size="sm" @click="unassignUser(user)">
                       <q-tooltip>Remove from role</q-tooltip>
                     </q-btn>
                   </q-item-section>
@@ -190,18 +133,8 @@
 
       <!-- Action Buttons -->
       <div class="row justify-end q-mt-lg q-gutter-sm">
-        <q-btn
-          flat
-          label="Cancel"
-          color="primary"
-          @click="goBack"
-        />
-        <q-btn
-          label="Save Changes"
-          color="primary"
-          @click="saveChanges"
-          :loading="saving"
-        />
+        <q-btn flat label="Cancel" color="primary" @click="goBack" />
+        <q-btn label="Save Changes" color="primary" @click="saveChanges" :loading="saving" />
       </div>
     </div>
   </q-page>
@@ -235,7 +168,7 @@ const dropZone = ref(null)
 
 // Computed
 const availableUsers = computed(() => {
-  return allUsers.value.filter(user => 
+  return allUsers.value.filter(user =>
     !assignedUsers.value.some(assigned => assigned.id === user.id)
   )
 })
@@ -358,11 +291,11 @@ const onDragLeave = (zone) => {
 const onDrop = (event, target) => {
   event.preventDefault()
   dropZone.value = null
-  
+
   try {
     const data = JSON.parse(event.dataTransfer.getData('text/plain'))
     const { user, source } = data
-    
+
     if (target === 'assigned' && source === 'available') {
       assignUser(user)
     } else if (target === 'available' && source === 'assigned') {
@@ -378,7 +311,7 @@ const saveChanges = async () => {
   try {
     const roleId = route.params.id
     const userIds = assignedUsers.value.map(u => u.id)
-    
+
     const response = await api.put(`/api/roles/${roleId}/users`, { userIds })
     if (response.data.success) {
       $q.notify({

@@ -3,23 +3,12 @@
     <div class="q-pa-md">
       <!-- Toolbar -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn 
-          flat 
-          :label="$t('create') + ' Sparepart'"
-          icon="add" 
-          color="primary"
-          @click="openCreateDialog"
-        />
+        <q-btn flat :label="$t('create') + ' Sparepart'" icon="add" color="white" class="bg-primary"
+          @click="openCreateDialog" />
         <q-space />
         <div class="col-6">
-          <q-input 
-            dense 
-            standout 
-            v-model="searchText" 
-            input-class="search-field text-left" 
-            class="q-ml-md"
-            placeholder="Search by code or name..."
-          >
+          <q-input dense standout="bg-primary" v-model="searchText" input-class="search-field text-left" class="q-ml-md"
+            placeholder="Search by code or name...">
             <template v-slot:append>
               <q-icon v-if="searchText === ''" name="search" />
               <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
@@ -29,17 +18,8 @@
       </q-toolbar>
 
       <!-- Data Table -->
-      <q-table
-        class="my-sticky-header-table"
-        flat
-        bordered
-        :rows="filteredRows"
-        :columns="columns"
-        row-key="kodeBarang"
-        :loading="loading"
-        :pagination="pagination"
-        @request="onRequest"
-      >
+      <q-table class="my-sticky-header-table" flat bordered :rows="filteredRows" :columns="columns" row-key="kodeBarang"
+        :loading="loading" :pagination="pagination" @request="onRequest">
         <template v-slot:body-cell-active="props">
           <q-td :props="props">
             <q-badge :color="props.row.active ? 'green' : 'red'">
@@ -62,24 +42,10 @@
 
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="edit" 
-              color="primary"
-              @click="openEditDialog(props.row)"
-            >
+            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
               <q-tooltip>Edit</q-tooltip>
             </q-btn>
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="delete" 
-              color="negative"
-              @click="confirmDelete(props.row)"
-            >
+            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
               <q-tooltip>Delete</q-tooltip>
             </q-btn>
           </q-td>
@@ -96,134 +62,54 @@
 
         <q-card-section class="q-pt-none">
           <q-form @submit="saveSparepart" class="q-gutter-md">
-            <q-input
-              v-model="formData.kodeSparepart"
-              label="Kode Sparepart *"
-              outlined
-              dense
-              :rules="[val => !!val || 'Kode Sparepart is required']"
-            />
+            <q-input v-model="formData.kodeSparepart" label="Kode Sparepart *" outlined dense
+              :rules="[val => !!val || 'Kode Sparepart is required']" />
 
-            <q-input
-              v-model="formData.namaSparepart"
-              label="Nama Sparepart *"
-              outlined
-              dense
-              :rules="[val => !!val || 'Nama Sparepart is required']"
-            />
+            <q-input v-model="formData.namaSparepart" label="Nama Sparepart *" outlined dense
+              :rules="[val => !!val || 'Nama Sparepart is required']" />
 
             <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input
-                  v-model.number="formData.hargaJual"
-                  label="Harga Jual"
-                  outlined
-                  dense
-                  type="number"
-                  step="0.01"
-                  prefix="Rp"
-                  class="q-mr-md"
-                />
+                <q-input v-model.number="formData.hargaJual" label="Harga Jual" outlined dense type="number" step="0.01"
+                  prefix="Rp" class="q-mr-md" />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model.number="formData.hargaBeli"
-                  label="Harga Beli"
-                  outlined
-                  dense
-                  type="number"
-                  step="0.01"
-                  prefix="Rp"
-                />
+                <q-input v-model.number="formData.hargaBeli" label="Harga Beli" outlined dense type="number" step="0.01"
+                  prefix="Rp" />
               </div>
             </div>
 
             <div class="row q-col-gutter">
               <div class="col-4">
-                <q-input
-                  v-model.number="formData.stok"
-                  label="Stok"
-                  outlined
-                  dense
-                  type="number"
-                  class="q-mr-md"
-                />
+                <q-input v-model.number="formData.stok" label="Stok" outlined dense type="number" class="q-mr-md" />
               </div>
               <div class="col-4">
-                <q-input
-                  v-model.number="formData.stokMinimal"
-                  label="Stok Minimal"
-                  outlined
-                  dense
-                  type="number" 
-                  class="q-mr-md"
-                />
+                <q-input v-model.number="formData.stokMinimal" label="Stok Minimal" outlined dense type="number"
+                  class="q-mr-md" />
               </div>
               <div class="col-4">
-                <q-input
-                  v-model="formData.satuan"
-                  label="Satuan"
-                  outlined
-                  dense
-                />
+                <q-input v-model="formData.satuan" label="Satuan" outlined dense />
               </div>
             </div>
 
             <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input
-                  v-model="formData.merek"
-                  label="Merek"
-                  outlined
-                  dense
-                  class="q-mr-md"
-                />
+                <q-input v-model="formData.merek" label="Merek" outlined dense class="q-mr-md" />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model="formData.tipeKendaraan"
-                  label="Tipe Kendaraan"
-                  outlined
-                  dense
-                />
+                <q-input v-model="formData.tipeKendaraan" label="Tipe Kendaraan" outlined dense />
               </div>
             </div>
 
-            <q-input
-              v-model.number="formData.supplierId"
-              label="Supplier ID"
-              outlined
-              dense
-              type="number"
-            />
+            <q-input v-model.number="formData.supplierId" label="Supplier ID" outlined dense type="number" />
 
-            <q-input
-              v-model="formData.keterangan"
-              label="Keterangan"
-              outlined
-              dense
-              type="textarea"
-              rows="2"
-            />
+            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2" />
 
-            <q-checkbox
-              v-model="formData.active"
-              label="Active"
-            />
+            <q-checkbox v-model="formData.active" label="Active" />
 
             <div class="row justify-end q-gutter-sm">
-              <q-btn 
-                flat 
-                label="Cancel" 
-                color="primary" 
-                @click="closeDialog"
-              />
-              <q-btn 
-                label="Save" 
-                type="submit" 
-                color="primary"
-                :loading="saving"
-              />
+              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -243,13 +129,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn 
-            flat 
-            label="Delete" 
-            color="negative" 
-            @click="deleteSparepart"
-            :loading="deleting"
-          />
+          <q-btn flat label="Delete" color="negative" @click="deleteSparepart" :loading="deleting" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -359,7 +239,7 @@ const filteredRows = computed(() => {
     return rows.value
   }
   const search = searchText.value.toLowerCase()
-  return rows.value.filter(row => 
+  return rows.value.filter(row =>
     row.kodeSparepart?.toLowerCase().includes(search) ||
     row.namaSparepart?.toLowerCase().includes(search)
   )

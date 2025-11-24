@@ -3,23 +3,11 @@
     <div class="q-pa-md">
       <!-- Toolbar -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn 
-          flat 
-          :label="$t('create') + ' Posisi'" 
-          icon="add" 
-          color="primary"
-          @click="openCreateDialog"
-        />
+        <q-btn flat :label="$t('create') + ' Posisi'" icon="add" color="primary" @click="openCreateDialog" />
         <q-space />
         <div class="col-6">
-          <q-input 
-            dense 
-            standout 
-            v-model="searchText" 
-            input-class="search-field text-left" 
-            class="q-ml-md"
-            placeholder="Search..."
-          >
+          <q-input dense standout="bg-secondary" v-model="searchText" input-class="search-field text-left"
+            class="q-ml-md" placeholder="Search...">
             <template v-slot:append>
               <q-icon v-if="searchText === ''" name="search" />
               <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
@@ -29,37 +17,14 @@
       </q-toolbar>
 
       <!-- Data Table -->
-      <q-table
-        class="my-sticky-header-table"
-        flat
-        bordered
-        :rows="filteredRows"
-        :columns="columns"
-        row-key="id"
-        :loading="loading"
-        :pagination="pagination"
-        @request="onRequest"
-      >
+      <q-table class="my-sticky-header-table" flat bordered :rows="filteredRows" :columns="columns" row-key="id"
+        :loading="loading" @request="onRequest">
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="edit" 
-              color="primary"
-              @click="openEditDialog(props.row)"
-            >
+            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
               <q-tooltip>Edit</q-tooltip>
             </q-btn>
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="delete" 
-              color="negative"
-              @click="confirmDelete(props.row)"
-            >
+            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
               <q-tooltip>Delete</q-tooltip>
             </q-btn>
           </q-td>
@@ -76,36 +41,14 @@
 
         <q-card-section class="q-pt-none">
           <q-form @submit="savePosisi" class="q-gutter-md">
-            <q-input
-              v-model="formData.posisi"
-              label="Nama Posisi *"
-              outlined
-              dense
-              :rules="[val => !!val || 'Nama Posisi is required']"
-            />
+            <q-input v-model="formData.posisi" label="Nama Posisi *" outlined dense
+              :rules="[val => !!val || 'Nama Posisi is required']" />
 
-            <q-input
-              v-model="formData.keterangan"
-              label="Keterangan"
-              outlined
-              dense
-              type="textarea"
-              rows="3"
-            />
+            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="3" />
 
             <div class="row justify-end q-gutter-sm">
-              <q-btn 
-                flat 
-                label="Cancel" 
-                color="primary" 
-                @click="closeDialog"
-              />
-              <q-btn 
-                label="Save" 
-                type="submit" 
-                color="primary"
-                :loading="saving"
-              />
+              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -125,13 +68,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn 
-            flat 
-            label="Delete" 
-            color="negative" 
-            @click="deletePosisi"
-            :loading="deleting"
-          />
+          <q-btn flat label="Delete" color="negative" @click="deletePosisi" :loading="deleting" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -195,7 +132,7 @@ const filteredRows = computed(() => {
     return rows.value
   }
   const search = searchText.value.toLowerCase()
-  return rows.value.filter(row => 
+  return rows.value.filter(row =>
     row.posisi?.toLowerCase().includes(search)
   )
 })

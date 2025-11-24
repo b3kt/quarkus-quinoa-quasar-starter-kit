@@ -3,23 +3,12 @@
     <div class="q-pa-md">
       <!-- Toolbar -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn 
-          flat 
-          :label="$t('create') + ' Kendaraan'" 
-          icon="add" 
-          color="primary"
-          @click="openCreateDialog"
-        />
+        <q-btn flat :label="$t('create') + ' Kendaraan'" icon="add" color="white" class="bg-primary"
+          @click="openCreateDialog" />
         <q-space />
         <div class="col-6">
-          <q-input 
-            dense 
-            standout 
-            v-model="searchText" 
-            input-class="search-field text-left" 
-            class="q-ml-md"
-            placeholder="Search..."
-          >
+          <q-input dense standout="bg-primary" v-model="searchText" input-class="search-field text-left" class="q-ml-md"
+            placeholder="Search...">
             <template v-slot:append>
               <q-icon v-if="searchText === ''" name="search" />
               <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
@@ -29,37 +18,14 @@
       </q-toolbar>
 
       <!-- Data Table -->
-      <q-table
-        class="my-sticky-header-table"
-        flat
-        bordered
-        :rows="filteredRows"
-        :columns="columns"
-        row-key="id"
-        :loading="loading"
-        :pagination="pagination"
-        @request="onRequest"
-      >
+      <q-table class="my-sticky-header-table" flat bordered :rows="filteredRows" :columns="columns" row-key="id"
+        :loading="loading" @request="onRequest">
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="edit" 
-              color="primary"
-              @click="openEditDialog(props.row)"
-            >
+            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
               <q-tooltip>Edit</q-tooltip>
             </q-btn>
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="delete" 
-              color="negative"
-              @click="confirmDelete(props.row)"
-            >
+            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
               <q-tooltip>Delete</q-tooltip>
             </q-btn>
           </q-td>
@@ -78,96 +44,26 @@
           <q-form @submit="saveKendaraan" class="q-gutter-md">
             <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input
-                  v-model="formData.jenis"
-                  label="Jenis *"
-                  outlined
-                  dense
-                  :rules="[val => !!val || 'Jenis is required']"
-                  class="q-mr-md"
-                />
-              </div>
-              <div class="col-6">
-                <q-input
-                  v-model="formData.model"
-                  label="Model"
-                  outlined
-                  dense
-                />
+                <q-input v-model="formData.merk" label="Merk *" outlined dense
+                  :rules="[val => !!val || 'Merk is required']" class="q-mr-md" />
               </div>
             </div>
 
             <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input
-                  v-model="formData.nomorMesin"
-                  label="Nomor Mesin"
-                  outlined
-                  dense
-                  class="q-mr-md"
-                />
+                <q-input v-model="formData.jenis" label="Jenis *" outlined dense
+                  :rules="[val => !!val || 'Jenis is required']" class="q-mr-md" />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model="formData.nomorRangka"
-                  label="Nomor Rangka"
-                  outlined
-                  dense
-                />
+                <q-input v-model="formData.model" label="Model" outlined dense />
               </div>
             </div>
 
-            <div class="row q-col-gutter-">
-              <div class="col-6">
-                <q-input
-                  v-model="formData.tahunPembuatan"
-                  label="Tahun Pembuatan"
-                  outlined
-                  dense
-                  maxlength="4"
-                  class="q-mr-md"
-                />
-              </div>
-              <div class="col-6">
-                <q-input
-                  v-model="formData.warna"
-                  label="Warna"
-                  outlined
-                  dense
-                />
-              </div>
-            </div>
-
-            <q-input
-              v-model.number="formData.pelangganId"
-              label="Pelanggan ID"
-              outlined
-              dense
-              type="number"
-            />
-
-            <q-input
-              v-model="formData.keterangan"
-              label="Keterangan"
-              outlined
-              dense
-              type="textarea"
-              rows="2"
-            />
+            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2" />
 
             <div class="row justify-end q-gutter-sm">
-              <q-btn 
-                flat 
-                label="Cancel" 
-                color="primary" 
-                @click="closeDialog"
-              />
-              <q-btn 
-                label="Save" 
-                type="submit" 
-                color="primary"
-                :loading="saving"
-              />
+              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -187,13 +83,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn 
-            flat 
-            label="Delete" 
-            color="negative" 
-            @click="deleteKendaraan"
-            :loading="deleting"
-          />
+          <q-btn flat label="Delete" color="negative" @click="deleteKendaraan" :loading="deleting" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -225,17 +115,21 @@ const pagination = ref({
 
 const formData = ref({
   id: null,
+  merk: '',
   jenis: '',
   model: '',
-  nomorMesin: '',
-  nomorRangka: '',
-  tahunPembuatan: '',
-  warna: '',
-  pelangganId: null,
   keterangan: ''
 })
 
 const columns = [
+  {
+    name: 'merk',
+    required: true,
+    label: 'Merk',
+    align: 'left',
+    field: 'merk',
+    sortable: true
+  },
   {
     name: 'jenis',
     required: true,
@@ -252,31 +146,6 @@ const columns = [
     sortable: true
   },
   {
-    name: 'nomorMesin',
-    label: 'Nomor Mesin',
-    align: 'left',
-    field: 'nomorMesin'
-  },
-  {
-    name: 'nomorRangka',
-    label: 'Nomor Rangka',
-    align: 'left',
-    field: 'nomorRangka'
-  },
-  {
-    name: 'tahunPembuatan',
-    label: 'Tahun',
-    align: 'center',
-    field: 'tahunPembuatan',
-    sortable: true
-  },
-  {
-    name: 'warna',
-    label: 'Warna',
-    align: 'center',
-    field: 'warna'
-  },
-  {
     name: 'actions',
     label: 'Actions',
     align: 'center',
@@ -289,11 +158,11 @@ const filteredRows = computed(() => {
     return rows.value
   }
   const search = searchText.value.toLowerCase()
-  return rows.value.filter(row => 
+  return rows.value.filter(row =>
+    row.merk?.toLowerCase().includes(search) ||
     row.jenis?.toLowerCase().includes(search) ||
     row.model?.toLowerCase().includes(search) ||
-    row.nomorMesin?.toLowerCase().includes(search) ||
-    row.nomorRangka?.toLowerCase().includes(search)
+    row.keterangan?.toLowerCase().includes(search)
   )
 })
 
@@ -340,13 +209,9 @@ const closeDialog = () => {
 const resetForm = () => {
   formData.value = {
     id: null,
+    merk: '',
     jenis: '',
     model: '',
-    nomorMesin: '',
-    nomorRangka: '',
-    tahunPembuatan: '',
-    warna: '',
-    pelangganId: null,
     keterangan: ''
   }
 }

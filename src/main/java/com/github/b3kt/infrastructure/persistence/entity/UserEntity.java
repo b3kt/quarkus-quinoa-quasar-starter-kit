@@ -11,8 +11,8 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_username", columnList = "username", unique = true),
-    @Index(name = "idx_email", columnList = "email")
+        @Index(name = "idx_username", columnList = "username", unique = true),
+        @Index(name = "idx_email", columnList = "email")
 })
 public class UserEntity {
 
@@ -34,13 +34,12 @@ public class UserEntity {
     @Column(name = "role")
     private Set<String> roles = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-        name = "user_roles_rbac",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(name = "user_roles_rbac", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<RoleEntity> rbacRoles = new HashSet<>();
+
+    @Column(name = "karyawan_id")
+    private Long karyawanId;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -138,5 +137,12 @@ public class UserEntity {
     public void setRbacRoles(Set<RoleEntity> rbacRoles) {
         this.rbacRoles = rbacRoles != null ? new HashSet<>(rbacRoles) : new HashSet<>();
     }
-}
 
+    public Long getKaryawanId() {
+        return karyawanId;
+    }
+
+    public void setKaryawanId(Long karyawanId) {
+        this.karyawanId = karyawanId;
+    }
+}

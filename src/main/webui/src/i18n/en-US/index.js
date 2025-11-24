@@ -4,7 +4,7 @@
 export default {
   failed: 'Gagal',
   success: 'Berhasil',
-  create: 'Tambah',
+  create: 'Tambah ',
   edit: 'Ubah',
   delete: 'Hapus',
 

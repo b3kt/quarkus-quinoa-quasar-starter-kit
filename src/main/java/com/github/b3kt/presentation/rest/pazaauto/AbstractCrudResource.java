@@ -8,6 +8,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Produces(MediaType.APPLICATION_JSON)
@@ -19,6 +20,8 @@ public abstract class AbstractCrudResource<T, ID> {
     protected abstract ID parseId(String id);
 
     protected abstract String getEntityName();
+
+    protected DateTimeFormatter spkNoformatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     @GET
     public Response list() {
@@ -33,12 +36,14 @@ public abstract class AbstractCrudResource<T, ID> {
             @QueryParam("rowsPerPage") @DefaultValue("10") int rowsPerPage,
             @QueryParam("sortBy") String sortBy,
             @QueryParam("descending") @DefaultValue("false") boolean descending,
-            @QueryParam("search") String search) {
+            @QueryParam("search") String search,
+            @QueryParam("statusFilter") String statusFilter) {
 
         PageRequest pageRequest = new PageRequest(page, rowsPerPage);
         pageRequest.setSortBy(sortBy);
         pageRequest.setDescending(descending);
         pageRequest.setSearch(search);
+        pageRequest.setStatusFilter(statusFilter);
 
         PageResponse<T> pageResponse = getService().findPaginated(pageRequest);
         return Response.ok(ApiResponse.success(pageResponse)).build();

@@ -23,6 +23,9 @@ public abstract class AbstractCrudService<T, ID> {
 
     protected abstract void setEntityId(T entity, ID id);
 
+    protected void setRelationships(T entity) {
+    }
+
     public List<T> findAll() {
         return getRepository().listAll();
     }

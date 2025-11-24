@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import com.github.b3kt.infrastructure.persistence.entity.BaseEntity;
 
@@ -14,11 +13,6 @@ import com.github.b3kt.infrastructure.persistence.entity.BaseEntity;
 @Getter
 @Setter
 public class TbKaryawanEntity extends BaseEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tb_karyawan_id_seq")
-    @SequenceGenerator(name = "tb_karyawan_id_seq", sequenceName = "tb_karyawan_id_seq", allocationSize = 1)
-    private Long id;
 
     @Column(name = "nama_karyawan", length = 30, nullable = false)
     private String namaKaryawan;
@@ -53,139 +47,6 @@ public class TbKaryawanEntity extends BaseEntity {
     @Column(name = "id_posisi")
     private Long idPosisi;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNamaKaryawan() {
-        return namaKaryawan;
-    }
-
-    public void setNamaKaryawan(String namaKaryawan) {
-        this.namaKaryawan = namaKaryawan;
-    }
-
-    public String getAlamat() {
-        return alamat;
-    }
-
-    public void setAlamat(String alamat) {
-        this.alamat = alamat;
-    }
-
-    public String getNoTlpn() {
-        return noTlpn;
-    }
-
-    public void setNoTlpn(String noTlpn) {
-        this.noTlpn = noTlpn;
-    }
-
-    public String getBergabung() {
-        return bergabung;
-    }
-
-    public void setBergabung(String bergabung) {
-        this.bergabung = bergabung;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public Integer getVersion() {
-        return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
-    }
-
-    public Integer getPosisiId() {
-        return posisiId;
-    }
-
-    public void setPosisiId(Integer posisiId) {
-        this.posisiId = posisiId;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getJenisKelamin() {
-        return jenisKelamin;
-    }
-
-    public void setJenisKelamin(String jenisKelamin) {
-        this.jenisKelamin = jenisKelamin;
-    }
-
-    public String getNoTelepon() {
-        return noTelepon;
-    }
-
-    public void setNoTelepon(String noTelepon) {
-        this.noTelepon = noTelepon;
-    }
-
-    public LocalDate getTanggalBergabung() {
-        return tanggalBergabung;
-    }
-
-    public void setTanggalBergabung(LocalDate tanggalBergabung) {
-        this.tanggalBergabung = tanggalBergabung;
-    }
-
-    public LocalDate getTanggalLahir() {
-        return tanggalLahir;
-    }
-
-    public void setTanggalLahir(LocalDate tanggalLahir) {
-        this.tanggalLahir = tanggalLahir;
-    }
-
-    public Long getIdPosisi() {
-        return idPosisi;
-    }
-
-    public void setIdPosisi(Long idPosisi) {
-        this.idPosisi = idPosisi;
-    }
+    @Transient
+    private String namePosisi;
 }

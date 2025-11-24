@@ -17,15 +17,8 @@
       </div>
     </q-toolbar>
 
-    <q-table class="my-sticky-virtscroll-table" 
-      virtual-scroll flat 
-      bordered 
-      v-model:pagination="pagination"
-      :rows-per-page-options="[0]" 
-      :virtual-scroll-sticky-size-start="48" 
-      row-key="index" 
-      title="Treats" 
-      :rows="rows"
+    <q-table class="my-sticky-virtscroll-table" virtual-scroll flat bordered v-model:pagination="pagination"
+      :rows-per-page-options="[0]" :virtual-scroll-sticky-size-start="48" row-key="index" title="Treats" :rows="rows"
       :columns="columns" />
   </div>
 </template>

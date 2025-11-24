@@ -3,23 +3,12 @@
     <div class="q-pa-md">
       <!-- Toolbar -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn 
-          flat 
-          :label="$t('create') + ' Jasa'" 
-          icon="add" 
-          color="primary"
-          @click="openCreateDialog"
-        />
+        <q-btn flat :label="$t('create') + ' Jasa'" icon="add" color="white" class="bg-primary"
+          @click="openCreateDialog" />
         <q-space />
         <div class="col-6">
-          <q-input 
-            dense 
-            standout 
-            v-model="searchText" 
-            input-class="search-field text-left" 
-            class="q-ml-md"
-            placeholder="Search by name..."
-          >
+          <q-input dense standout="bg-primary" v-model="searchText" input-class="search-field text-left" class="q-ml-md"
+            placeholder="Search by name...">
             <template v-slot:append>
               <q-icon v-if="searchText === ''" name="search" />
               <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
@@ -29,17 +18,8 @@
       </q-toolbar>
 
       <!-- Data Table -->
-      <q-table
-        class="my-sticky-header-table"
-        flat
-        bordered
-        :rows="filteredRows"
-        :columns="columns"
-        row-key="id"
-        :loading="loading"
-        :pagination="pagination"
-        @request="onRequest"
-      >
+      <q-table class="my-sticky-header-table" flat bordered :rows="rows" :columns="columns" row-key="id"
+        :loading="loading" v-model:pagination="pagination" @request="onRequest" binary-state-sort>
         <template v-slot:body-cell-hargaJasa="props">
           <q-td :props="props">
             {{ formatCurrency(props.row.hargaJasa) }}
@@ -48,24 +28,10 @@
 
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="edit" 
-              color="primary"
-              @click="openEditDialog(props.row)"
-            >
+            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
               <q-tooltip>Edit</q-tooltip>
             </q-btn>
-            <q-btn 
-              flat 
-              dense 
-              round 
-              icon="delete" 
-              color="negative"
-              @click="confirmDelete(props.row)"
-            >
+            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
               <q-tooltip>Delete</q-tooltip>
             </q-btn>
           </q-td>
@@ -82,54 +48,20 @@
 
         <q-card-section class="q-pt-none">
           <q-form @submit="saveJasa" class="q-gutter-md">
-            <q-input
-              v-model="formData.namaJasa"
-              label="Nama Jasa *"
-              outlined
-              dense
-              :rules="[val => !!val || 'Nama Jasa is required']"
-            />
+            <q-input v-model="formData.namaJasa" label="Nama Jasa *" outlined dense
+              :rules="[val => !!val || 'Nama Jasa tidak boleh kosong']" />
 
-            <q-input
-              v-model.number="formData.hargaJasa"
-              label="Harga Jasa"
-              outlined
-              dense
-              type="number"
-              prefix="Rp"
-            />
+            <q-input v-model.number="formData.hargaJasa" label="Harga Jasa" outlined dense type="number" prefix="Rp"
+              :rules="[val => val >= 0 || 'Harga jasa tidak valid']" />
 
-            <q-input
-              v-model.number="formData.estimasiWaktu"
-              label="Estimasi Waktu (menit)"
-              outlined
-              dense
-              type="number"
-              suffix="menit"
-            />
+            <q-input v-model.number="formData.estimasiWaktu" label="Estimasi Waktu (menit)" outlined dense type="number"
+              :rules="[val => val >= 0 || 'Waktu estimasi tidak valid']" />
 
-            <q-input
-              v-model="formData.deskripsi"
-              label="Deskripsi"
-              outlined
-              dense
-              type="textarea"
-              rows="3"
-            />
+            <q-input v-model="formData.deskripsi" label="Deskripsi" outlined dense type="textarea" rows="3" />
 
             <div class="row justify-end q-gutter-sm">
-              <q-btn 
-                flat 
-                label="Cancel" 
-                color="primary" 
-                @click="closeDialog"
-              />
-              <q-btn 
-                label="Save" 
-                type="submit" 
-                color="primary"
-                :loading="saving"
-              />
+              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
             </div>
           </q-form>
         </q-card-section>
@@ -149,13 +81,7 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn 
-            flat 
-            label="Delete" 
-            color="negative" 
-            @click="deleteJasa"
-            :loading="deleting"
-          />
+          <q-btn flat label="Delete" color="negative" @click="deleteJasa" :loading="deleting" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -163,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 
@@ -181,6 +107,8 @@ const isEditMode = ref(false)
 const itemToDelete = ref(null)
 
 const pagination = ref({
+  sortBy: null,
+  descending: false,
   page: 1,
   rowsPerPage: 10,
   rowsNumber: 0
@@ -233,25 +161,33 @@ const columns = [
   }
 ]
 
-// Computed
-const filteredRows = computed(() => {
-  if (!searchText.value) {
-    return rows.value
-  }
-  const search = searchText.value.toLowerCase()
-  return rows.value.filter(row => 
-    row.namaJasa?.toLowerCase().includes(search)
-  )
-})
-
 // Methods
-const fetchJasa = async () => {
+const fetchJasa = async (paginationData = pagination.value) => {
   loading.value = true
   try {
-    const response = await api.get('/api/pazaauto/jasa')
+    const params = {
+      page: paginationData.page,
+      rowsPerPage: paginationData.rowsPerPage
+    }
+
+    // Add sorting if specified
+    if (paginationData.sortBy) {
+      params.sortBy = paginationData.sortBy
+      params.descending = paginationData.descending
+    }
+
+    // Add search if specified
+    if (searchText.value) {
+      params.search = searchText.value
+    }
+
+    const response = await api.get('/api/pazaauto/jasa/paginated', { params })
     if (response.data.success) {
-      rows.value = response.data.data || []
-      pagination.value.rowsNumber = rows.value.length
+      const pageData = response.data.data
+      rows.value = pageData.rows || []
+      pagination.value.rowsNumber = pageData.rowsNumber
+      pagination.value.page = pageData.page
+      pagination.value.rowsPerPage = pageData.rowsPerPage
     }
   } catch (error) {
     $q.notify({
@@ -265,7 +201,12 @@ const fetchJasa = async () => {
 }
 
 const onRequest = (props) => {
-  pagination.value = props.pagination
+  const { page, rowsPerPage, sortBy, descending } = props.pagination
+  pagination.value.page = page
+  pagination.value.rowsPerPage = rowsPerPage
+  pagination.value.sortBy = sortBy
+  pagination.value.descending = descending
+  fetchJasa(pagination.value)
 }
 
 const openCreateDialog = () => {
@@ -361,6 +302,21 @@ const formatCurrency = (value) => {
     minimumFractionDigits: 0
   }).format(value)
 }
+
+// Watchers
+let searchTimeout = null
+watch(searchText, (newVal) => {
+  console.log('searchText changed to:', newVal)
+  // Debounce search to avoid too many API calls
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  searchTimeout = setTimeout(() => {
+    // Reset to page 1 when searching
+    pagination.value.page = 1
+    fetchJasa()
+  }, 500)
+})
 
 // Lifecycle
 onMounted(() => {

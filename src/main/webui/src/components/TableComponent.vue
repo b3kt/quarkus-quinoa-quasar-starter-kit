@@ -1,35 +1,25 @@
 <template>
   <div class="q-pa-md">
     <q-toolbar class="shadow-1 rounded-borders">
-            <div class="col-2">
-              <q-btn flat label="Create" icon="add" />
-            </div>
-            <q-space />
-            <!-- <q-btn flat label="Filter" icon="search" /> -->
-            <div class="col-6">
-              <q-input dense standout v-model="text" 
-                input-class="search-field text-left" class="q-ml-md"
-                placeholder="Search">
-              <template v-slot:append>
-                <q-icon v-if="text === ''" name="search" />
-                <q-icon v-else name="clear" class="cursor-pointer" @click="text = ''" />
-              </template>
-            </q-input>
-            </div>
-          </q-toolbar>
+      <div class="col-2">
+        <q-btn flat label="Create" icon="add" />
+      </div>
+      <q-space />
+      <!-- <q-btn flat label="Filter" icon="search" /> -->
+      <div class="col-6">
+        <q-input dense standout v-model="text" input-class="search-field text-left" class="q-ml-md"
+          placeholder="Search">
+          <template v-slot:append>
+            <q-icon v-if="text === ''" name="search" />
+            <q-icon v-else name="clear" class="cursor-pointer" @click="text = ''" />
+          </template>
+        </q-input>
+      </div>
+    </q-toolbar>
 
-    <q-table
-      class="my-sticky-virtscroll-table"
-      virtual-scroll
-      flat bordered
-      v-model:pagination="pagination"
-      :rows-per-page-options="[0]"
-      :virtual-scroll-sticky-size-start="48"
-      row-key="index"
-      title="Treats"
-      :rows="rows"
-      :columns="columns"
-    />
+    <q-table class="my-sticky-virtscroll-table" virtual-scroll flat bordered v-model:pagination="pagination"
+      :rows-per-page-options="[0]" :virtual-scroll-sticky-size-start="48" row-key="index" title="Treats" :rows="rows"
+      :columns="columns" />
   </div>
 </template>
 
@@ -173,7 +163,7 @@ rows.forEach((row, index) => {
 })
 
 export default {
-  setup () {
+  setup() {
     return {
       columns,
       rows,

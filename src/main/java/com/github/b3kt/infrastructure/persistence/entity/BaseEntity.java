@@ -1,7 +1,6 @@
 package com.github.b3kt.infrastructure.persistence.entity;
 
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
@@ -10,6 +9,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    protected Long id;
 
     @Column(name = "created_at")
     protected LocalDateTime createdAt;

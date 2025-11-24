@@ -71,4 +71,20 @@ public class TbPelangganService extends AbstractCrudService<TbPelangganEntity, L
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
     }
+
+    /**
+     * Find pelanggan by nopol. If multiple records exist, return the last updated
+     * one.
+     *
+     * @param nopol The vehicle registration number
+     * @return The pelanggan entity or null if not found
+     */
+    public TbPelangganEntity findByNopol(String nopol) {
+        if (nopol == null || nopol.trim().isEmpty()) {
+            return null;
+        }
+
+        return repository.find("nopol", Sort.descending("updatedAt"), nopol)
+                .firstResult();
+    }
 }

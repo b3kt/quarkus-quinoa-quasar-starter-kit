@@ -79,8 +79,20 @@
                   <q-input v-model="formData.noSpk" label="No SPK" outlined dense disable />
                 </div>
                 <div class="q-mb-md">
-                  <q-input v-model="formData.nopol" label="No Polisi" outlined dense
-                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+                  <q-select v-model="formData.nopol" label="No Polisi *" outlined dense
+                    :options="filteredPelangganOptions" :option-label="constructNopolOptions" option-value="nopol"
+                    emit-value map-options use-input input-debounce="300" @filter="filterPelanggan"
+                    @update:model-value="onNopolChange" :loading="loadingPelanggan"
+                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" new-value-mode="add-unique"
+                    :rules="[val => !!val || 'No Polisi is required']">
+                    <template v-slot:no-option>
+                      <q-item>
+                        <q-item-section class="text-grey">
+                          No results
+                        </q-item-section>
+                      </q-item>
+                    </template>
+                  </q-select>
                 </div>
 
                 <div class="q-mb-md">
@@ -101,20 +113,23 @@
                   <span class="text-caption text-bold">Informasi Pelanggan</span>
                 </div>
                 <div class="q-mb-md">
-                  <q-input label="Nama" outlined dense readonly />
+                  <q-input v-model="formData.namaPelanggan" label="Nama *" outlined dense :readonly="!isNewCustomer"
+                    :rules="isNewCustomer ? [val => !!val || 'Nama is required'] : []" />
                 </div>
                 <div class="q-mb-md">
-                  <q-input label="Alamat" outlined dense readonly type="textarea" rows="4" />
+                  <q-input v-model="formData.alamat" label="Alamat" outlined dense :readonly="!isNewCustomer"
+                    type="textarea" rows="4" />
                 </div>
                 <div class="q-mb-md">
-                  <q-input label="Kendaraan" outlined dense readonly />
+                  <q-input v-model="formData.nopol" label="Kendaraan" outlined dense readonly />
                 </div>
                 <div class="row q-col-gutter-sm">
                   <div class="q-mb-md col-6">
-                    <q-input label="Merk" outlined dense readonly />
+                    <q-input v-model="formData.merk" label="Merk *" outlined dense :readonly="!isNewCustomer"
+                      :rules="isNewCustomer ? [val => !!val || 'Merk is required'] : []" />
                   </div>
                   <div class="q-mb-md col-6">
-                    <q-input label="Jenis" outlined dense readonly />
+                    <q-input v-model="formData.jenis" label="Jenis" outlined dense :readonly="!isNewCustomer" />
                   </div>
 
                 </div>
@@ -231,9 +246,13 @@ const saveFilterToStorage = (filter) => {
 const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const loadingPelanggan = ref(false)
+const isNewCustomer = ref(false)
 const searchText = ref('')
 const filterStatus = ref(loadFilterFromStorage())
 const rows = ref([])
+const pelangganOptions = ref([])
+const filteredPelangganOptions = ref([])
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
@@ -264,7 +283,7 @@ const formData = ref({
   nopol: '',
   namaKaryawan: '',
   km: null,
-  statusSpk: '',
+  statusSpk: 'OPEN',
   diskon: null,
   keluhan: '',
   keterangan: '',
@@ -272,7 +291,12 @@ const formData = ref({
   ppn: null,
   status: '',
   csId: null,
-  mekanikId: null
+  mekanikId: null,
+  // Customer info fields
+  namaPelanggan: '',
+  alamat: '',
+  merk: '',
+  jenis: ''
 })
 
 // Table columns
@@ -394,6 +418,86 @@ const fetchNextSpkNumber = async () => {
   }
 }
 
+const fetchPelanggan = async () => {
+  loadingPelanggan.value = true
+  try {
+    const response = await api.get('/api/pazaauto/pelanggan')
+    if (response.data.success) {
+      pelangganOptions.value = response.data.data || []
+      filteredPelangganOptions.value = pelangganOptions.value
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to fetch pelanggan data',
+      caption: error.response?.data?.message || error.message
+    })
+  } finally {
+    loadingPelanggan.value = false
+  }
+}
+
+const filterPelanggan = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredPelangganOptions.value = pelangganOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      filteredPelangganOptions.value = pelangganOptions.value.filter(
+        v => v.nopol.toLowerCase().indexOf(needle) > -1
+      )
+    }
+  })
+}
+
+const onNopolChange = async (nopol) => {
+  if (!nopol) {
+    // Clear customer info fields
+    formData.value.namaPelanggan = ''
+    formData.value.alamat = ''
+    formData.value.merk = ''
+    formData.value.jenis = ''
+    isNewCustomer.value = false
+    return
+  }
+
+  // Check if nopol exists in pelangganOptions
+  const existingPelanggan = pelangganOptions.value.find(p => p.nopol === nopol)
+
+  if (existingPelanggan) {
+    // Existing customer - fetch details and make fields readonly
+    isNewCustomer.value = false
+    try {
+      const response = await api.get(`/api/pazaauto/pelanggan/by-nopol/${nopol}`)
+      if (response.data.success && response.data.data) {
+        const pelanggan = response.data.data
+        formData.value.namaPelanggan = pelanggan.namaPelanggan || ''
+        formData.value.alamat = pelanggan.alamat || ''
+        formData.value.merk = pelanggan.merk || ''
+        formData.value.jenis = pelanggan.jenis || ''
+      }
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to fetch pelanggan details',
+        caption: error.response?.data?.message || error.message
+      })
+    }
+  } else {
+    // New customer - clear fields and make them editable
+    isNewCustomer.value = true
+    formData.value.namaPelanggan = ''
+    formData.value.alamat = ''
+    formData.value.merk = ''
+    formData.value.jenis = ''
+    $q.notify({
+      type: 'info',
+      message: 'New customer - Please fill in customer details',
+      timeout: 2000
+    })
+  }
+}
+
 const onRequest = (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination
   pagination.value.page = page
@@ -413,11 +517,13 @@ const openCreateDialog = () => {
 const openEditDialog = (row) => {
   isEditMode.value = true
   formData.value = { ...row }
+  onNopolChange(formData.value.nopol)
   showDialog.value = true
 }
 
 const closeDialog = () => {
   showDialog.value = false
+  isNewCustomer.value = false
   resetForm()
 }
 
@@ -430,7 +536,7 @@ const resetForm = () => {
     nopol: '',
     namaKaryawan: '',
     km: null,
-    statusSpk: '',
+    statusSpk: 'OPEN',
     diskon: null,
     keluhan: '',
     keterangan: '',
@@ -438,7 +544,12 @@ const resetForm = () => {
     ppn: null,
     status: '',
     csId: null,
-    mekanikId: null
+    mekanikId: null,
+    // Customer info fields
+    namaPelanggan: '',
+    alamat: '',
+    merk: '',
+    jenis: ''
   }
 }
 
@@ -450,6 +561,51 @@ const initNoSpk = () => {
 const saveSpk = async () => {
   saving.value = true
   try {
+    // If new customer, create pelanggan first
+    if (isNewCustomer.value && !isEditMode.value) {
+      // Validate required customer fields
+      if (!formData.value.namaPelanggan || !formData.value.merk) {
+        $q.notify({
+          type: 'warning',
+          message: 'Please fill in required customer fields (Nama, Merk)'
+        })
+        saving.value = false
+        return
+      }
+
+      // Create new pelanggan
+      const pelangganData = {
+        nopol: formData.value.nopol,
+        namaPelanggan: formData.value.namaPelanggan,
+        alamat: formData.value.alamat,
+        merk: formData.value.merk,
+        jenis: formData.value.jenis
+      }
+
+      try {
+        const pelangganResponse = await api.post('/api/pazaauto/pelanggan', pelangganData)
+        if (!pelangganResponse.data.success) {
+          throw new Error('Failed to create pelanggan')
+        }
+        $q.notify({
+          type: 'positive',
+          message: 'New customer created successfully'
+        })
+        // Refresh pelanggan list
+        await fetchPelanggan()
+        isNewCustomer.value = false
+      } catch (error) {
+        $q.notify({
+          type: 'negative',
+          message: 'Failed to create new customer',
+          caption: error.response?.data?.message || error.message
+        })
+        saving.value = false
+        return
+      }
+    }
+
+    // Proceed with SPK creation/update
     let response
     if (isEditMode.value) {
       response = await api.put(`/api/pazaauto/spk/${formData.value.id}`, formData.value)
@@ -523,6 +679,15 @@ const getStatusColor = (status) => {
   return 'blue'
 }
 
+const constructNopolOptions = (formData) => {
+  if (!isNewCustomer.value) {
+    if (formData.nopol) {
+      return `${formData.nopol} - ${formData.namaPelanggan}`
+    }
+  }
+  return formData
+}
+
 // Watchers
 let searchTimeout = null
 watch(searchText, (newVal) => {
@@ -551,6 +716,7 @@ watch(filterStatus, (newVal) => {
 // Lifecycle
 onMounted(() => {
   fetchSpk()
+  fetchPelanggan()
 })
 </script>
 

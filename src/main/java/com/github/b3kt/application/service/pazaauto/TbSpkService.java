@@ -13,7 +13,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
@@ -107,6 +106,6 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
                 .stream()
                 .map(TbSpkEntity::getNoSpk)
                 .findFirst()
-                .orElse(null);
+                .orElse(spkNumber + "00");
     }
 }

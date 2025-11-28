@@ -7,23 +7,21 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Path;
 
-import java.util.UUID;
-
 @RequestScoped
 @Path("/api/pazaauto/supplier")
-public class TbSupplierResource extends AbstractCrudResource<TbSupplierEntity, UUID> {
+public class TbSupplierResource extends AbstractCrudResource<TbSupplierEntity, Integer> {
 
     @Inject
     TbSupplierService service;
 
     @Override
-    protected AbstractCrudService<TbSupplierEntity, UUID> getService() {
+    protected AbstractCrudService<TbSupplierEntity, Integer> getService() {
         return service;
     }
 
     @Override
-    protected UUID parseId(String id) {
-        return UUID.fromString(id);
+    protected Integer parseId(String id) {
+        return Integer.valueOf(id);
     }
 
     @Override
@@ -31,4 +29,3 @@ public class TbSupplierResource extends AbstractCrudResource<TbSupplierEntity, U
         return "Supplier";
     }
 }
-

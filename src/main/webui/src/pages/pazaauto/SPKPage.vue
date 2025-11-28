@@ -96,11 +96,32 @@
                 </div>
 
                 <div class="q-mb-md">
-                  <q-input v-model="formData.namaKaryawan" label="Mekanik" outlined dense
-                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+                  <!-- <q-input v-model="formData.namaKaryawan" label="Mekanik" outlined dense
+                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" /> -->
+                  <q-select v-model="selectedMekaniks" label="Select Mechanics" outlined dense multiple
+                    :options="karyawanOptions" option-label="namaKaryawan" option-value="id" use-chips use-input
+                    input-debounce="300" @filter="filterKaryawan" :loading="loadingKaryawan"
+                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" emit-value map-options>
+                    <template v-slot:option="{ itemProps, opt }">
+                      <q-item v-bind="itemProps">
+                        <q-item-section side>
+                          <q-checkbox :model-value="isSelected(opt.id)" @update:model-value="toggleMechanic(opt)" />
+                        </q-item-section>
+                        <q-item-section @click.stop>
+                          <q-item-label>{{ opt.namaKaryawan }}</q-item-label>
+                        </q-item-section>
+                        <q-item-section @click.stop side v-if="isSelected(opt.id)">
+                          <q-select :model-value="getMekanikTugas(opt.id)"
+                            @update:model-value="setMekanikTugas(opt.id, $event)" :options="['Utama', 'Pembantu']" dense
+                            outlined style="min-width: 120px" />
+                        </q-item-section>
+                      </q-item>
+                    </template>
+                  </q-select>
                 </div>
                 <div>
                   <q-input v-model.number="formData.km" label="KM" outlined dense type="number"
+                    :rules="[val => !!val || 'KM is required number']"
                     :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
                 </div>
                 <!-- <div class="q-mb-md">
@@ -135,46 +156,6 @@
                 </div>
               </q-card-section>
             </q-card>
-
-            <!-- <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input v-model.number="formData.km" label="KM" outlined dense type="number" class="q-mr-md" />
-              </div>
-              <div class="col-6">
-                <q-input v-model.number="formData.kmSaatIni" label="KM Saat Ini" outlined dense type="number" />
-              </div>
-            </div> 
-
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input v-model="formData.statusSpk" label="Status SPK" outlined dense class="q-mr-md" />
-              </div>
-              <div class="col-6">
-                <q-input v-model="formData.status" label="Status" outlined dense />
-              </div>
-            </div>
-
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input v-model.number="formData.diskon" label="Diskon" outlined dense type="number" step="0.01"
-                  prefix="Rp" class="q-mr-md" />
-              </div>
-              <div class="col-6">
-                <q-input v-model.number="formData.ppn" label="PPN" outlined dense type="number" step="0.01"
-                  prefix="Rp" />
-              </div>
-            </div>
-
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input v-model.number="formData.csId" label="CS ID" outlined dense type="number" class="q-mr-md" />
-              </div>
-              <div class="col-6">
-                <q-input v-model.number="formData.mekanikId" label="Mekanik ID" outlined dense type="number" />
-              </div>
-            </div>
-
-            -->
 
             <q-input v-model="formData.keluhan" label="Keluhan" outlined dense type="textarea" rows="5"
               :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
@@ -247,12 +228,15 @@ const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 const loadingPelanggan = ref(false)
+const loadingKaryawan = ref(false)
 const isNewCustomer = ref(false)
 const searchText = ref('')
 const filterStatus = ref(loadFilterFromStorage())
 const rows = ref([])
 const pelangganOptions = ref([])
 const filteredPelangganOptions = ref([])
+const karyawanOptions = ref([])
+const selectedMekaniks = ref([])  // Array of { id, namaKaryawan, tugas }
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
@@ -292,6 +276,7 @@ const formData = ref({
   status: '',
   csId: null,
   mekanikId: null,
+  mekanikList: null,
   // Customer info fields
   namaPelanggan: '',
   alamat: '',
@@ -498,6 +483,64 @@ const onNopolChange = async (nopol) => {
   }
 }
 
+const fetchKaryawan = async () => {
+  loadingKaryawan.value = true
+  try {
+    const response = await api.get('/api/pazaauto/karyawan')
+    if (response.data.success) {
+      karyawanOptions.value = response.data.data || []
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to fetch karyawan data',
+      caption: error.response?.data?.message || error.message
+    })
+  } finally {
+    loadingKaryawan.value = false
+  }
+}
+
+const filterKaryawan = (val, update) => {
+  update(() => {
+    if (!val) {
+      // Don't filter, let q-select handle it
+      return
+    }
+  })
+}
+
+const isSelected = (id) => {
+  return selectedMekaniks.value.some(m => m.id === id)
+}
+
+const toggleMechanic = (mechanic) => {
+  const index = selectedMekaniks.value.findIndex(m => m.id === mechanic.id)
+  if (index > -1) {
+    // Remove
+    selectedMekaniks.value.splice(index, 1)
+  } else {
+    // Add with default tugas
+    selectedMekaniks.value.push({
+      id: mechanic.id,
+      namaKaryawan: mechanic.namaKaryawan,
+      tugas: 'Utama'
+    })
+  }
+}
+
+const getMekanikTugas = (id) => {
+  const mechanic = selectedMekaniks.value.find(m => m.id === id)
+  return mechanic?.tugas || 'Utama'
+}
+
+const setMekanikTugas = (id, tugas) => {
+  const mechanic = selectedMekaniks.value.find(m => m.id === id)
+  if (mechanic) {
+    mechanic.tugas = tugas
+  }
+}
+
 const onRequest = (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination
   pagination.value.page = page
@@ -514,16 +557,38 @@ const openCreateDialog = () => {
   showDialog.value = true
 }
 
-const openEditDialog = (row) => {
+const openEditDialog = async (row) => {
   isEditMode.value = true
   formData.value = { ...row }
   onNopolChange(formData.value.nopol)
+
+  // Parse mekanikList JSON
+  if (row.mekanikList) {
+    try {
+      const mekanikArray = JSON.parse(row.mekanikList)
+      selectedMekaniks.value = mekanikArray.map(m => {
+        const karyawan = karyawanOptions.value.find(k => k.id === m.id)
+        return {
+          id: m.id,
+          namaKaryawan: karyawan?.namaKaryawan || `ID: ${m.id}`,
+          tugas: m.tugas
+        }
+      })
+    } catch (error) {
+      console.error('Failed to parse mekanikList:', error)
+      selectedMekaniks.value = []
+    }
+  } else {
+    selectedMekaniks.value = []
+  }
+
   showDialog.value = true
 }
 
 const closeDialog = () => {
   showDialog.value = false
   isNewCustomer.value = false
+  selectedMekaniks.value = []
   resetForm()
 }
 
@@ -603,6 +668,15 @@ const saveSpk = async () => {
         saving.value = false
         return
       }
+    }
+
+    // Convert selectedMekaniks to JSON string
+    if (selectedMekaniks.value.length > 0) {
+      formData.value.mekanikList = JSON.stringify(
+        selectedMekaniks.value.map(m => ({ id: m.id, tugas: m.tugas || 'Utama' }))
+      )
+    } else {
+      formData.value.mekanikList = null
     }
 
     // Proceed with SPK creation/update
@@ -717,6 +791,7 @@ watch(filterStatus, (newVal) => {
 onMounted(() => {
   fetchSpk()
   fetchPelanggan()
+  fetchKaryawan()
 })
 </script>
 

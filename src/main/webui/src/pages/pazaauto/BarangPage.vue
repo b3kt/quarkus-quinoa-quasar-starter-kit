@@ -6,9 +6,9 @@
         <q-btn flat :label="$t('create') + ' Barang'" icon="add" color="white" class="bg-primary"
           @click="openCreateDialog" />
         <q-space />
-        <div class="col-1">
-          <q-select v-model="filterStatus" multiple :options="statusOptions" label="Status" dense options-dense flat
-            outlined />
+        <div class="col-2">
+          <q-select v-model="filterStatus" multiple :options="statusOptions" label="Availability" dense options-dense
+            flat outlined />
         </div>
         <div class="col-6">
           <q-input dense standout="bg-primary" v-model="searchText" input-class="search-field text-left" class="q-ml-md"
@@ -94,7 +94,17 @@
 
             <q-input v-model="formData.satuan" label="Satuan" outlined dense placeholder="e.g., pcs, kg, liter" />
 
-            <q-input v-model.number="formData.supplierId" label="Supplier ID" outlined dense type="number" />
+            <q-select v-model="formData.supplierId" label="Supplier" outlined dense :options="filteredSupplierOptions"
+              option-label="namaSupplier" option-value="id" emit-value map-options use-input input-debounce="300"
+              @filter="filterSupplier" :loading="loadingSupplier" clearable>
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No results
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
 
             <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="3" />
 
@@ -161,11 +171,14 @@ const saveFilterToStorage = (filter) => {
 
 // State
 const loading = ref(false)
+const loadingSupplier = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 const searchText = ref('')
 const filterStatus = ref(loadFilterFromStorage())
 const rows = ref([])
+const supplierOptions = ref([])
+const filteredSupplierOptions = ref([])
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
@@ -307,6 +320,38 @@ const fetchBarang = async (paginationData = pagination.value) => {
   }
 }
 
+const fetchSupplier = async () => {
+  loadingSupplier.value = true
+  try {
+    const response = await api.get('/api/pazaauto/supplier')
+    if (response.data.success) {
+      supplierOptions.value = response.data.data || []
+      filteredSupplierOptions.value = supplierOptions.value
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to fetch supplier data',
+      caption: error.response?.data?.message || error.message
+    })
+  } finally {
+    loadingSupplier.value = false
+  }
+}
+
+const filterSupplier = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredSupplierOptions.value = supplierOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      filteredSupplierOptions.value = supplierOptions.value.filter(
+        v => v.namaSupplier.toLowerCase().indexOf(needle) > -1
+      )
+    }
+  })
+}
+
 const onRequest = (props) => {
   const { page, rowsPerPage, sortBy, descending } = props.pagination
   pagination.value.page = page
@@ -444,6 +489,7 @@ watch(filterStatus, (newVal) => {
 // Lifecycle
 onMounted(() => {
   fetchBarang()
+  fetchSupplier()
 })
 </script>
 

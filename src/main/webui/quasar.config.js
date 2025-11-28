@@ -3,6 +3,7 @@
 
 import { defineConfig } from '#q-app/wrappers'
 import { fileURLToPath } from 'node:url'
+import { loadEnv } from 'vite';
 
 export default defineConfig((ctx) => {
   return {
@@ -64,7 +65,16 @@ export default defineConfig((ctx) => {
       extendViteConf(viteConf) {
         // Workaround for crypto.hash issue in Node 24
         if (typeof viteConf.define === 'undefined') {
-          viteConf.define = {}
+          viteConf.define = {
+            server: {
+              port: 80,
+              allowedHosts: [
+                'hired-statement-couples-she.trycloudflare.com']
+            },
+            define: {
+              __API_URL__: JSON.stringify("hired-statement-couples-she.trycloudflare.com")
+            }
+          }
         }
       },
       // viteVuePluginOptions: {},

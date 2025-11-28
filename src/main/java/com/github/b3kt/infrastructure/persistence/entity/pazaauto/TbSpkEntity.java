@@ -70,6 +70,9 @@ public class TbSpkEntity {
     @Column(name = "id_mekanik")
     private Long mekanikId;
 
+    @Column(name = "mekanik_list", columnDefinition = "TEXT")
+    private String mekanikList; // Stores JSON array of mechanic assignments
+
     public Long getId() {
         return id;
     }
@@ -228,5 +231,13 @@ public class TbSpkEntity {
 
     public void setMekanikId(Long mekanikId) {
         this.mekanikId = mekanikId;
+    }
+
+    public String getMekanikList() {
+        return mekanikList;
+    }
+
+    public void setMekanikList(String mekanikList) {
+        this.mekanikList = mekanikList;
     }
 }

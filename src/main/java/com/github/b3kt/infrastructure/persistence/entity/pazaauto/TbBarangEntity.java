@@ -26,9 +26,6 @@ public class TbBarangEntity extends BaseEntity {
     @Column(name = "harga_beli", precision = 18, scale = 2)
     private BigDecimal hargaBeli;
 
-    // @Column(name = "stock")
-    // private Integer stock;
-
     @Column(name = "keterangan", length = 500)
     private String keterangan;
 
@@ -42,7 +39,7 @@ public class TbBarangEntity extends BaseEntity {
     private Integer stokMinimal;
 
     @Column(name = "id_supplier")
-    private Long supplierId;
+    private Integer supplierId;
 
     @Column(name = "is_active")
     private Boolean active;

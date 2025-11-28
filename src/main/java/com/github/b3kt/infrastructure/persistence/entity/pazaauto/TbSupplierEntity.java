@@ -3,15 +3,15 @@ package com.github.b3kt.infrastructure.persistence.entity.pazaauto;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "tb_supplier")
 public class TbSupplierEntity {
 
     @Id
-    @Column(name = "id", columnDefinition = "uuid")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
 
     @Column(name = "nama_supplier", length = 100, nullable = false)
     private String namaSupplier;
@@ -61,18 +61,11 @@ public class TbSupplierEntity {
     @Column(name = "no_telepon", length = 20)
     private String noTelepon;
 
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
-    }
-
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -204,4 +197,3 @@ public class TbSupplierEntity {
         this.noTelepon = noTelepon;
     }
 }
-

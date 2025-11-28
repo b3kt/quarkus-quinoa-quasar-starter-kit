@@ -286,3 +286,23 @@ CREATE TABLE IF NOT EXISTS tb_supplier (
     no_telepon varchar(20),
     PRIMARY KEY (id)
 );
+
+-- Migration script to add mekanik_list column to tb_spk table
+-- Created: 2025-11-25
+-- Purpose: Support multiple mechanics per SPK with JSON storage
+
+-- Add new column
+ALTER TABLE tb_spk ADD COLUMN IF NOT EXISTS mekanik_list TEXT;
+
+-- Optionally migrate existing data from id_mekanik to mekanik_list
+-- Uncomment if you want to migrate existing data
+/*
+UPDATE tb_spk 
+SET mekanik_list = json_build_array(
+json_build_object('id', id_mekanik, 'tugas', 'Utama')
+)::text
+WHERE id_mekanik IS NOT NULL AND mekanik_list IS NULL;
+*/
+
+-- Add comment
+COMMENT ON COLUMN tb_spk.mekanik_list IS 'JSON array of mechanic assignments with format: [{"id": mekanikId, "tugas": "Utama"|"Pembantu"}]';

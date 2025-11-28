@@ -12,21 +12,20 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.List;
-import java.util.UUID;
 
 @ApplicationScoped
-public class TbSupplierService extends AbstractCrudService<TbSupplierEntity, UUID> {
+public class TbSupplierService extends AbstractCrudService<TbSupplierEntity, Integer> {
 
     @Inject
     TbSupplierRepository repository;
 
     @Override
-    protected PanacheRepositoryBase<TbSupplierEntity, UUID> getRepository() {
+    protected PanacheRepositoryBase<TbSupplierEntity, Integer> getRepository() {
         return repository;
     }
 
     @Override
-    protected void setEntityId(TbSupplierEntity entity, UUID id) {
+    protected void setEntityId(TbSupplierEntity entity, Integer id) {
         entity.setId(id);
     }
 

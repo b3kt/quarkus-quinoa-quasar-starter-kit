@@ -4,9 +4,6 @@ import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSupplierEnti
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 
-import java.util.UUID;
-
 @ApplicationScoped
-public class TbSupplierRepository implements PanacheRepositoryBase<TbSupplierEntity, UUID> {
+public class TbSupplierRepository implements PanacheRepositoryBase<TbSupplierEntity, Integer> {
 }
-

@@ -44,8 +44,17 @@
           <q-form @submit="saveKendaraan" class="q-gutter-md">
             <div class="row q-col-gutter">
               <div class="col-6">
-                <q-input v-model="formData.merk" label="Merk *" outlined dense
-                  :rules="[val => !!val || 'Merk is required']" class="q-mr-md" />
+                <q-select v-model="formData.merk" label="Merk *" outlined dense :options="filteredMerkOptions" use-input
+                  input-debounce="300" @filter="filterMerk" @new-value="createMerkValue" :loading="loadingMerk"
+                  new-value-mode="add-unique" :rules="[val => !!val || 'Merk is required']" class="q-mr-md">
+                  <template v-slot:no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">
+                        No results - type to add new
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
               </div>
             </div>
 
@@ -98,10 +107,13 @@ import { useQuasar } from 'quasar'
 const $q = useQuasar()
 
 const loading = ref(false)
+const loadingMerk = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
 const searchText = ref('')
 const rows = ref([])
+const merkOptions = ref([])
+const filteredMerkOptions = ref([])
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
@@ -182,6 +194,47 @@ const fetchKendaraan = async () => {
     })
   } finally {
     loading.value = false
+  }
+}
+
+const fetchDistinctMerks = async () => {
+  loadingMerk.value = true
+  try {
+    const response = await api.get('/api/pazaauto/kendaraan/merk/distinct')
+    if (response.data.success) {
+      merkOptions.value = response.data.data || []
+      filteredMerkOptions.value = merkOptions.value
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to fetch merk options',
+      caption: error.response?.data?.message || error.message
+    })
+  } finally {
+    loadingMerk.value = false
+  }
+}
+
+const filterMerk = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredMerkOptions.value = merkOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      filteredMerkOptions.value = merkOptions.value.filter(
+        v => v.toLowerCase().indexOf(needle) > -1
+      )
+    }
+  })
+}
+
+const createMerkValue = (val, done) => {
+  if (val.length > 0) {
+    if (!merkOptions.value.includes(val)) {
+      merkOptions.value.push(val)
+    }
+    done(val, 'add-unique')
   }
 }
 
@@ -276,6 +329,7 @@ const deleteKendaraan = async () => {
 
 onMounted(() => {
   fetchKendaraan()
+  fetchDistinctMerks()
 })
 </script>
 

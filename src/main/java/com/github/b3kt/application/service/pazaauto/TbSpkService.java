@@ -68,6 +68,16 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
             params = newParams;
         }
 
+        // Apply today filter if specified
+        if (pageRequest.isFilterToday()) {
+            queryString += " and tanggalJamSpk like ?" + paramIndex;
+            Object[] newParams = new Object[params.length + 1];
+            System.arraycopy(params, 0, newParams, 0, params.length);
+            newParams[params.length] = java.time.LocalDate.now().toString() + "%";
+            params = newParams;
+            paramIndex++;
+        }
+
         // Create query
         if (params.length > 0) {
             query = repository.find(queryString, params);

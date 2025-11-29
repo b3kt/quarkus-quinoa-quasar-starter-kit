@@ -6,6 +6,9 @@
         <q-btn flat :label="$t('create') + ' SPK'" icon="add" color="white" class="bg-primary"
           @click="openCreateDialog" />
         <q-space />
+        <div class="col-auto q-mr-md">
+          <q-checkbox v-model="filterToday" label="Hanya tampilkan SPK Hari Ini" dense />
+        </div>
         <div class="col-1">
           <q-select v-model="filterStatus" multiple :options="statusOptions" label="Status" dense options-dense flat
             outlined />
@@ -157,8 +160,15 @@
               </q-card-section>
             </q-card>
 
-            <q-input v-model="formData.keluhan" label="Keluhan" outlined dense type="textarea" rows="5"
-              :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+            <q-card class="row col-12" flat bordered>
+              <q-card-section class="col-12 q-pr-none">
+                <div class="q-mb-md">
+                  <span class="text-caption text-bold">Detail SPK</span>
+                </div>
+                <div class="q-mb-md">
+                </div>
+              </q-card-section>
+            </q-card>
 
             <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="5"
               :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
@@ -232,6 +242,7 @@ const loadingKaryawan = ref(false)
 const isNewCustomer = ref(false)
 const searchText = ref('')
 const filterStatus = ref(loadFilterFromStorage())
+const filterToday = ref(false)
 const rows = ref([])
 const pelangganOptions = ref([])
 const filteredPelangganOptions = ref([])
@@ -367,6 +378,11 @@ const fetchSpk = async (paginationData = pagination.value) => {
     // Add status filter if specified
     if (filterStatus.value && filterStatus.value.length > 0) {
       params.statusFilter = filterStatus.value.join(',')
+    }
+
+    // Add today filter if checked
+    if (filterToday.value) {
+      params.filterToday = true
     }
 
     const response = await api.get('/api/pazaauto/spk/paginated', { params })
@@ -786,6 +802,14 @@ watch(filterStatus, (newVal) => {
   pagination.value.page = 1
   fetchSpk()
 }, { deep: true })
+
+// Watch today filter changes
+watch(filterToday, (newVal) => {
+  console.log('filterToday changed to:', newVal)
+  // Reset to page 1 when filtering
+  pagination.value.page = 1
+  fetchSpk()
+})
 
 // Lifecycle
 onMounted(() => {

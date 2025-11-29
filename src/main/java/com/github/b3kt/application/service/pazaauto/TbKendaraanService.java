@@ -65,4 +65,11 @@ public class TbKendaraanService extends AbstractCrudService<TbKendaraanEntity, L
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
     }
+
+    public List<String> findDistinctMerks() {
+        return repository
+                .find("SELECT DISTINCT k.merk FROM TbKendaraanEntity k WHERE k.merk IS NOT NULL ORDER BY k.merk")
+                .project(String.class)
+                .list();
+    }
 }

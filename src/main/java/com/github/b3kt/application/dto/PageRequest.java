@@ -67,6 +67,16 @@ public class PageRequest {
         this.statusFilter = statusFilter;
     }
 
+    private boolean filterToday = false;
+
+    public boolean isFilterToday() {
+        return filterToday;
+    }
+
+    public void setFilterToday(boolean filterToday) {
+        this.filterToday = filterToday;
+    }
+
     public int getOffset() {
         return (page - 1) * rowsPerPage;
     }

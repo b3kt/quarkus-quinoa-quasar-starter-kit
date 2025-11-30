@@ -3,6 +3,8 @@ package com.github.b3kt.application.service.pazaauto;
 import com.github.b3kt.application.dto.PageRequest;
 import com.github.b3kt.application.dto.PageResponse;
 import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSpkEntity;
+import com.github.b3kt.infrastructure.persistence.entity.subentity.SpkMekanik;
+import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbKaryawanRepository;
 import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbSpkRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
@@ -13,12 +15,19 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
 
     @Inject
     TbSpkRepository repository;
+
+    @Inject
+    TbKaryawanRepository karyawanRepository;
+
+    @Inject
+    com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbSpkDetailRepository detailRepository;
 
     @Override
     protected PanacheRepositoryBase<TbSpkEntity, Long> getRepository() {
@@ -28,6 +37,75 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
     @Override
     protected void setEntityId(TbSpkEntity entity, Long id) {
         entity.setId(id);
+    }
+
+    @Override
+    @jakarta.transaction.Transactional
+    public TbSpkEntity create(TbSpkEntity entity) {
+        // Persist SPK first to get ID/NoSPK if needed (though NoSPK seems
+        if (entity.getNoAntrian() == null) {
+            final int noAntrian = Integer.parseInt(entity.getNoSpk().substring(entity.getNoSpk().length() - 2));
+            entity.setNoAntrian(noAntrian);
+        }
+
+        // pre-generated)
+        super.create(entity);
+
+        // Save details
+        saveDetails(entity);
+
+        return entity;
+    }
+
+    @Override
+    @jakarta.transaction.Transactional
+    public TbSpkEntity update(Long id, TbSpkEntity entity) {
+        TbSpkEntity updated = super.update(id, entity);
+
+        // Delete existing details
+        detailRepository.delete("id.noSpk", updated.getNoSpk());
+
+        // update status
+        if (entity.isStartProcess()) {
+            updated.setStatusSpk("PROSES");
+        }
+
+        // Save new details
+        saveDetails(entity);
+
+        return updated;
+    }
+
+    @Override
+    public TbSpkEntity findById(Long id) {
+        TbSpkEntity entity = super.findById(id);
+        if (entity != null) {
+            List<com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSpkDetailEntity> details = detailRepository
+                    .find("id.noSpk", entity.getNoSpk()).list();
+            entity.setDetails(details);
+        }
+        return entity;
+    }
+
+    private void saveDetails(TbSpkEntity entity) {
+        if (entity.getDetails() != null) {
+            for (com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSpkDetailEntity detail : entity
+                    .getDetails()) {
+                if (detail.getId() == null) {
+                    detail.setId(new com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSpkDetailId());
+                }
+                detail.getId().setNoSpk(entity.getNoSpk());
+                // Ensure namaJasa is set from frontend or logic
+                if (detail.getId().getNamaJasa() == null || detail.getId().getNamaJasa().isEmpty()) {
+                    // Fallback or error? Assuming frontend sends it.
+                    // If it's a Barang, we might need to use namaBarang as namaJasa for the key?
+                    // The requirement says "Detail SPK can be TbJasaEntity / TbBarangEntity"
+                    // But TbSpkDetailId has 'namaJasa'.
+                    // We'll assume the frontend puts the item name in 'namaJasa' of the ID.
+                }
+                detailRepository.persist(detail);
+            }
+        }
     }
 
     @Override
@@ -105,7 +183,27 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
         // Apply pagination
         List<TbSpkEntity> rows = query.page(Page.of(pageRequest.getPage() - 1, pageRequest.getRowsPerPage())).list();
 
+        fillNamaKaryawan(rows);
+
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
+    }
+
+    private void fillNamaKaryawan(List<TbSpkEntity> entities) {
+
+        entities
+                .stream()
+                .forEach(entity -> {
+                    if (entity.getMekanikList() != null) {
+                        List<Long> ids = entity.getMekanikList().stream().map(SpkMekanik::getId)
+                                .collect(Collectors.toList());
+
+                        List<String> names = karyawanRepository.find("id in :ids", Parameters.with("ids", ids)).stream()
+                                .map(obj -> obj.getNamaKaryawan()).collect(Collectors.toList());
+
+                        entity.setNamaKaryawan(String.join(", ", names));
+                    }
+                });
+
     }
 
     public String getNextSpkNumber(String spkNumber) {

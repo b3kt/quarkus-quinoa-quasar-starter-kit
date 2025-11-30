@@ -63,8 +63,12 @@
     <!-- Create/Edit Dialog -->
     <q-dialog v-model="showDialog" persistent>
       <q-card class="dialog-spk">
-        <q-card-section>
-          <div class="text-h6">{{ isEditMode ? 'Edit SPK' : 'Tambah SPK' }}</div>
+        <q-card-section class="row">
+          <div class="text-h6 col-6">
+            {{ isEditMode ? 'Edit SPK' : 'Tambah SPK' }}
+          </div>
+          <q-space />
+          <q-chip square icon="event" :color="getStatusColor(formData.statusSpk)">{{ formData.statusSpk }}</q-chip>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
@@ -85,9 +89,8 @@
                   <q-select v-model="formData.nopol" label="No Polisi *" outlined dense
                     :options="filteredPelangganOptions" :option-label="constructNopolOptions" option-value="nopol"
                     emit-value map-options use-input input-debounce="300" @filter="filterPelanggan"
-                    @update:model-value="onNopolChange" :loading="loadingPelanggan"
-                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" new-value-mode="add-unique"
-                    :rules="[val => !!val || 'No Polisi is required']">
+                    @update:model-value="onNopolChange" :loading="loadingPelanggan" :disable="!isEditable"
+                    new-value-mode="add-unique" :rules="[val => !!val || 'No Polisi is required']">
                     <template v-slot:no-option>
                       <q-item>
                         <q-item-section class="text-grey">
@@ -99,12 +102,10 @@
                 </div>
 
                 <div class="q-mb-md">
-                  <!-- <q-input v-model="formData.namaKaryawan" label="Mekanik" outlined dense
-                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" /> -->
                   <q-select v-model="selectedMekaniks" label="Select Mechanics" outlined dense multiple
                     :options="karyawanOptions" option-label="namaKaryawan" option-value="id" use-chips use-input
-                    input-debounce="300" @filter="filterKaryawan" :loading="loadingKaryawan"
-                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" emit-value map-options>
+                    input-debounce="300" @filter="filterKaryawan" :loading="loadingKaryawan" :disable="!isEditable"
+                    emit-value map-options>
                     <template v-slot:option="{ itemProps, opt }">
                       <q-item v-bind="itemProps">
                         <q-item-section side>
@@ -124,12 +125,13 @@
                 </div>
                 <div>
                   <q-input v-model.number="formData.km" label="KM" outlined dense type="number"
-                    :rules="[val => !!val || 'KM is required number']"
-                    :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+                    :rules="[val => !!val || 'KM is required number']" :disable="!isEditable" />
                 </div>
                 <!-- <div class="q-mb-md">
                   <q-input v-model.number="formData.noAntrian" label="No Antrian" outlined dense type="number" />
                 </div> -->
+                <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2"
+                  :disable="!isEditable" autogrow />
               </q-card-section>
 
               <q-card-section class="col-6">
@@ -155,33 +157,173 @@
                   <div class="q-mb-md col-6">
                     <q-input v-model="formData.jenis" label="Jenis" outlined dense :readonly="!isNewCustomer" />
                   </div>
-
                 </div>
               </q-card-section>
             </q-card>
 
-            <q-card class="row col-12" flat bordered>
-              <q-card-section class="col-12 q-pr-none">
-                <div class="q-mb-md">
-                  <span class="text-caption text-bold">Detail SPK</span>
-                </div>
-                <div class="q-mb-md">
-                </div>
-              </q-card-section>
-            </q-card>
 
-            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="5"
-              :disable="isEditMode && formData.statusSpk == 'SELESAI'" />
+            <!-- Split Layout for Jasa and Barang -->
+            <div class="row q-col-gutter-md q-mb-md q-pl-md q-py-md">
+              <!-- Left: Jasa -->
+              <div class="col-12 col-md-6">
+                <q-card flat bordered class="full-height">
+                  <q-card-section class="bg-grey-2 q-py-xs">
+                    <div class="text-subtitle2">LAYANAN PERBAIKAN / SERVIS</div>
+                  </q-card-section>
+                  <q-card-section class="q-pa-none">
+                    <q-table flat :rows="jasaRows" :columns="jasaColumns" row-key="tempId" dense hide-pagination
+                      separator="cell">
+                      <template v-slot:body="props">
+                        <q-tr :props="props">
+                          <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
+                          <q-td key="namaJasa" :props="props">{{ props.row.namaItem }}</q-td>
+                          <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
+                          }}</q-td>
+                          <q-td key="jumlah" :props="props">
+                            {{ props.row.jumlah }}
+                            <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">
+                              <q-input v-model.number="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+                            </q-popup-edit>
+                          </q-td>
+                          <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
+                            props.row.jumlah) }}</q-td>
+                          <q-td key="actions" :props="props" class="text-center"
+                            v-if="isEditable || formData.statusSpk !== 'SELESAI'">
+                            <q-btn flat dense round icon="delete" color="negative" size="sm"
+                              @click="removeDetail(props.row)" />
+                          </q-td>
+                        </q-tr>
+                      </template>
+                    </q-table>
+                    <!-- Inline Add Jasa -->
+                    <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
+                      v-if="isEditable && formData.statusSpk != 'SELESAI'">
+                      <div class="col-grow">
+                        <q-select v-model="newJasa.item" :options="jasaOptions" option-label="namaJasa" dense outlined
+                          label="Pilih Jasa" use-input input-debounce="300" @filter="filterJasa" emit-value map-options>
+                          <template v-slot:option="scope">
+                            <q-item v-bind="scope.itemProps">
+                              <q-item-section>
+                                <q-item-label>{{ scope.opt.namaJasa }}</q-item-label>
+                                <q-item-label caption>{{ formatCurrency(scope.opt.hargaJasa) }}</q-item-label>
+                              </q-item-section>
+                            </q-item>
+                          </template>
+                        </q-select>
+                      </div>
+                      <!-- <div class="col-2">
+                        <q-input v-model.number="newJasa.jumlah" type="number" dense outlined label="Qty" />
+                      </div> -->
+                      <div class="col-auto">
+                        <q-btn icon="add" color="primary" dense round size="sm" @click="addJasa"
+                          :disable="!newJasa.item" />
+                      </div>
+                    </div>
+                  </q-card-section>
+                  <q-separator />
+                  <q-card-section class="q-py-xs text-right bg-grey-2">
+                    <span class="text-weight-bold">Sub Total: {{ formatCurrency(subtotalJasa) }}</span>
+                  </q-card-section>
+                </q-card>
+              </div>
+
+              <!-- Right: Barang -->
+              <div class="col-12 col-md-6">
+                <q-card flat bordered class="full-height">
+                  <q-card-section class="bg-grey-2 q-py-xs">
+                    <div class="text-subtitle2">BARANG / SPAREPART</div>
+                  </q-card-section>
+                  <q-card-section class="q-pa-none">
+                    <q-table flat :rows="barangRows" :columns="barangColumns" row-key="tempId" dense hide-pagination
+                      separator="cell">
+                      <template v-slot:body="props">
+                        <q-tr :props="props">
+                          <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
+                          <q-td key="namaBarang" :props="props">{{ props.row.namaItem }}</q-td>
+                          <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
+                          }}</q-td>
+                          <q-td key="jumlah" :props="props">
+                            {{ props.row.jumlah }}
+                            <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">
+                              <q-input v-model.number="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+                            </q-popup-edit>
+                          </q-td>
+                          <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
+                            props.row.jumlah) }}</q-td>
+                          <q-td key="actions" :props="props" class="text-center"
+                            v-if="isEditable || formData.statusSpk !== 'SELESAI'">
+                            <q-btn flat dense round icon="delete" color="negative" size="sm"
+                              @click="removeDetail(props.row)" />
+                          </q-td>
+                        </q-tr>
+                      </template>
+                    </q-table>
+                    <!-- Inline Add Barang -->
+                    <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
+                      v-if="isEditable || formData.statusSpk !== 'SELESAI'">
+                      <div class="col-grow">
+                        <q-select v-model="newBarang.item" :options="barangOptions" option-label="namaBarang" dense
+                          outlined label="Pilih Barang" use-input input-debounce="300" @filter="filterBarang" emit-value
+                          map-options>
+                          <template v-slot:option="scope">
+                            <q-item v-bind="scope.itemProps">
+                              <q-item-section>
+                                <q-item-label>{{ scope.opt.namaBarang }}</q-item-label>
+                                <q-item-label caption>Stok: {{ scope.opt.stok }} | {{
+                                  formatCurrency(scope.opt.hargaJual) }}</q-item-label>
+                              </q-item-section>
+                            </q-item>
+                          </template>
+                        </q-select>
+                      </div>
+                      <div class="col-2">
+                        <q-input v-model.number="newBarang.jumlah" type="number" dense outlined label="Qty"
+                          :rules="[(val) => val > 0 || 'Qty must be greater than 0']" />
+                      </div>
+                      <div class="col-auto">
+                        <q-btn icon="add" color="primary" dense round size="sm" @click="addBarang"
+                          :disable="!newBarang.item" />
+                      </div>
+                    </div>
+                  </q-card-section>
+                  <q-separator />
+                  <q-card-section class="q-py-xs text-right bg-grey-2">
+                    <span class="text-weight-bold">Sub Total: {{ formatCurrency(subtotalBarang) }}</span>
+                  </q-card-section>
+                </q-card>
+              </div>
+            </div>
+
+            <!-- Grand Total -->
+            <div class="row justify-end q-mb-md">
+              <div class="text-h6 bg-grey-3 q-px-md q-py-sm rounded-borders">
+                GRAND TOTAL: {{ formatCurrency(grandTotal) }}
+              </div>
+            </div>
 
             <div class="row justify-end q-gutter-sm">
+              <div v-if="isEditMode && formData.statusSpk == 'OPEN'">
+                <q-btn label="Mulai Proses" type="button" color="green" @click="startProcess" :loading="saving" />
+              </div>
+
+              <div v-if="formData.statusSpk == 'PROSES'">
+                <q-btn label="Bayar" type="button" color="green" @click="finishProcess" :loading="saving" />
+              </div>
+
+              <q-space />
+
               <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-              <q-btn label="Save" type="submit" color="primary" :loading="saving"
+
+              <q-btn label="Simpan" type="submit" color="primary" :loading="saving"
                 v-if="formData.statusSpk != 'SELESAI'" />
+
             </div>
           </q-form>
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <!-- Add Item Dialog Removed (Inline) -->
 
     <!-- Delete Confirmation Dialog -->
     <q-dialog v-model="showDeleteDialog" persistent>
@@ -204,7 +346,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 
@@ -252,6 +394,65 @@ const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
 const itemToDelete = ref(null)
+const isEditable = ref(false)
+
+// Detail SPK State
+const jasaOptions = ref([])
+const allJasaOptions = ref([])
+const barangOptions = ref([])
+const allBarangOptions = ref([])
+
+const newJasa = ref({ item: null, jumlah: 1 })
+const newBarang = ref({ item: null, jumlah: 1 })
+
+const jasaColumns = [
+  { name: 'no', label: 'NO', align: 'left', field: 'no' },
+  { name: 'namaJasa', label: 'JASA', align: 'left', field: 'namaItem' },
+  { name: 'harga', label: 'HARGA SATUAN', align: 'right', field: 'harga' },
+  { name: 'jumlah', label: 'QTY', align: 'center', field: 'jumlah' },
+  { name: 'total', label: 'TOTAL', align: 'right', field: row => row.harga * row.jumlah },
+  { name: 'actions', label: '', align: 'center' }
+]
+
+const barangColumns = [
+  { name: 'no', label: 'NO', align: 'left', field: 'no' },
+  { name: 'namaBarang', label: 'BARANG', align: 'left', field: 'namaItem' },
+  { name: 'harga', label: 'HARGA SATUAN', align: 'right', field: 'harga' },
+  { name: 'jumlah', label: 'QTY', align: 'center', field: 'jumlah' },
+  { name: 'total', label: 'TOTAL', align: 'right', field: row => row.harga * row.jumlah },
+  { name: 'actions', label: '', align: 'center' }
+]
+
+// Computed
+const jasaRows = computed(() => {
+  return formData.value.details
+    .filter(d => d.jasaId)
+    .map(d => {
+      const jasa = allJasaOptions.value.find(j => j.id === d.jasaId)
+      const harga = jasa ? jasa.hargaJasa : 0
+      return { ...d, harga }
+    })
+})
+
+const barangRows = computed(() => {
+  return formData.value.details
+    .filter(d => d.sparepartId)
+    .map(d => {
+      const barang = allBarangOptions.value.find(b => b.id === d.sparepartId)
+      const harga = barang ? barang.hargaJual : 0
+      return { ...d, harga }
+    })
+})
+
+const subtotalJasa = computed(() => {
+  return jasaRows.value.reduce((sum, row) => sum + (row.harga * row.jumlah), 0)
+})
+
+const subtotalBarang = computed(() => {
+  return barangRows.value.reduce((sum, row) => sum + (row.harga * row.jumlah), 0)
+})
+
+const grandTotal = computed(() => subtotalJasa.value + subtotalBarang.value)
 
 // Status options for filter
 const statusOptions = ref([
@@ -292,7 +493,10 @@ const formData = ref({
   namaPelanggan: '',
   alamat: '',
   merk: '',
-  jenis: ''
+  jenis: '',
+  // Details
+  details: [],
+  startProcess: false
 })
 
 // Table columns
@@ -354,6 +558,8 @@ const columns = [
     field: 'actions'
   }
 ]
+
+
 
 // Methods
 const fetchSpk = async (paginationData = pagination.value) => {
@@ -566,38 +772,56 @@ const onRequest = (props) => {
   fetchSpk(pagination.value)
 }
 
-const openCreateDialog = () => {
+const openCreateDialog = async () => {
   isEditMode.value = false
+  isEditable.value = true
   resetForm()
   initNoSpk()
   showDialog.value = true
+  // Fetch options for inline add
+  await Promise.all([fetchJasa(), fetchBarang()])
 }
 
 const openEditDialog = async (row) => {
   isEditMode.value = true
-  formData.value = { ...row }
+
+  // Fetch options first so we can map prices
+  await Promise.all([fetchJasa(), fetchBarang()])
+
+  // Fetch full details including details list
+  try {
+    const response = await api.get(`/api/pazaauto/spk/${row.id}`)
+    if (response.data.success) {
+      formData.value = response.data.data
+      // Ensure details is an array
+      if (!formData.value.details) {
+        formData.value.details = []
+      }
+    } else {
+      formData.value = { ...row, details: [] }
+    }
+  } catch (error) {
+    console.error('Failed to fetch SPK details', error)
+    formData.value = { ...row, details: [] }
+  }
+
   onNopolChange(formData.value.nopol)
 
-  // Parse mekanikList JSON
-  if (row.mekanikList) {
-    try {
-      const mekanikArray = JSON.parse(row.mekanikList)
-      selectedMekaniks.value = mekanikArray.map(m => {
-        const karyawan = karyawanOptions.value.find(k => k.id === m.id)
-        return {
-          id: m.id,
-          namaKaryawan: karyawan?.namaKaryawan || `ID: ${m.id}`,
-          tugas: m.tugas
-        }
-      })
-    } catch (error) {
-      console.error('Failed to parse mekanikList:', error)
-      selectedMekaniks.value = []
-    }
+  // Parse mekanikList (now it's an array from backend)
+  if (formData.value.mekanikList && Array.isArray(formData.value.mekanikList)) {
+    selectedMekaniks.value = formData.value.mekanikList.map(m => {
+      const karyawan = karyawanOptions.value.find(k => k.id === m.id)
+      return {
+        id: m.id,
+        namaKaryawan: karyawan?.namaKaryawan || `ID: ${m.id}`,
+        tugas: m.tugas
+      }
+    })
   } else {
     selectedMekaniks.value = []
   }
 
+  isEditable.value = formData.value.statusSpk == 'OPEN'
   showDialog.value = true
 }
 
@@ -630,13 +854,27 @@ const resetForm = () => {
     namaPelanggan: '',
     alamat: '',
     merk: '',
-    jenis: ''
+    jenis: '',
+    details: []
   }
 }
 
 const initNoSpk = () => {
-  formData.value.tanggalJamSpk = new Date().toISOString()
+  const offsetMs = 7 * 60 * 60 * 1000;
+  const gmt7 = new Date(new Date().getTime() + offsetMs);
+  const gmt7Iso = gmt7.toISOString().replace("T", " ").replace("Z", "").substring(0, 16);
+  formData.value.tanggalJamSpk = gmt7Iso;
   fetchNextSpkNumber()
+}
+
+const startProcess = () => {
+  formData.value.statusSpk = 'PROSES'
+  saveSpk()
+}
+
+const finishProcess = () => {
+  formData.value.statusSpk = 'SELESAI'
+  saveSpk()
 }
 
 const saveSpk = async () => {
@@ -686,13 +924,11 @@ const saveSpk = async () => {
       }
     }
 
-    // Convert selectedMekaniks to JSON string
+    // Convert selectedMekaniks to List (Array)
     if (selectedMekaniks.value.length > 0) {
-      formData.value.mekanikList = JSON.stringify(
-        selectedMekaniks.value.map(m => ({ id: m.id, tugas: m.tugas || 'Utama' }))
-      )
+      formData.value.mekanikList = selectedMekaniks.value.map(m => ({ id: m.id, tugas: m.tugas || 'Utama' }))
     } else {
-      formData.value.mekanikList = null
+      formData.value.mekanikList = []
     }
 
     // Proceed with SPK creation/update
@@ -778,6 +1014,92 @@ const constructNopolOptions = (formData) => {
   return formData
 }
 
+// Detail SPK Methods
+const fetchJasa = async () => {
+  try {
+    const response = await api.get('/api/pazaauto/jasa')
+    if (response.data.success) {
+      allJasaOptions.value = response.data.data || []
+      jasaOptions.value = allJasaOptions.value
+    }
+  } catch (error) {
+    console.error('Failed to fetch jasa', error)
+  }
+}
+
+const fetchBarang = async () => {
+  try {
+    const response = await api.get('/api/pazaauto/barang')
+    if (response.data.success) {
+      allBarangOptions.value = response.data.data || []
+      barangOptions.value = allBarangOptions.value
+    }
+  } catch (error) {
+    console.error('Failed to fetch barang', error)
+  }
+}
+
+const filterJasa = (val, update) => {
+  update(() => {
+    if (val === '') {
+      jasaOptions.value = allJasaOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      jasaOptions.value = allJasaOptions.value.filter(v => v.namaJasa.toLowerCase().indexOf(needle) > -1)
+    }
+  })
+}
+
+const filterBarang = (val, update) => {
+  update(() => {
+    if (val === '') {
+      barangOptions.value = allBarangOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      barangOptions.value = allBarangOptions.value.filter(v => v.namaBarang.toLowerCase().indexOf(needle) > -1)
+    }
+  })
+}
+
+const addJasa = () => {
+  if (!newJasa.value.item) return
+  const item = {
+    id: { noSpk: formData.value.noSpk, namaJasa: newJasa.value.item.namaJasa },
+    namaItem: newJasa.value.item.namaJasa,
+    jasaId: newJasa.value.item.id,
+    jumlah: newJasa.value.jumlah,
+    keterangan: '',
+    tempId: Date.now()
+  }
+  formData.value.details.push(item)
+  newJasa.value = { item: null, jumlah: 1 }
+}
+
+const addBarang = () => {
+  if (!newBarang.value.item) return
+  const item = {
+    id: { noSpk: formData.value.noSpk, namaJasa: newBarang.value.item.namaBarang },
+    namaItem: newBarang.value.item.namaBarang,
+    sparepartId: newBarang.value.item.id,
+    jumlah: newBarang.value.jumlah,
+    keterangan: '',
+    tempId: Date.now()
+  }
+  formData.value.details.push(item)
+  newBarang.value = { item: null, jumlah: 1 }
+}
+
+const removeDetail = (row) => {
+  // Find index by tempId or ID
+  const index = formData.value.details.findIndex(d =>
+    (d.tempId && d.tempId === row.tempId) ||
+    (d.id && row.id && d.id.namaJasa === row.id.namaJasa && d.id.noSpk === row.id.noSpk)
+  )
+  if (index > -1) {
+    formData.value.details.splice(index, 1)
+  }
+}
+
 // Watchers
 let searchTimeout = null
 watch(searchText, (newVal) => {
@@ -801,7 +1123,7 @@ watch(filterStatus, (newVal) => {
   // Reset to page 1 when filtering
   pagination.value.page = 1
   fetchSpk()
-}, { deep: true })
+})
 
 // Watch today filter changes
 watch(filterToday, (newVal) => {
@@ -821,7 +1143,7 @@ onMounted(() => {
 
 <style lang="sass" scoped>
 .dialog-spk
-  min-width: 840px
+  min-width: calc(80vw - 48px);
 .my-sticky-header-table
   max-height: 70vh
 

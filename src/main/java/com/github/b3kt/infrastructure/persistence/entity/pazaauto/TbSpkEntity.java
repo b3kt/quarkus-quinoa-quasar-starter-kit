@@ -1,17 +1,24 @@
 package com.github.b3kt.infrastructure.persistence.entity.pazaauto;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.github.b3kt.infrastructure.persistence.entity.BaseEntity;
+import com.github.b3kt.infrastructure.persistence.entity.subentity.SpkMekanik;
 
 @Entity
 @Table(name = "tb_spk")
-public class TbSpkEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Getter
+@Setter
+public class TbSpkEntity extends BaseEntity {
 
     @Column(name = "no_spk", length = 30, nullable = false)
     private String noSpk;
@@ -70,174 +77,14 @@ public class TbSpkEntity {
     @Column(name = "id_mekanik")
     private Long mekanikId;
 
-    @Column(name = "mekanik_list", columnDefinition = "TEXT")
-    private String mekanikList; // Stores JSON array of mechanic assignments
+    @Column(name = "mekanik_list", nullable = false, columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<SpkMekanik> mekanikList; // Stores JSON array of mechanic assignments
 
-    public Long getId() {
-        return id;
-    }
+    @Transient
+    private java.util.List<TbSpkDetailEntity> details;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @Transient
+    private boolean startProcess;
 
-    public String getNoSpk() {
-        return noSpk;
-    }
-
-    public void setNoSpk(String noSpk) {
-        this.noSpk = noSpk;
-    }
-
-    public Integer getNoAntrian() {
-        return noAntrian;
-    }
-
-    public void setNoAntrian(Integer noAntrian) {
-        this.noAntrian = noAntrian;
-    }
-
-    public String getTanggalJamSpk() {
-        return tanggalJamSpk;
-    }
-
-    public void setTanggalJamSpk(String tanggalJamSpk) {
-        this.tanggalJamSpk = tanggalJamSpk;
-    }
-
-    public String getNopol() {
-        return nopol;
-    }
-
-    public void setNopol(String nopol) {
-        this.nopol = nopol;
-    }
-
-    public String getNamaKaryawan() {
-        return namaKaryawan;
-    }
-
-    public void setNamaKaryawan(String namaKaryawan) {
-        this.namaKaryawan = namaKaryawan;
-    }
-
-    public Integer getKm() {
-        return km;
-    }
-
-    public void setKm(Integer km) {
-        this.km = km;
-    }
-
-    public String getStatusSpk() {
-        return statusSpk;
-    }
-
-    public void setStatusSpk(String statusSpk) {
-        this.statusSpk = statusSpk;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public BigDecimal getDiskon() {
-        return diskon;
-    }
-
-    public void setDiskon(BigDecimal diskon) {
-        this.diskon = diskon;
-    }
-
-    public String getKeluhan() {
-        return keluhan;
-    }
-
-    public void setKeluhan(String keluhan) {
-        this.keluhan = keluhan;
-    }
-
-    public String getKeterangan() {
-        return keterangan;
-    }
-
-    public void setKeterangan(String keterangan) {
-        this.keterangan = keterangan;
-    }
-
-    public Integer getKmSaatIni() {
-        return kmSaatIni;
-    }
-
-    public void setKmSaatIni(Integer kmSaatIni) {
-        this.kmSaatIni = kmSaatIni;
-    }
-
-    public BigDecimal getPpn() {
-        return ppn;
-    }
-
-    public void setPpn(BigDecimal ppn) {
-        this.ppn = ppn;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Long getCsId() {
-        return csId;
-    }
-
-    public void setCsId(Long csId) {
-        this.csId = csId;
-    }
-
-    public Long getMekanikId() {
-        return mekanikId;
-    }
-
-    public void setMekanikId(Long mekanikId) {
-        this.mekanikId = mekanikId;
-    }
-
-    public String getMekanikList() {
-        return mekanikList;
-    }
-
-    public void setMekanikList(String mekanikList) {
-        this.mekanikList = mekanikList;
-    }
 }

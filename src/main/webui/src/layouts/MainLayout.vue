@@ -2,50 +2,26 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
           {{ $t('app.constant.app_name') }}
         </q-toolbar-title>
 
         <div class="q-gutter-sm">
-          <q-btn
-            v-if="authStore.isLoggedIn"
-            flat
-            dense
-            icon="logout"
-            label="Logout"
-            @click="handleLogout"
-          />
+          <q-btn v-if="authStore.isLoggedIn" flat dense icon="logout" label="Logout" @click="handleLogout" />
           <span v-else>Quasar v{{ $q.version }}</span>
         </div>
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label
-          header
-        >
+        <q-item-label header>
           Essential Links
         </q-item-label>
 
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
+        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
 
@@ -99,7 +75,7 @@ const linksList = [
         icon: 'warehouse',
         link: '/pazaauto/sparepart'
       },
-      
+
       {
         title: t('app.menu.master.customer.title'),
         caption: t('app.menu.master.customer.caption'),
@@ -141,38 +117,21 @@ const linksList = [
     ]
   },
   {
-    title: t('app.menu.sales.title'),
-    caption: t('app.menu.sales.caption'),
+    title: t('app.menu.report.title'),
+    caption: t('app.menu.report.caption'),
     icon: 'trolley',
-    link: 'https://quasar.dev',
     children: [
       {
         title: t('app.menu.sales.buy.title'),
         caption: t('app.menu.sales.buy.caption'),
         icon: 'warehouse',
+        link: '/pazaauto/pembelian-barang'
       },
       {
         title: t('app.menu.sales.sell.title'),
         caption: t('app.menu.sales.sell.caption'),
         icon: 'warehouse',
-      },
-    ]
-  },
-  {
-    title: t('app.menu.report.title'),
-    caption: t('app.menu.report.caption'),
-    icon: 'assignment',
-    link: 'https://quasar.dev',
-    children: [
-      {
-        title: t('app.menu.master.product.title'),
-        caption: t('app.menu.master.product.caption'),
-        icon: 'warehouse',
-      },
-      {
-        title: t('app.menu.master.service.title'),
-        caption: t('app.menu.master.service.caption'),
-        icon: 'warehouse',
+        link: '/pazaauto/penjualan-barang'
       },
     ]
   },
@@ -199,11 +158,11 @@ const linksList = [
 
 const leftDrawerOpen = ref(false)
 
-function toggleLeftDrawer () {
+function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 
-async function handleLogout () {
+async function handleLogout() {
   await authStore.logout()
   $q.notify({
     type: 'info',

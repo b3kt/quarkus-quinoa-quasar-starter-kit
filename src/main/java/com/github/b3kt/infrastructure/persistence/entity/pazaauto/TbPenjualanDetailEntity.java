@@ -1,15 +1,21 @@
 package com.github.b3kt.infrastructure.persistence.entity.pazaauto;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
+import com.github.b3kt.infrastructure.persistence.entity.BaseEntity;
+
 @Entity
 @Table(name = "tb_penjualan_detail")
-public class TbPenjualanDetailEntity {
+@Setter
+@Getter
+public class TbPenjualanDetailEntity extends BaseEntity {
 
-    @EmbeddedId
-    private TbPenjualanDetailId id;
+    // @EmbeddedId
+    // private TbPenjualanDetailId id;
 
     @Column(name = "kategori", length = 10)
     private String kategori;
@@ -29,93 +35,19 @@ public class TbPenjualanDetailEntity {
     @Column(name = "keterangan", length = 255)
     private String keterangan;
 
-    @Column(name = "id_barang")
+    @Column(name = "id_barang", nullable = true)
     private Long barangId;
 
-    @Column(name = "id_jasa")
+    @Column(name = "id_jasa", nullable = true)
     private Long jasaId;
 
-    @Column(name = "id_sparepart")
+    @Column(name = "id_sparepart", nullable = true)
     private Long sparepartId;
 
-    public TbPenjualanDetailId getId() {
-        return id;
-    }
+    @Column(name = "no_penjualan", nullable = true)
+    private String noPenjualan;
 
-    public void setId(TbPenjualanDetailId id) {
-        this.id = id;
-    }
+    @Column(name = "nama_jasa_barang", nullable = true)
+    private String namaJasaBarang;
 
-    public String getKategori() {
-        return kategori;
-    }
-
-    public void setKategori(String kategori) {
-        this.kategori = kategori;
-    }
-
-    public Integer getHargaJual() {
-        return hargaJual;
-    }
-
-    public void setHargaJual(Integer hargaJual) {
-        this.hargaJual = hargaJual;
-    }
-
-    public Integer getKuantiti() {
-        return kuantiti;
-    }
-
-    public void setKuantiti(Integer kuantiti) {
-        this.kuantiti = kuantiti;
-    }
-
-    public Integer getTotal() {
-        return total;
-    }
-
-    public void setTotal(Integer total) {
-        this.total = total;
-    }
-
-    public BigDecimal getDiskon() {
-        return diskon;
-    }
-
-    public void setDiskon(BigDecimal diskon) {
-        this.diskon = diskon;
-    }
-
-    public String getKeterangan() {
-        return keterangan;
-    }
-
-    public void setKeterangan(String keterangan) {
-        this.keterangan = keterangan;
-    }
-
-    public Long getBarangId() {
-        return barangId;
-    }
-
-    public void setBarangId(Long barangId) {
-        this.barangId = barangId;
-    }
-
-    public Long getJasaId() {
-        return jasaId;
-    }
-
-    public void setJasaId(Long jasaId) {
-        this.jasaId = jasaId;
-    }
-
-    public Long getSparepartId() {
-        return sparepartId;
-    }
-
-    public void setSparepartId(Long sparepartId) {
-        this.sparepartId = sparepartId;
-    }
 }
-

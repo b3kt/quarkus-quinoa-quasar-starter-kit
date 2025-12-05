@@ -4,6 +4,8 @@ import com.github.b3kt.application.dto.PageRequest;
 import com.github.b3kt.application.dto.PageResponse;
 import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbPelangganEntity;
 import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbPelangganRepository;
+
+import io.quarkus.cache.CacheResult;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import io.quarkus.panache.common.Page;
@@ -18,6 +20,10 @@ public class TbPelangganService extends AbstractCrudService<TbPelangganEntity, L
 
     @Inject
     TbPelangganRepository repository;
+
+    @Inject
+    @io.quarkus.cache.CacheName("pelanggan-by-nopol")
+    io.quarkus.cache.Cache cache;
 
     @Override
     protected PanacheRepositoryBase<TbPelangganEntity, Long> getRepository() {
@@ -79,6 +85,7 @@ public class TbPelangganService extends AbstractCrudService<TbPelangganEntity, L
      * @param nopol The vehicle registration number
      * @return The pelanggan entity or null if not found
      */
+    @CacheResult(cacheName = "pelanggan-by-nopol")
     public TbPelangganEntity findByNopol(String nopol) {
         if (nopol == null || nopol.trim().isEmpty()) {
             return null;
@@ -86,5 +93,22 @@ public class TbPelangganService extends AbstractCrudService<TbPelangganEntity, L
 
         return repository.find("nopol", Sort.descending("updatedAt"), nopol)
                 .firstResult();
+    }
+
+    @Override
+    @jakarta.transaction.Transactional
+    public TbPelangganEntity update(Long id, TbPelangganEntity entity) {
+        // Invalidate cache for old nopol
+        TbPelangganEntity existing = findById(id);
+        if (existing != null && existing.getNopol() != null) {
+            cache.invalidate(existing.getNopol()).await().indefinitely();
+        }
+
+        // Invalidate cache for new nopol
+        if (entity.getNopol() != null) {
+            cache.invalidate(entity.getNopol()).await().indefinitely();
+        }
+
+        return super.update(id, entity);
     }
 }

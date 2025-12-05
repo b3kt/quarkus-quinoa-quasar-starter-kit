@@ -7,6 +7,7 @@ import com.github.b3kt.application.service.pazaauto.TbSpkService;
 import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSpkEntity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -56,5 +57,18 @@ public class TbSpkResource extends AbstractCrudResource<TbSpkEntity, Long> {
             return Response.ok(ApiResponse.error(getEntityName() + " not found")).build();
         }
         return Response.ok(ApiResponse.success(getEntityName() + " updated", updated)).build();
+    }
+
+    @Override
+    @DELETE
+    @Path("/{id}")
+    public Response delete(@PathParam("id") String id) {
+        // getService().delete(parseId(id));
+        TbSpkEntity entity = getService().findById(parseId(id));
+        entity.setKeterangan("SPK Dibatalkan. lastStatus: " + entity.getStatusSpk());
+        entity.setStatusSpk("BATAL");
+        TbSpkEntity updated = getService().update(parseId(id), entity);
+
+        return Response.ok(ApiResponse.success(getEntityName() + " cancelled", updated)).build();
     }
 }

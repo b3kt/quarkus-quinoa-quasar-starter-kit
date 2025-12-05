@@ -32,6 +32,9 @@ public class TbSpkEntity extends BaseEntity {
     @Column(name = "nopol", length = 10)
     private String nopol;
 
+    @Column(name = "id_pelanggan")
+    private Long pelangganId;
+
     @Column(name = "nama_karyawan", length = 300)
     private String namaKaryawan;
 
@@ -40,6 +43,12 @@ public class TbSpkEntity extends BaseEntity {
 
     @Column(name = "status_spk", length = 20)
     private String statusSpk;
+
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "finished_at")
+    private LocalDateTime finishedAt;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -86,5 +95,8 @@ public class TbSpkEntity extends BaseEntity {
 
     @Transient
     private boolean startProcess;
+
+    @Transient
+    private String namaPelanggan;
 
 }

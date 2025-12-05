@@ -7,7 +7,7 @@
           @click="openCreateDialog" />
         <q-space />
         <div class="col-auto q-mr-md">
-          <q-checkbox v-model="filterToday" label="Hanya tampilkan SPK Hari Ini" dense />
+          <q-checkbox v-model="filterToday" label="Filter SPK hari ini" dense />
         </div>
         <div class="col-1">
           <q-select v-model="filterStatus" multiple :options="statusOptions" label="Status" dense options-dense flat
@@ -49,12 +49,20 @@
 
         <template v-slot:body-cell-actions="props">
           <q-td :props="props">
-            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
-              <q-tooltip>Edit</q-tooltip>
-            </q-btn>
-            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
-              <q-tooltip>Delete</q-tooltip>
-            </q-btn>
+
+            <div v-if="props.row.statusSpk !== 'SELESAI' && props.row.statusSpk !== 'BATAL'">
+              <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
+                <q-tooltip>Edit</q-tooltip>
+              </q-btn>
+              <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
+                <q-tooltip>Delete</q-tooltip>
+              </q-btn>
+            </div>
+            <div v-else>
+              <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
+                <q-tooltip>View</q-tooltip>
+              </q-btn>
+            </div>
           </q-td>
         </template>
       </q-table>
@@ -68,7 +76,10 @@
             {{ isEditMode ? 'Edit SPK' : 'Tambah SPK' }}
           </div>
           <q-space />
-          <q-chip square icon="event" :color="getStatusColor(formData.statusSpk)">{{ formData.statusSpk }}</q-chip>
+          <span class="text-caption text-middle q-py-sm">STATUS:</span>
+          <q-chip square tooltip="Status" :color="getStatusColor(formData.statusSpk)">{{
+            formData.statusSpk
+            }}</q-chip>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
@@ -188,7 +199,7 @@
                           <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
                             props.row.jumlah) }}</q-td>
                           <q-td key="actions" :props="props" class="text-center"
-                            v-if="isEditable || formData.statusSpk !== 'SELESAI'">
+                            v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
                             <q-btn flat dense round icon="delete" color="negative" size="sm"
                               @click="removeDetail(props.row)" />
                           </q-td>
@@ -197,7 +208,7 @@
                     </q-table>
                     <!-- Inline Add Jasa -->
                     <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
-                      v-if="isEditable && formData.statusSpk != 'SELESAI'">
+                      v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
                       <div class="col-grow">
                         <q-select v-model="newJasa.item" :options="jasaOptions" option-label="namaJasa" dense outlined
                           label="Pilih Jasa" use-input input-debounce="300" @filter="filterJasa" emit-value map-options>
@@ -251,7 +262,7 @@
                           <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
                             props.row.jumlah) }}</q-td>
                           <q-td key="actions" :props="props" class="text-center"
-                            v-if="isEditable || formData.statusSpk !== 'SELESAI'">
+                            v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
                             <q-btn flat dense round icon="delete" color="negative" size="sm"
                               @click="removeDetail(props.row)" />
                           </q-td>
@@ -260,7 +271,7 @@
                     </q-table>
                     <!-- Inline Add Barang -->
                     <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
-                      v-if="isEditable || formData.statusSpk !== 'SELESAI'">
+                      v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
                       <div class="col-grow">
                         <q-select v-model="newBarang.item" :options="barangOptions" option-label="namaBarang" dense
                           outlined label="Pilih Barang" use-input input-debounce="300" @filter="filterBarang" emit-value
@@ -295,27 +306,40 @@
             </div>
 
             <!-- Grand Total -->
-            <div class="row justify-end q-mb-md">
+            <div class="row justify-end q-mb-md q-gutter-sm">
               <div class="text-h6 bg-grey-3 q-px-md q-py-sm rounded-borders">
                 GRAND TOTAL: {{ formatCurrency(grandTotal) }}
               </div>
+              <!-- 
+              <div class="text-h6 bg-grey-3 q-px-md q-py-sm rounded-borders">
+                <q-input v-model="formData.namaPelanggan" label="Dibayar" outlined dense :readonly="!isNewCustomer"
+                  :rules="isNewCustomer ? [val => !!val || 'Nama is required'] : []" />
+              </div>
+
+              <div class="text-h6 bg-grey-3 q-px-md q-py-sm rounded-borders">
+                <q-input v-model="formData.namaPelanggan" label="Kembalian" outlined dense :readonly="!isNewCustomer"
+                  :rules="isNewCustomer ? [val => !!val || 'Nama is required'] : []" />
+              </div> -->
             </div>
 
             <div class="row justify-end q-gutter-sm">
-              <div v-if="isEditMode && formData.statusSpk == 'OPEN'">
-                <q-btn label="Mulai Proses" type="button" color="green" @click="startProcess" :loading="saving" />
-              </div>
-
-              <div v-if="formData.statusSpk == 'PROSES'">
-                <q-btn label="Bayar" type="button" color="green" @click="finishProcess" :loading="saving" />
-              </div>
 
               <q-space />
 
               <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
 
               <q-btn label="Simpan" type="submit" color="primary" :loading="saving"
-                v-if="formData.statusSpk != 'SELESAI'" />
+                v-if="formData.statusSpk != 'SELESAI' && formData.statusSpk != 'BATAL'" />
+
+
+              <div v-if="formData.statusSpk == 'PROSES'">
+                <q-btn label="Bayar" type="button" color="green" @click="finishProcess" style="width: 100px;"
+                  :loading="saving" />
+              </div>
+              <div v-if="isEditMode && formData.statusSpk == 'OPEN'">
+                <q-btn label="Mulai Proses" type="button" color="green" @click="startProcess" :loading="saving" />
+              </div>
+
 
             </div>
           </q-form>
@@ -339,6 +363,114 @@
         <q-card-actions align="right">
           <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
           <q-btn flat label="Delete" color="negative" @click="deleteSpk" :loading="deleting" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Payment Invoice Dialog -->
+    <q-dialog v-model="showPaymentDialog" persistent>
+      <q-card style="min-width: 800px; max-width: 900px">
+        <!-- Invoice Header -->
+        <q-card-section class="bg-primary text-white">
+          <div class="row items-center">
+            <div class="col">
+              <div class="text-h5">INVOICE</div>
+              <div class="text-subtitle2">{{ paymentData.noPenjualan || 'Generating...' }}</div>
+            </div>
+            <div class="col-auto text-right">
+              <div class="text-subtitle2">Date: {{ new Date().toLocaleDateString('id-ID') }}</div>
+              <div class="text-subtitle2">SPK: {{ formData.noSpk }}</div>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <!-- Customer Information -->
+        <q-card-section>
+          <div class="row q-col-gutter-md">
+            <div class="col-6">
+              <div class="text-weight-bold text-grey-8 q-mb-xs">Bill To:</div>
+              <div>{{ formData.namaPelanggan }}</div>
+              <div class="text-caption text-grey-7">{{ formData.alamat }}</div>
+              <div class="text-caption text-grey-7">{{ formData.nopol }} - {{ formData.merk }} {{ formData.jenis }}
+              </div>
+            </div>
+            <div class="col-6 text-right">
+              <div class="text-weight-bold text-grey-8 q-mb-xs">Total Due:</div>
+              <div class="text-h4 text-primary">{{ formatCurrency(grandTotal) }}</div>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <!-- Items Table -->
+        <q-card-section class="q-pa-none">
+          <q-table flat :rows="invoiceItems" :columns="invoiceColumns" row-key="id" hide-pagination dense
+            separator="horizontal">
+            <template v-slot:body-cell-price="props">
+              <q-td :props="props" class="text-right">
+                {{ formatCurrency(props.row.price) }}
+              </q-td>
+            </template>
+            <template v-slot:body-cell-total="props">
+              <q-td :props="props" class="text-right">
+                {{ formatCurrency(props.row.total) }}
+              </q-td>
+            </template>
+          </q-table>
+        </q-card-section>
+
+        <q-separator />
+
+        <!-- Totals Section -->
+        <q-card-section>
+          <div class="row justify-end">
+            <div class="col-4">
+              <div class="row justify-between q-mb-sm">
+                <span class="text-grey-7">Subtotal:</span>
+                <span class="text-weight-bold">{{ formatCurrency(grandTotal) }}</span>
+              </div>
+              <q-separator class="q-my-sm" />
+              <div class="row justify-between q-mb-md">
+                <span class="text-weight-bold text-h6">Total:</span>
+                <span class="text-weight-bold text-h6 text-primary">{{ formatCurrency(grandTotal) }}</span>
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <!-- Payment Input Section -->
+        <q-card-section class="bg-grey-2">
+          <div class="text-h6 q-mb-md">Payment Details</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-4">
+              <q-input v-model.number="paymentData.uangDibayar" label="Dibayar *" outlined dense type="number"
+                prefix="Rp" :rules="[val => val > 0 || 'Amount must be greater than 0']"
+                @update:model-value="calculateKembalian" />
+            </div>
+            <div class="col-4">
+              <q-input v-model="kembalianFormatted" label="Kembalian" outlined dense readonly prefix="Rp"
+                :class="paymentData.kembalian < 0 ? 'text-negative' : ''" />
+            </div>
+            <div class="col-4">
+              <q-select v-model="paymentData.metodePembayaran" label="Metode Pembayaran *" outlined dense
+                :options="paymentMethodOptions" :rules="[val => !!val || 'Payment method is required']" />
+            </div>
+          </div>
+          <div v-if="paymentData.kembalian < 0" class="text-negative q-mt-sm">
+            <q-icon name="warning" /> Insufficient payment amount
+          </div>
+        </q-card-section>
+
+        <!-- Actions -->
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Cancel" color="primary" @click="closePaymentDialog" />
+          <q-btn label="Confirm Payment" color="primary" @click="confirmPayment" :loading="saving"
+            :disable="paymentData.uangDibayar <= 0 || !paymentData.metodePembayaran" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -392,9 +524,19 @@ const karyawanOptions = ref([])
 const selectedMekaniks = ref([])  // Array of { id, namaKaryawan, tugas }
 const showDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showPaymentDialog = ref(false)
 const isEditMode = ref(false)
 const itemToDelete = ref(null)
 const isEditable = ref(false)
+
+// Payment dialog state
+const paymentData = ref({
+  uangDibayar: 0,
+  kembalian: 0,
+  metodePembayaran: 'CASH'
+})
+
+const paymentMethodOptions = ['CASH', 'CREDIT', 'TRANSFER', 'QRIS']
 
 // Detail SPK State
 const jasaOptions = ref([])
@@ -453,6 +595,49 @@ const subtotalBarang = computed(() => {
 })
 
 const grandTotal = computed(() => subtotalJasa.value + subtotalBarang.value)
+
+// Payment dialog computed properties
+const invoiceItems = computed(() => {
+  const items = []
+
+  // Add jasa items
+  jasaRows.value.forEach((row, index) => {
+    items.push({
+      id: `jasa-${index}`,
+      description: row.namaItem,
+      category: 'Service',
+      quantity: row.jumlah,
+      price: row.harga,
+      total: row.harga * row.jumlah
+    })
+  })
+
+  // Add barang items
+  barangRows.value.forEach((row, index) => {
+    items.push({
+      id: `barang-${index}`,
+      description: row.namaItem,
+      category: 'Parts',
+      quantity: row.jumlah,
+      price: row.harga,
+      total: row.harga * row.jumlah
+    })
+  })
+
+  return items
+})
+
+const invoiceColumns = [
+  { name: 'description', label: 'DESCRIPTION', align: 'left', field: 'description' },
+  { name: 'category', label: 'CATEGORY', align: 'left', field: 'category' },
+  { name: 'quantity', label: 'QTY', align: 'center', field: 'quantity' },
+  { name: 'price', label: 'PRICE', align: 'right', field: 'price' },
+  { name: 'total', label: 'TOTAL', align: 'right', field: 'total' }
+]
+
+const kembalianFormatted = computed(() => {
+  return paymentData.value.kembalian.toLocaleString('id-ID')
+})
 
 // Status options for filter
 const statusOptions = ref([
@@ -517,10 +702,10 @@ const columns = [
     sortable: true
   },
   {
-    name: 'tanggalJamSpk',
-    label: 'Tanggal/Jam',
+    name: 'namaPelanggan',
+    label: 'Pelanggan',
     align: 'left',
-    field: 'tanggalJamSpk',
+    field: 'namaPelanggan',
     sortable: true
   },
   {
@@ -530,6 +715,28 @@ const columns = [
     field: 'nopol',
     sortable: true
   },
+  {
+    name: 'tanggalJamSpk',
+    label: 'Tanggal/Jam',
+    align: 'left',
+    field: 'tanggalJamSpk',
+    sortable: true
+  },
+  {
+    name: 'startedAt',
+    label: 'Started At',
+    align: 'left',
+    field: 'startedAt',
+    sortable: true
+  },
+  {
+    name: 'finishedAt',
+    label: 'Finished At',
+    align: 'left',
+    field: 'finishedAt',
+    sortable: true
+  },
+
   {
     name: 'namaKaryawan',
     label: 'Nama Karyawan',
@@ -869,12 +1076,24 @@ const initNoSpk = () => {
 
 const startProcess = () => {
   formData.value.statusSpk = 'PROSES'
+  formData.value.startedAt = new Date().toISOString()
   saveSpk()
 }
 
-const finishProcess = () => {
-  formData.value.statusSpk = 'SELESAI'
-  saveSpk()
+const finishProcess = async () => {
+  // Generate penjualan number
+  await generatePenjualanNumber()
+
+  // Reset payment data
+  paymentData.value = {
+    uangDibayar: grandTotal.value,
+    kembalian: 0,
+    metodePembayaran: 'CASH',
+    noPenjualan: paymentData.value.noPenjualan
+  }
+
+  // Open payment dialog
+  showPaymentDialog.value = true
 }
 
 const saveSpk = async () => {
@@ -888,7 +1107,7 @@ const saveSpk = async () => {
           type: 'warning',
           message: 'Please fill in required customer fields (Nama, Merk)'
         })
-        saving.value = false
+        //saving.value = false
         return
       }
 
@@ -955,6 +1174,159 @@ const saveSpk = async () => {
     })
   } finally {
     saving.value = false
+  }
+}
+
+// Payment dialog functions
+const generatePenjualanNumber = async () => {
+  try {
+    const response = await api.get('/api/pazaauto/penjualan/next-number')
+    if (response.data.success) {
+      paymentData.value.noPenjualan = response.data.data
+    } else {
+      // Fallback to manual generation if endpoint doesn't exist
+      const date = new Date()
+      const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '')
+      const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+      paymentData.value.noPenjualan = `PNJ-${dateStr}-${random}`
+    }
+  } catch (error) {
+    // Fallback to manual generation
+    const date = new Date()
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '')
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+    paymentData.value.noPenjualan = `PNJ-${dateStr}-${random}`
+  }
+}
+
+const calculateKembalian = () => {
+  paymentData.value.kembalian = paymentData.value.uangDibayar - grandTotal.value
+}
+
+const determinePaymentStatus = () => {
+  if (paymentData.value.uangDibayar >= grandTotal.value) {
+    return 'LUNAS'
+  } else if (paymentData.value.uangDibayar > 0) {
+    return 'DP'
+  } else {
+    return 'BELUM_LUNAS'
+  }
+}
+
+const confirmPayment = async () => {
+  saving.value = true
+  try {
+    // Validate payment amount
+    if (paymentData.value.uangDibayar <= 0) {
+      $q.notify({
+        type: 'warning',
+        message: 'Please enter a valid payment amount'
+      })
+      saving.value = false
+      return
+    }
+
+    // Calculate kembalian
+    calculateKembalian()
+
+    // Prepare penjualan data
+    const penjualanData = {
+      noPenjualan: paymentData.value.noPenjualan,
+      tanggalJamPenjualan: new Date().toISOString(),
+      noSpk: formData.value.noSpk,
+      grandTotal: grandTotal.value,
+      uangDibayar: paymentData.value.uangDibayar,
+      kembalian: paymentData.value.kembalian,
+      metodePembayaran: paymentData.value.metodePembayaran,
+      statusPembayaran: determinePaymentStatus(),
+      keterangan: `Payment for SPK ${formData.value.noSpk}`
+    }
+
+    // Create penjualan
+    const penjualanResponse = await api.post('/api/pazaauto/penjualan', penjualanData)
+
+    if (!penjualanResponse.data.success) {
+      throw new Error('Failed to create penjualan')
+    }
+
+    // Create penjualan details
+    const details = []
+
+    // Add jasa details
+    jasaRows.value.forEach((row) => {
+      details.push({
+        id: {
+          noPenjualan: paymentData.value.noPenjualan,
+          namaJasaBarang: row.namaItem
+        },
+        kategori: 'JASA',
+        jasaId: row.jasaId,
+        hargaJual: row.harga,
+        kuantiti: row.jumlah,
+        total: row.harga * row.jumlah,
+        keterangan: row.namaItem
+      })
+    })
+
+    // Add barang details
+    barangRows.value.forEach((row) => {
+      details.push({
+        id: {
+          noPenjualan: paymentData.value.noPenjualan,
+          namaJasaBarang: row.namaItem
+        },
+        kategori: 'SPAREPART',
+        sparepartId: row.sparepartId,
+        hargaJual: row.harga,
+        kuantiti: row.jumlah,
+        total: row.harga * row.jumlah,
+        keterangan: row.namaItem
+      })
+    })
+
+    // Save all details
+    for (const detail of details) {
+      await api.post('/api/pazaauto/penjualan-detail', detail)
+    }
+
+    // Update SPK status to SELESAI
+    formData.value.statusSpk = 'SELESAI'
+    formData.value.finishedAt = new Date().toISOString()
+
+    // Save SPK
+    const spkResponse = await api.put(`/api/pazaauto/spk/${formData.value.id}`, formData.value)
+
+    if (spkResponse.data.success) {
+      $q.notify({
+        type: 'positive',
+        message: 'Payment processed successfully',
+        caption: `Invoice ${paymentData.value.noPenjualan} created`
+      })
+
+      // Close dialogs
+      showPaymentDialog.value = false
+      closeDialog()
+
+      // Refresh SPK list
+      await fetchSpk()
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to process payment',
+      caption: error.response?.data?.message || error.message
+    })
+  } finally {
+    saving.value = false
+  }
+}
+
+const closePaymentDialog = () => {
+  showPaymentDialog.value = false
+  paymentData.value = {
+    uangDibayar: 0,
+    kembalian: 0,
+    metodePembayaran: 'CASH'
   }
 }
 

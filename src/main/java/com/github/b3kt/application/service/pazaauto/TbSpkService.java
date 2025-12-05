@@ -2,9 +2,11 @@ package com.github.b3kt.application.service.pazaauto;
 
 import com.github.b3kt.application.dto.PageRequest;
 import com.github.b3kt.application.dto.PageResponse;
+import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbPelangganEntity;
 import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSpkEntity;
 import com.github.b3kt.infrastructure.persistence.entity.subentity.SpkMekanik;
 import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbKaryawanRepository;
+import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbPelangganRepository;
 import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbSpkRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
@@ -14,7 +16,10 @@ import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -25,6 +30,9 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
 
     @Inject
     TbKaryawanRepository karyawanRepository;
+
+    @Inject
+    TbPelangganService pelangganService;
 
     @Inject
     com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbSpkDetailRepository detailRepository;
@@ -68,6 +76,7 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
         // update status
         if (entity.isStartProcess()) {
             updated.setStatusSpk("PROSES");
+            updated.setStartedAt(LocalDateTime.now());
         }
 
         // Save new details
@@ -183,12 +192,12 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
         // Apply pagination
         List<TbSpkEntity> rows = query.page(Page.of(pageRequest.getPage() - 1, pageRequest.getRowsPerPage())).list();
 
-        fillNamaKaryawan(rows);
+        fillRequiredFields(rows);
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
     }
 
-    private void fillNamaKaryawan(List<TbSpkEntity> entities) {
+    private void fillRequiredFields(List<TbSpkEntity> entities) {
 
         entities
                 .stream()
@@ -201,6 +210,14 @@ public class TbSpkService extends AbstractCrudService<TbSpkEntity, Long> {
                                 .map(obj -> obj.getNamaKaryawan()).collect(Collectors.toList());
 
                         entity.setNamaKaryawan(String.join(", ", names));
+                    }
+
+                    if (entity.getNopol() != null) {
+                        Optional.ofNullable(pelangganService.findByNopol(entity.getNopol()))
+                                .ifPresent(pelanggan -> {
+                                    entity.setPelangganId(pelanggan.getId());
+                                    entity.setNamaPelanggan(pelanggan.getNamaPelanggan());
+                                });
                     }
                 });
 

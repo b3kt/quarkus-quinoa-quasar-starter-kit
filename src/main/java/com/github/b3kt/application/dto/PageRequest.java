@@ -68,6 +68,10 @@ public class PageRequest {
     }
 
     private boolean filterToday = false;
+    private String jenisPembelianFilter;
+    private String kategoriOperasionalFilter;
+    private String startDate;
+    private String endDate;
 
     public boolean isFilterToday() {
         return filterToday;
@@ -75,6 +79,38 @@ public class PageRequest {
 
     public void setFilterToday(boolean filterToday) {
         this.filterToday = filterToday;
+    }
+
+    public String getJenisPembelianFilter() {
+        return jenisPembelianFilter;
+    }
+
+    public void setJenisPembelianFilter(String jenisPembelianFilter) {
+        this.jenisPembelianFilter = jenisPembelianFilter;
+    }
+
+    public String getKategoriOperasionalFilter() {
+        return kategoriOperasionalFilter;
+    }
+
+    public void setKategoriOperasionalFilter(String kategoriOperasionalFilter) {
+        this.kategoriOperasionalFilter = kategoriOperasionalFilter;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
     }
 
     public int getOffset() {

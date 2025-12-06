@@ -65,4 +65,25 @@ public class TbSparepartService extends AbstractCrudService<TbSparepartEntity, S
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
     }
+
+    @jakarta.transaction.Transactional
+    public void increaseStock(String sparepartId, Integer quantity) {
+        TbSparepartEntity sparepart = findById(sparepartId);
+        Integer currentStock = sparepart.getStok() != null ? sparepart.getStok() : 0;
+        sparepart.setStok(currentStock + quantity);
+        repository.persist(sparepart);
+    }
+
+    @jakarta.transaction.Transactional
+    public void decreaseStock(String sparepartId, Integer quantity) {
+        TbSparepartEntity sparepart = findById(sparepartId);
+        Integer currentStock = sparepart.getStok() != null ? sparepart.getStok() : 0;
+        int newStock = currentStock - quantity;
+        if (newStock < 0) {
+            throw new IllegalStateException("Cannot decrease stock below zero. Current stock: " + currentStock
+                    + ", requested decrease: " + quantity);
+        }
+        sparepart.setStok(newStock);
+        repository.persist(sparepart);
+    }
 }

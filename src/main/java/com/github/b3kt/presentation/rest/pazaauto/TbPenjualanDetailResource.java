@@ -4,33 +4,26 @@ import com.github.b3kt.application.dto.ApiResponse;
 import com.github.b3kt.application.service.pazaauto.AbstractCrudService;
 import com.github.b3kt.application.service.pazaauto.TbPenjualanDetailService;
 import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbPenjualanDetailEntity;
-import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbPenjualanDetailId;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 
 @RequestScoped
 @Path("/api/pazaauto/penjualan-detail")
-public class TbPenjualanDetailResource extends AbstractCrudResource<TbPenjualanDetailEntity, TbPenjualanDetailId> {
+public class TbPenjualanDetailResource extends AbstractCrudResource<TbPenjualanDetailEntity, Long> {
 
     @Inject
     TbPenjualanDetailService service;
 
     @Override
-    protected AbstractCrudService<TbPenjualanDetailEntity, TbPenjualanDetailId> getService() {
+    protected AbstractCrudService<TbPenjualanDetailEntity, Long> getService() {
         return service;
     }
 
     @Override
-    protected TbPenjualanDetailId parseId(String id) {
-        String[] parts = id.split(":", 2);
-        if (parts.length != 2) {
-            throw new BadRequestException("Invalid identifier format. Use 'noPenjualan:namaJasaBarang'.");
-        }
-        return new TbPenjualanDetailId(parts[0], parts[1]);
+    protected Long parseId(String id) {
+        return Long.parseLong(id);
     }
 
     @Override

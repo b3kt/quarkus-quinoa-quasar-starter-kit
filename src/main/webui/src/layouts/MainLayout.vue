@@ -113,6 +113,12 @@ const linksList = [
         caption: t('app.menu.process.order.caption'),
         icon: 'warehouse',
         link: '/pazaauto/spk'
+      },
+      {
+        title: 'Absensi',
+        caption: 'Employee Attendance',
+        icon: 'access_time',
+        link: '/pazaauto/absensi'
       }
     ]
   },

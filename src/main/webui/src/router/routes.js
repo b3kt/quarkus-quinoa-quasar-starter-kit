@@ -27,7 +27,8 @@ const routes = [
       { path: 'pazaauto/sparepart', component: () => import('pages/pazaauto/SparepartPage.vue') },
       { path: 'pazaauto/spk', component: () => import('pages/pazaauto/SPKPage.vue') },
       { path: 'pazaauto/pembelian-barang', component: () => import('pages/pazaauto/PembelianBarangPage.vue') },
-      { path: 'pazaauto/penjualan-barang', component: () => import('pages/pazaauto/PenjualanBarangPage.vue') }
+      { path: 'pazaauto/penjualan-barang', component: () => import('pages/pazaauto/PenjualanBarangPage.vue') },
+      { path: 'pazaauto/absensi', component: () => import('pages/pazaauto/AbsensiPage.vue') }
 
     ]
   },

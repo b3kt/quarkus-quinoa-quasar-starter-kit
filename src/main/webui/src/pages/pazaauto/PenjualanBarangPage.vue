@@ -57,36 +57,95 @@
 
         <!-- Create/Edit Dialog -->
         <q-dialog v-model="showDialog" persistent>
-            <q-card style="min-width: 500px">
-                <q-card-section>
-                    <div class="text-h6">{{ isEditMode ? 'Edit Penjualan' : 'Create Penjualan' }}</div>
+            <q-card style="min-width: 700px; max-width: 800px">
+                <!-- Invoice Header -->
+                <q-card-section class="bg-primary text-white">
+                    <div class="row items-center">
+                        <div class="col">
+                            <div class="text-h5">{{ isEditMode ? 'PENJUALAN' : 'PENJUALAN' }}</div>
+                            <div class="text-subtitle2">{{ formData.noPenjualan || 'New Invoice' }}</div>
+                        </div>
+                        <div class="col-auto text-right">
+                            <div class="text-subtitle2">Date: {{ new Date().toLocaleDateString('id-ID') }}</div>
+                            <q-badge :color="getStatusColor(formData.statusPembayaran)" class="q-mt-xs">
+                                {{ formData.statusPembayaran || 'NEW' }}
+                            </q-badge>
+                        </div>
+                    </div>
                 </q-card-section>
 
+                <q-separator />
+
                 <q-card-section class="q-pt-none">
-                    <q-form @submit="savePenjualan" class="q-gutter-md">
-                        <q-input v-model="formData.noPenjualan" label="No Penjualan *" outlined dense
-                            :rules="[val => !!val || 'No Penjualan is required']" :disable="isEditMode" />
+                    <q-form @submit.prevent="closeDialog" class="q-gutter-md">
+                        <!-- Invoice Information Section -->
+                        <div class="q-mt-md">
+                            <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Invoice Information</div>
+                            <div class="row q-col-gutter-md">
+                                <div class="col-6">
+                                    <q-input v-model="formData.noPenjualan" label="No Penjualan" outlined dense
+                                        readonly />
+                                </div>
+                                <div class="col-6">
+                                    <q-input v-model="formData.tanggalJamPenjualan" label="Tanggal Penjualan" outlined
+                                        dense type="datetime-local" stack-label readonly />
+                                </div>
+                            </div>
+                            <div class="row q-col-gutter-md q-mt-xs">
+                                <div class="col-6">
+                                    <q-input v-model="formData.noSpk" label="No SPK" outlined dense readonly />
+                                </div>
+                                <div class="col-6">
+                                    <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense
+                                        type="number" prefix="Rp" readonly />
+                                </div>
+                            </div>
+                        </div>
 
-                        <q-input v-model="formData.tanggalJamPenjualan" label="Tanggal Penjualan" outlined dense
-                            type="datetime-local" stack-label />
+                        <q-separator class="q-my-md" />
 
-                        <q-input v-model="formData.noSpk" label="No SPK" outlined dense />
+                        <!-- Payment Details Section -->
+                        <div class="bg-grey-2 q-pa-md rounded-borders">
+                            <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Payment Details</div>
+                            <div class="row q-col-gutter-md">
+                                <div class="col-4">
+                                    <q-input v-model="formData.statusPembayaran" label="Status Pembayaran" outlined
+                                        dense readonly />
+                                </div>
+                                <div class="col-4">
+                                    <q-input v-model="formData.metodePembayaran" label="Metode Pembayaran" outlined
+                                        dense readonly />
+                                </div>
+                                <div class="col-4">
+                                    <q-input v-model.number="formData.uangDibayar" label="Uang Dibayar" outlined dense
+                                        type="number" prefix="Rp" readonly />
+                                </div>
+                            </div>
+                            <div class="row q-col-gutter-md q-mt-xs">
+                                <div class="col-6">
+                                    <q-input v-model.number="formData.kembalian" label="Kembalian" outlined dense
+                                        type="number" prefix="Rp" readonly />
+                                </div>
+                                <div class="col-6">
+                                    <q-input v-model.number="formData.diskon" label="Diskon" outlined dense
+                                        type="number" prefix="Rp" readonly />
+                                </div>
+                            </div>
+                        </div>
 
-                        <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense type="number"
-                            prefix="Rp" />
+                        <q-separator class="q-my-md" />
 
-                        <q-select v-model="formData.statusPembayaran" label="Status Pembayaran" outlined dense
-                            :options="statusOptions" />
+                        <!-- Additional Notes -->
+                        <div>
+                            <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Additional Information
+                            </div>
+                            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea"
+                                rows="3" readonly />
+                        </div>
 
-                        <q-select v-model="formData.metodePembayaran" label="Metode Pembayaran" outlined dense
-                            :options="['CASH', 'CREDIT', 'TRANSFER', 'QRIS']" />
-
-                        <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea"
-                            rows="3" />
-
-                        <div class="row justify-end q-gutter-sm">
-                            <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-                            <q-btn label="Save" type="submit" color="primary" :loading="saving" />
+                        <!-- Actions -->
+                        <div class="row justify-end q-gutter-sm q-mt-md">
+                            <q-btn label="Close" color="primary" @click="closeDialog" />
                         </div>
                     </q-form>
                 </q-card-section>
@@ -145,7 +204,6 @@ const saveFilterToStorage = (filter) => {
 
 // State
 const loading = ref(false)
-const saving = ref(false)
 const deleting = ref(false)
 const searchText = ref('')
 const filterStatus = ref(loadFilterFromStorage())
@@ -303,35 +361,6 @@ const resetForm = () => {
         statusPembayaran: 'BELUM_LUNAS',
         metodePembayaran: 'CASH',
         keterangan: ''
-    }
-}
-
-const savePenjualan = async () => {
-    saving.value = true
-    try {
-        let response
-        if (isEditMode.value) {
-            response = await api.put(`/api/pazaauto/penjualan/${formData.value.noPenjualan}`, formData.value)
-        } else {
-            response = await api.post('/api/pazaauto/penjualan', formData.value)
-        }
-
-        if (response.data.success) {
-            $q.notify({
-                type: 'positive',
-                message: isEditMode.value ? 'Penjualan updated successfully' : 'Penjualan created successfully'
-            })
-            closeDialog()
-            await fetchPenjualan()
-        }
-    } catch (error) {
-        $q.notify({
-            type: 'negative',
-            message: 'Failed to save penjualan',
-            caption: error.response?.data?.message || error.message
-        })
-    } finally {
-        saving.value = false
     }
 }
 

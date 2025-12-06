@@ -572,7 +572,8 @@ const jasaRows = computed(() => {
     .map(d => {
       const jasa = allJasaOptions.value.find(j => j.id === d.jasaId)
       const harga = jasa ? jasa.hargaJasa : 0
-      return { ...d, harga }
+      const namaItem = jasa ? jasa.namaJasa : d.namaItem || 'Unknown Service'
+      return { ...d, harga, namaItem }
     })
 })
 
@@ -582,7 +583,8 @@ const barangRows = computed(() => {
     .map(d => {
       const barang = allBarangOptions.value.find(b => b.id === d.sparepartId)
       const harga = barang ? barang.hargaJual : 0
-      return { ...d, harga }
+      const namaItem = barang ? barang.namaBarang : d.namaItem || 'Unknown Part'
+      return { ...d, harga, namaItem }
     })
 })
 
@@ -1196,6 +1198,7 @@ const generatePenjualanNumber = async () => {
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '')
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
     paymentData.value.noPenjualan = `PNJ-${dateStr}-${random}`
+    console.log(error)
   }
 }
 
@@ -1255,10 +1258,8 @@ const confirmPayment = async () => {
     // Add jasa details
     jasaRows.value.forEach((row) => {
       details.push({
-        id: {
-          noPenjualan: paymentData.value.noPenjualan,
-          namaJasaBarang: row.namaItem
-        },
+        noPenjualan: paymentData.value.noPenjualan,
+        namaJasaBarang: row.namaItem,
         kategori: 'JASA',
         jasaId: row.jasaId,
         hargaJual: row.harga,
@@ -1271,10 +1272,8 @@ const confirmPayment = async () => {
     // Add barang details
     barangRows.value.forEach((row) => {
       details.push({
-        id: {
-          noPenjualan: paymentData.value.noPenjualan,
-          namaJasaBarang: row.namaItem
-        },
+        noPenjualan: paymentData.value.noPenjualan,
+        namaJasaBarang: row.namaItem,
         kategori: 'SPAREPART',
         sparepartId: row.sparepartId,
         hargaJual: row.harga,

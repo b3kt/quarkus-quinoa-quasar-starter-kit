@@ -1,14 +1,19 @@
 package com.github.b3kt.infrastructure.persistence.entity.pazaauto;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 
+import com.github.b3kt.infrastructure.persistence.entity.BaseEntity;
+
 @Entity
 @Table(name = "tb_sparepart")
-public class TbSparepartEntity {
+@Getter
+@Setter
+public class TbSparepartEntity extends BaseEntity {
 
-    @Id
     @Column(name = "kd_barang", length = 9)
     private String kodeBarang;
 
@@ -54,124 +59,4 @@ public class TbSparepartEntity {
     @Column(name = "id_supplier")
     private Long supplierId;
 
-    public String getKodeBarang() {
-        return kodeBarang;
-    }
-
-    public void setKodeBarang(String kodeBarang) {
-        this.kodeBarang = kodeBarang;
-    }
-
-    public String getNamaBarang() {
-        return namaBarang;
-    }
-
-    public void setNamaBarang(String namaBarang) {
-        this.namaBarang = namaBarang;
-    }
-
-    public BigDecimal getHargaBeli() {
-        return hargaBeli;
-    }
-
-    public void setHargaBeli(BigDecimal hargaBeli) {
-        this.hargaBeli = hargaBeli;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
-
-    public BigDecimal getHargaJual() {
-        return hargaJual;
-    }
-
-    public void setHargaJual(BigDecimal hargaJual) {
-        this.hargaJual = hargaJual;
-    }
-
-    public String getKeterangan() {
-        return keterangan;
-    }
-
-    public void setKeterangan(String keterangan) {
-        this.keterangan = keterangan;
-    }
-
-    public String getKodeSparepart() {
-        return kodeSparepart;
-    }
-
-    public void setKodeSparepart(String kodeSparepart) {
-        this.kodeSparepart = kodeSparepart;
-    }
-
-    public String getMerek() {
-        return merek;
-    }
-
-    public void setMerek(String merek) {
-        this.merek = merek;
-    }
-
-    public String getNamaSparepart() {
-        return namaSparepart;
-    }
-
-    public void setNamaSparepart(String namaSparepart) {
-        this.namaSparepart = namaSparepart;
-    }
-
-    public String getSatuan() {
-        return satuan;
-    }
-
-    public void setSatuan(String satuan) {
-        this.satuan = satuan;
-    }
-
-    public Integer getStok() {
-        return stok;
-    }
-
-    public void setStok(Integer stok) {
-        this.stok = stok;
-    }
-
-    public Integer getStokMinimal() {
-        return stokMinimal;
-    }
-
-    public void setStokMinimal(Integer stokMinimal) {
-        this.stokMinimal = stokMinimal;
-    }
-
-    public String getTipeKendaraan() {
-        return tipeKendaraan;
-    }
-
-    public void setTipeKendaraan(String tipeKendaraan) {
-        this.tipeKendaraan = tipeKendaraan;
-    }
-
-    public Long getSupplierId() {
-        return supplierId;
-    }
-
-    public void setSupplierId(Long supplierId) {
-        this.supplierId = supplierId;
-    }
 }
-

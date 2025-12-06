@@ -10,14 +10,14 @@ WITH
     1 INCREMENT BY 1;
 
 CREATE TABLE IF NOT EXISTS tb_pembelian (
-    id INTEGER NOT NULL DEFAULT nextval('tb_pembelian_id_seq'),
+    id BIGINT NOT NULL DEFAULT nextval('tb_pembelian_id_seq'),
     no_pembelian VARCHAR(15) NOT NULL,
     no_urut INTEGER,
     tgl_pembelian TIMESTAMP WITHOUT TIME ZONE,
     jenis_pembelian VARCHAR(20) NOT NULL,
     jenis_operasional VARCHAR(50),
     kategori_operasional VARCHAR(20),
-    id_supplier INTEGER,
+    id_supplier BIGINT,
     grand_total NUMERIC(18, 2),
     jenis_pembayaran VARCHAR(20),
     status_pembayaran VARCHAR(20),
@@ -77,7 +77,7 @@ WITH
 
 CREATE TABLE IF NOT EXISTS tb_pembelian_detail (
     id BIGINT NOT NULL DEFAULT nextval('tb_pembelian_detail_id_seq'),
-    id_pembelian INTEGER NOT NULL,
+    id_pembelian BIGINT NOT NULL,
     nama_item VARCHAR(100) NOT NULL,
     kategori_item VARCHAR(20),
     harga NUMERIC(18, 2) NOT NULL,
@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS tb_pembelian_detail (
     total NUMERIC(18, 2),
     keterangan VARCHAR(255),
     id_barang BIGINT,
-    id_sparepart BIGINT NULL,
+    id_sparepart BIGINT,
+    id_supplier BIGINT,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
@@ -93,8 +94,8 @@ CREATE TABLE IF NOT EXISTS tb_pembelian_detail (
     version INTEGER,
     PRIMARY KEY (id),
     CONSTRAINT fk_pembelian_detail_pembelian FOREIGN KEY (id_pembelian) REFERENCES tb_pembelian (id) ON DELETE CASCADE,
-    CONSTRAINT fk_pembelian_detail_barang FOREIGN KEY (id_barang) REFERENCES tb_barang (id) ON DELETE SET NULL,
-    -- CONSTRAINT fk_pembelian_detail_sparepart FOREIGN KEY (id_sparepart) REFERENCES tb_sparepart (id) ON DELETE SET NULL,
+    CONSTRAINT fk_pembelian_detail_barang FOREIGN KEY (id_barang) REFERENCES tb_barang (kode_barang) ON DELETE SET NULL,
+    CONSTRAINT fk_pembelian_detail_sparepart FOREIGN KEY (id_sparepart) REFERENCES tb_sparepart (kode_barang) ON DELETE SET NULL,
     CONSTRAINT chk_kategori_item CHECK (
         kategori_item IN (
             'SPAREPART',

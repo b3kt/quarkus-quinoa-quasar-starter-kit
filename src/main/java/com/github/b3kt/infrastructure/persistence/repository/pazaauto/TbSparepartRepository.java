@@ -5,6 +5,5 @@ import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
-public class TbSparepartRepository implements PanacheRepositoryBase<TbSparepartEntity, String> {
+public class TbSparepartRepository implements PanacheRepositoryBase<TbSparepartEntity, Long> {
 }
-

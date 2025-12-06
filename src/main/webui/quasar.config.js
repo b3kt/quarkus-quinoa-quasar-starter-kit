@@ -47,13 +47,13 @@ export default defineConfig((ctx) => {
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
-      vueRouterBase: '/quinoa/',
+      vueRouterBase: '/',
       // vueDevtools,
       // vueOptionsAPI: false,
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      publicPath: '/quinoa/',
+      publicPath: '/',
       // analyze: true,
       // env: {},
       // rawDefine: {}

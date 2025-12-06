@@ -101,7 +101,17 @@
               </div>
             </div>
 
-            <q-input v-model.number="formData.supplierId" label="Supplier ID" outlined dense type="number" />
+            <q-select v-model="formData.supplierId" label="Supplier" outlined dense use-input input-debounce="300"
+              :options="supplierOptions" option-value="id" option-label="namaSupplier" @filter="filterSuppliers"
+              emit-value map-options clearable>
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No results
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
 
             <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2" />
 
@@ -274,15 +284,55 @@ const openCreateDialog = () => {
   showDialog.value = true
 }
 
-const openEditDialog = (row) => {
+const openEditDialog = async (row) => {
   isEditMode.value = true
   formData.value = { ...row }
+
+  // Pre-load supplier if exists
+  if (row.supplierId) {
+    try {
+      const response = await api.get(`/api/pazaauto/supplier/${row.supplierId}`)
+      if (response.data.success) {
+        supplierOptions.value = [response.data.data]
+      }
+    } catch (error) {
+      console.error('Error fetching supplier details:', error)
+    }
+  }
+
   showDialog.value = true
 }
 
 const closeDialog = () => {
   showDialog.value = false
   resetForm()
+}
+
+const supplierOptions = ref([])
+
+const filterSuppliers = async (val, update) => {
+  if (val === '') {
+    update(() => {
+      supplierOptions.value = []
+    })
+    return
+  }
+
+  try {
+    const response = await api.get('/api/pazaauto/supplier', {
+      params: { search: val }
+    })
+    update(() => {
+      if (response.data.success) {
+        supplierOptions.value = response.data.data || []
+      }
+    })
+  } catch (error) {
+    update(() => {
+      console.error('Error fetching suppliers:', error)
+      supplierOptions.value = []
+    })
+  }
 }
 
 const resetForm = () => {
@@ -301,6 +351,7 @@ const resetForm = () => {
     keterangan: '',
     active: true
   }
+  supplierOptions.value = []
 }
 
 const saveSparepart = async () => {

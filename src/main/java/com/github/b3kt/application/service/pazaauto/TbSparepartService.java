@@ -14,49 +14,50 @@ import jakarta.inject.Inject;
 import java.util.List;
 
 @ApplicationScoped
-public class TbSparepartService extends AbstractCrudService<TbSparepartEntity, String> {
+public class TbSparepartService extends AbstractCrudService<TbSparepartEntity, Long> {
 
     @Inject
     TbSparepartRepository repository;
 
     @Override
-    protected PanacheRepositoryBase<TbSparepartEntity, String> getRepository() {
+    protected PanacheRepositoryBase<TbSparepartEntity, Long> getRepository() {
         return repository;
     }
 
     @Override
-    protected void setEntityId(TbSparepartEntity entity, String id) {
-        entity.setKodeBarang(id);
+    protected void setEntityId(TbSparepartEntity entity, Long id) {
+        entity.setId(id);
     }
 
     @Override
     public PageResponse<TbSparepartEntity> findPaginated(PageRequest pageRequest) {
         PanacheQuery<TbSparepartEntity> query;
 
+        StringBuilder queryBuilder = new StringBuilder();
+        java.util.Map<String, Object> params = new java.util.HashMap<>();
+
         if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
-            String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
-            query = repository.find(
-                    "lower(namaSparepart) like ?1 or lower(kodeSparepart) like ?1",
-                    searchPattern);
-        } else {
-            query = repository.findAll();
+            queryBuilder.append("(lower(namaSparepart) like :search or lower(kodeSparepart) like :search)");
+            params.put("search", "%" + pageRequest.getSearch().toLowerCase() + "%");
         }
+
+        if (pageRequest.getSupplierId() != null) {
+            if (queryBuilder.length() > 0) {
+                queryBuilder.append(" and ");
+            }
+            queryBuilder.append("supplierId = :supplierId");
+            params.put("supplierId", pageRequest.getSupplierId());
+        }
+
+        String queryString = queryBuilder.length() > 0 ? queryBuilder.toString() : "";
 
         if (pageRequest.getSortBy() != null && !pageRequest.getSortBy().isEmpty()) {
             Sort sort = pageRequest.isDescending()
                     ? Sort.descending(pageRequest.getSortBy())
                     : Sort.ascending(pageRequest.getSortBy());
-            query = query.page(Page.of(0, Integer.MAX_VALUE));
-
-            if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
-                String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
-                query = repository.find(
-                        "lower(namaSparepart) like ?1 or lower(kodeSparepart) like ?1",
-                        sort,
-                        searchPattern);
-            } else {
-                query = repository.findAll(sort);
-            }
+            query = repository.find(queryString, sort, params);
+        } else {
+            query = repository.find(queryString, params);
         }
 
         long totalCount = query.count();
@@ -67,7 +68,7 @@ public class TbSparepartService extends AbstractCrudService<TbSparepartEntity, S
     }
 
     @jakarta.transaction.Transactional
-    public void increaseStock(String sparepartId, Integer quantity) {
+    public void increaseStock(Long sparepartId, Integer quantity) {
         TbSparepartEntity sparepart = findById(sparepartId);
         Integer currentStock = sparepart.getStok() != null ? sparepart.getStok() : 0;
         sparepart.setStok(currentStock + quantity);
@@ -75,7 +76,7 @@ public class TbSparepartService extends AbstractCrudService<TbSparepartEntity, S
     }
 
     @jakarta.transaction.Transactional
-    public void decreaseStock(String sparepartId, Integer quantity) {
+    public void decreaseStock(Long sparepartId, Integer quantity) {
         TbSparepartEntity sparepart = findById(sparepartId);
         Integer currentStock = sparepart.getStok() != null ? sparepart.getStok() : 0;
         int newStock = currentStock - quantity;

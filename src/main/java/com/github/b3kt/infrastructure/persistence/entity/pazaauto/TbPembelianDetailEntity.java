@@ -39,8 +39,8 @@ public class TbPembelianDetailEntity extends BaseEntity {
     @Column(name = "id_barang")
     private Long barangId;
 
-    @Column(name = "id_sparepart")
-    private String sparepartId;
+    @Column(name = "id_sparepart", length = 20)
+    private Long sparepartId;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

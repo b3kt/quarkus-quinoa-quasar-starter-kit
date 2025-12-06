@@ -1,8 +1,11 @@
 package com.github.b3kt.application.dto;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Generic API response wrapper.
  */
+@RegisterForReflection
 public class ApiResponse<T> {
     private boolean success;
     private String message;
@@ -65,4 +68,3 @@ public class ApiResponse<T> {
         this.error = error;
     }
 }
-

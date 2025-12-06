@@ -284,7 +284,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 
@@ -566,6 +566,7 @@ const filterSuppliers = async (val, update) => {
         })
     } catch (error) {
         update(() => {
+            console.error('Error fetching suppliers:', error)
             supplierOptions.value = []
         })
     }
@@ -580,9 +581,13 @@ const filterSpareparts = async (val, update) => {
     }
 
     try {
-        const response = await api.get('/api/pazaauto/sparepart', {
-            params: { search: val }
-        })
+        const params = { search: val }
+        const supplierId = formData.value.supplierId?.id || formData.value.supplierId
+        if (supplierId) {
+            params.supplierId = supplierId
+        }
+
+        const response = await api.get('/api/pazaauto/sparepart', { params })
         update(() => {
             if (response.data.success) {
                 sparepartOptions.value = response.data.data || []
@@ -590,6 +595,7 @@ const filterSpareparts = async (val, update) => {
         })
     } catch (error) {
         update(() => {
+            console.error('Error fetching spareparts:', error)
             sparepartOptions.value = []
         })
     }
@@ -609,7 +615,8 @@ const savePembelian = async () => {
         const details = formData.value.details.map(detail => ({
             ...detail,
             sparepartId: detail.sparepartId?.kodeBarang || detail.sparepartId,
-            kategoriItem: formData.value.jenisPembelian
+            kategoriItem: formData.value.jenisPembelian,
+            supplierId: formData.value.supplierId?.id || formData.value.supplierId
         }))
 
         const requestBody = {

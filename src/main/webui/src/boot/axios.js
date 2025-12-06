@@ -15,7 +15,7 @@ const getBaseURL = () => {
     return 'http://localhost:8080'
   }
   // In production, use the same origin
-  return '/api'
+  return '/'
 }
 
 const api = axios.create({

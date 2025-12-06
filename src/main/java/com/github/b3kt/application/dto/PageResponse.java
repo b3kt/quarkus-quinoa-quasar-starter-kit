@@ -1,10 +1,12 @@
 package com.github.b3kt.application.dto;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.util.List;
 
 /**
  * DTO for paginated response data.
  */
+@RegisterForReflection
 public class PageResponse<T> {
     private List<T> rows;
     private int page;

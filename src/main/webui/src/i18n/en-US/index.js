@@ -67,14 +67,14 @@ export default {
       },
       sales: {
         title: 'Penjualan',
-        caption: 'Penjualan',
+        caption: 'Penjualan & Pemasukan',
         buy: {
-          title: 'Beli',
-          caption: 'Penjualan Beli'
+          title: 'Pembelian',
+          caption: 'Pembelian & Pengeluaran'
         },
         sell: {
-          title: 'Jual',
-          caption: 'Penjualan Jual'
+          title: 'Penjualan',
+          caption: 'Penjualan & Pemasukan'
         }
       },
       report: {

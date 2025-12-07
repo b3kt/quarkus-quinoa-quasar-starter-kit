@@ -1,174 +1,172 @@
 <template>
   <q-page padding>
-    <div class="q-pa-md">
-      <!-- Toolbar -->
-      <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn flat :label="$t('create') + ' Sparepart'" icon="add" color="white" class="bg-primary"
-          @click="openCreateDialog" />
-        <q-space />
-        <div class="col-6">
-          <q-input dense standout="bg-primary" v-model="searchText" input-class="search-field text-left" class="q-ml-md"
-            placeholder="Search by code or name...">
-            <template v-slot:append>
-              <q-icon v-if="searchText === ''" name="search" />
-              <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
-            </template>
-          </q-input>
-        </div>
-      </q-toolbar>
+    <GenericTable :rows="rows" :columns="columns" :loading="loading" :pagination="pagination"
+      @update:pagination="pagination = $event" @request="onRequest" @search="onSearch" :on-create="openCreateDialog"
+      :on-edit="openEditDialog" :on-delete="confirmDelete" create-label="Create Sparepart"
+      search-placeholder="Search by code or name...">
+      <template v-slot:body-cell-active="props">
+        <q-td :props="props">
+          <q-badge :color="props.row.active ? 'green' : 'red'">
+            {{ props.row.active ? 'Active' : 'Inactive' }}
+          </q-badge>
+        </q-td>
+      </template>
 
-      <!-- Data Table -->
-      <q-table class="my-sticky-header-table" flat bordered :rows="filteredRows" :columns="columns" row-key="kodeBarang"
-        :loading="loading" :pagination="pagination" @request="onRequest">
-        <template v-slot:body-cell-active="props">
-          <q-td :props="props">
-            <q-badge :color="props.row.active ? 'green' : 'red'">
-              {{ props.row.active ? 'Active' : 'Inactive' }}
-            </q-badge>
-          </q-td>
-        </template>
+      <template v-slot:body-cell-hargaJual="props">
+        <q-td :props="props">
+          {{ formatCurrency(props.row.hargaJual) }}
+        </q-td>
+      </template>
 
-        <template v-slot:body-cell-hargaJual="props">
-          <q-td :props="props">
-            {{ formatCurrency(props.row.hargaJual) }}
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-hargaBeli="props">
-          <q-td :props="props">
-            {{ formatCurrency(props.row.hargaBeli) }}
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-actions="props">
-          <q-td :props="props">
-            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
-              <q-tooltip>Edit</q-tooltip>
-            </q-btn>
-            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
-              <q-tooltip>Delete</q-tooltip>
-            </q-btn>
-          </q-td>
-        </template>
-      </q-table>
-    </div>
+      <template v-slot:body-cell-hargaBeli="props">
+        <q-td :props="props">
+          {{ formatCurrency(props.row.hargaBeli) }}
+        </q-td>
+      </template>
+    </GenericTable>
 
     <!-- Create/Edit Dialog -->
-    <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 600px">
-        <q-card-section>
-          <div class="text-h6">{{ isEditMode ? 'Edit Sparepart' : 'Create Sparepart' }}</div>
-        </q-card-section>
+    <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit Sparepart' : 'Create Sparepart'" min-width="600px">
+      <q-form @submit="handleSave" id="sparepart-form" class="q-gutter-md">
+        <q-input v-model="formData.kodeSparepart" label="Kode Sparepart *" outlined dense
+          :rules="[val => !!val || 'Kode Sparepart is required']" />
 
-        <q-card-section class="q-pt-none">
-          <q-form @submit="saveSparepart" class="q-gutter-md">
-            <q-input v-model="formData.kodeSparepart" label="Kode Sparepart *" outlined dense
-              :rules="[val => !!val || 'Kode Sparepart is required']" />
+        <q-input v-model="formData.namaSparepart" label="Nama Sparepart *" outlined dense
+          :rules="[val => !!val || 'Nama Sparepart is required']" />
 
-            <q-input v-model="formData.namaSparepart" label="Nama Sparepart *" outlined dense
-              :rules="[val => !!val || 'Nama Sparepart is required']" />
+        <div class="row q-col-gutter">
+          <div class="col-6">
+            <q-input v-model.number="formData.hargaJual" label="Harga Jual" outlined dense type="number" step="0.01"
+              prefix="Rp" class="q-mr-md" />
+          </div>
+          <div class="col-6">
+            <q-input v-model.number="formData.hargaBeli" label="Harga Beli" outlined dense type="number" step="0.01"
+              prefix="Rp" />
+          </div>
+        </div>
 
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input v-model.number="formData.hargaJual" label="Harga Jual" outlined dense type="number" step="0.01"
-                  prefix="Rp" class="q-mr-md" />
-              </div>
-              <div class="col-6">
-                <q-input v-model.number="formData.hargaBeli" label="Harga Beli" outlined dense type="number" step="0.01"
-                  prefix="Rp" />
-              </div>
-            </div>
+        <div class="row q-col-gutter">
+          <div class="col-4">
+            <q-input v-model.number="formData.stok" label="Stok" outlined dense type="number" class="q-mr-md" />
+          </div>
+          <div class="col-4">
+            <q-input v-model.number="formData.stokMinimal" label="Stok Minimal" outlined dense type="number"
+              class="q-mr-md" />
+          </div>
+          <div class="col-4">
+            <q-input v-model="formData.satuan" label="Satuan" outlined dense />
+          </div>
+        </div>
 
-            <div class="row q-col-gutter">
-              <div class="col-4">
-                <q-input v-model.number="formData.stok" label="Stok" outlined dense type="number" class="q-mr-md" />
-              </div>
-              <div class="col-4">
-                <q-input v-model.number="formData.stokMinimal" label="Stok Minimal" outlined dense type="number"
-                  class="q-mr-md" />
-              </div>
-              <div class="col-4">
-                <q-input v-model="formData.satuan" label="Satuan" outlined dense />
-              </div>
-            </div>
+        <div class="row q-col-gutter">
+          <div class="col-6">
+            <q-input v-model="formData.merek" label="Merek" outlined dense class="q-mr-md" />
+          </div>
+          <div class="col-6">
+            <q-input v-model="formData.tipeKendaraan" label="Tipe Kendaraan" outlined dense />
+          </div>
+        </div>
 
-            <div class="row q-col-gutter">
-              <div class="col-6">
-                <q-input v-model="formData.merek" label="Merek" outlined dense class="q-mr-md" />
-              </div>
-              <div class="col-6">
-                <q-input v-model="formData.tipeKendaraan" label="Tipe Kendaraan" outlined dense />
-              </div>
-            </div>
+        <q-select v-model="formData.supplierId" label="Supplier" outlined dense use-input input-debounce="300"
+          :options="supplierOptions" option-value="id" option-label="namaSupplier" @filter="filterSuppliers" emit-value
+          map-options clearable>
+          <template v-slot:no-option>
+            <q-item>
+              <q-item-section class="text-grey">
+                No results
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
 
-            <q-select v-model="formData.supplierId" label="Supplier" outlined dense use-input input-debounce="300"
-              :options="supplierOptions" option-value="id" option-label="namaSupplier" @filter="filterSuppliers"
-              emit-value map-options clearable>
-              <template v-slot:no-option>
-                <q-item>
-                  <q-item-section class="text-grey">
-                    No results
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
+        <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2" />
 
-            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2" />
-
-            <q-checkbox v-model="formData.active" label="Active" />
-
-            <div class="row justify-end q-gutter-sm">
-              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+        <q-checkbox v-model="formData.active" label="Active" />
+      </q-form>
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="showDialog = false" />
+        <q-btn label="Save" type="submit" form="sparepart-form" color="primary" :loading="saving" />
+      </template>
+    </GenericDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <q-dialog v-model="showDeleteDialog" persistent>
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Confirm Delete</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          Are you sure you want to delete <strong>{{ itemToDelete?.namaSparepart }}</strong>?
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn flat label="Delete" color="negative" @click="deleteSparepart" :loading="deleting" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
+      Are you sure you want to delete <strong>{{ itemToDelete?.namaSparepart }}</strong>?
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
+        <q-btn flat label="Delete" color="negative" @click="deleteItem" :loading="deleting" />
+      </template>
+    </GenericDialog>
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { api } from 'boot/axios'
-import { useQuasar } from 'quasar'
+import GenericTable from 'components/GenericTable.vue'
+import GenericDialog from 'components/GenericDialog.vue'
+import { useCrud } from 'src/composables/useCrud'
 
-const $q = useQuasar()
-
-const loading = ref(false)
-const saving = ref(false)
-const deleting = ref(false)
-const searchText = ref('')
-const rows = ref([])
-const showDialog = ref(false)
-const showDeleteDialog = ref(false)
-const isEditMode = ref(false)
-const itemToDelete = ref(null)
-
-const pagination = ref({
-  page: 1,
-  rowsPerPage: 10,
-  rowsNumber: 0
+// Use CRUD Composable
+const {
+  rows,
+  loading,
+  saving,
+  deleting,
+  showDialog,
+  showDeleteDialog,
+  isEditMode,
+  itemToDelete,
+  pagination,
+  fetchData,
+  onRequest,
+  onSearch,
+  saveData,
+  confirmDelete,
+  deleteItem,
+  openCreateDialog: baseOpenCreateDialog,
+  openEditDialog: baseOpenEditDialog
+} = useCrud({
+  baseApiUrl: '/api/pazaauto/sparepart',
+  idField: 'kodeBarang',
+  defaultPagination: {
+    sortBy: null,
+    descending: false,
+    page: 1,
+    rowsPerPage: 10,
+    rowsNumber: 0
+  }
 })
 
+// Supplier Logic
+const supplierOptions = ref([])
+
+const filterSuppliers = async (val, update) => {
+  if (val === '') {
+    update(() => {
+      supplierOptions.value = []
+    })
+    return
+  }
+
+  try {
+    const response = await api.get('/api/pazaauto/supplier', {
+      params: { search: val }
+    })
+    update(() => {
+      if (response.data.success) {
+        supplierOptions.value = response.data.data || []
+      }
+    })
+  } catch (error) {
+    update(() => {
+      console.error('Error fetching suppliers:', error)
+      supplierOptions.value = []
+    })
+  }
+}
+
+// Form Data
 const formData = ref({
   kodeBarang: '',
   kodeSparepart: '',
@@ -185,6 +183,52 @@ const formData = ref({
   active: true
 })
 
+const resetForm = () => {
+  formData.value = {
+    kodeBarang: '',
+    kodeSparepart: '',
+    namaSparepart: '',
+    hargaJual: null,
+    hargaBeli: null,
+    stok: null,
+    stokMinimal: null,
+    satuan: '',
+    merek: '',
+    tipeKendaraan: '',
+    supplierId: null,
+    keterangan: '',
+    active: true
+  }
+  supplierOptions.value = []
+}
+
+const openCreateDialog = () => {
+  baseOpenCreateDialog(resetForm)
+}
+
+const openEditDialog = async (row) => {
+  baseOpenEditDialog(row, (r) => {
+    formData.value = { ...r }
+  })
+
+  // Pre-load supplier if exists
+  if (row.supplierId) {
+    try {
+      const response = await api.get(`/api/pazaauto/supplier/${row.supplierId}`)
+      if (response.data.success) {
+        supplierOptions.value = [response.data.data]
+      }
+    } catch (error) {
+      console.error('Error fetching supplier details:', error)
+    }
+  }
+}
+
+const handleSave = async () => {
+  await saveData(formData.value)
+}
+
+// Table Columns
 const columns = [
   {
     name: 'kodeSparepart',
@@ -244,174 +288,6 @@ const columns = [
   }
 ]
 
-const filteredRows = computed(() => {
-  if (!searchText.value) {
-    return rows.value
-  }
-  const search = searchText.value.toLowerCase()
-  return rows.value.filter(row =>
-    row.kodeSparepart?.toLowerCase().includes(search) ||
-    row.namaSparepart?.toLowerCase().includes(search)
-  )
-})
-
-const fetchSparepart = async () => {
-  loading.value = true
-  try {
-    const response = await api.get('/api/pazaauto/sparepart')
-    if (response.data.success) {
-      rows.value = response.data.data || []
-      pagination.value.rowsNumber = rows.value.length
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to fetch sparepart data',
-      caption: error.response?.data?.message || error.message
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-const onRequest = (props) => {
-  pagination.value = props.pagination
-}
-
-const openCreateDialog = () => {
-  isEditMode.value = false
-  resetForm()
-  showDialog.value = true
-}
-
-const openEditDialog = async (row) => {
-  isEditMode.value = true
-  formData.value = { ...row }
-
-  // Pre-load supplier if exists
-  if (row.supplierId) {
-    try {
-      const response = await api.get(`/api/pazaauto/supplier/${row.supplierId}`)
-      if (response.data.success) {
-        supplierOptions.value = [response.data.data]
-      }
-    } catch (error) {
-      console.error('Error fetching supplier details:', error)
-    }
-  }
-
-  showDialog.value = true
-}
-
-const closeDialog = () => {
-  showDialog.value = false
-  resetForm()
-}
-
-const supplierOptions = ref([])
-
-const filterSuppliers = async (val, update) => {
-  if (val === '') {
-    update(() => {
-      supplierOptions.value = []
-    })
-    return
-  }
-
-  try {
-    const response = await api.get('/api/pazaauto/supplier', {
-      params: { search: val }
-    })
-    update(() => {
-      if (response.data.success) {
-        supplierOptions.value = response.data.data || []
-      }
-    })
-  } catch (error) {
-    update(() => {
-      console.error('Error fetching suppliers:', error)
-      supplierOptions.value = []
-    })
-  }
-}
-
-const resetForm = () => {
-  formData.value = {
-    kodeBarang: '',
-    kodeSparepart: '',
-    namaSparepart: '',
-    hargaJual: null,
-    hargaBeli: null,
-    stok: null,
-    stokMinimal: null,
-    satuan: '',
-    merek: '',
-    tipeKendaraan: '',
-    supplierId: null,
-    keterangan: '',
-    active: true
-  }
-  supplierOptions.value = []
-}
-
-const saveSparepart = async () => {
-  saving.value = true
-  try {
-    let response
-    if (isEditMode.value) {
-      response = await api.put(`/api/pazaauto/sparepart/${formData.value.kodeBarang}`, formData.value)
-    } else {
-      response = await api.post('/api/pazaauto/sparepart', formData.value)
-    }
-
-    if (response.data.success) {
-      $q.notify({
-        type: 'positive',
-        message: isEditMode.value ? 'Sparepart updated successfully' : 'Sparepart created successfully'
-      })
-      closeDialog()
-      await fetchSparepart()
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to save sparepart',
-      caption: error.response?.data?.message || error.message
-    })
-  } finally {
-    saving.value = false
-  }
-}
-
-const confirmDelete = (row) => {
-  itemToDelete.value = row
-  showDeleteDialog.value = true
-}
-
-const deleteSparepart = async () => {
-  deleting.value = true
-  try {
-    const response = await api.delete(`/api/pazaauto/sparepart/${itemToDelete.value.kodeBarang}`)
-    if (response.data.success) {
-      $q.notify({
-        type: 'positive',
-        message: 'Sparepart deleted successfully'
-      })
-      showDeleteDialog.value = false
-      itemToDelete.value = null
-      await fetchSparepart()
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to delete sparepart',
-      caption: error.response?.data?.message || error.message
-    })
-  } finally {
-    deleting.value = false
-  }
-}
-
 const formatCurrency = (value) => {
   if (!value) return 'Rp 0'
   return new Intl.NumberFormat('id-ID', {
@@ -421,20 +297,11 @@ const formatCurrency = (value) => {
   }).format(value)
 }
 
+// Lifecycle
 onMounted(() => {
-  fetchSparepart()
+  fetchData()
 })
 </script>
 
 <style lang="sass" scoped>
-.my-sticky-header-table
-  max-height: 70vh
-
-  thead tr th
-    position: sticky
-    z-index: 1
-    background-color: #ffffff
-
-  thead tr:first-child th
-    top: 0
 </style>

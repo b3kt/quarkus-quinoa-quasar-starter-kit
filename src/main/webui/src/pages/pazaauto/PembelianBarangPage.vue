@@ -53,88 +53,66 @@
         </div>
 
         <!-- Create/Edit Dialog -->
-        <q-dialog v-model="showDialog" persistent>
-            <q-card class="dialog-pembelian">
-                <q-card-section>
-                    <div class="text-h6">{{ isEditMode ? 'Edit Pembelian' : 'Create Pembelian' }}</div>
-                </q-card-section>
+        <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit Pembelian' : 'Create Pembelian'"
+            min-width="80vw">
+            <q-form @submit="savePembelian" id="pembelian-barang-form" class="q-gutter-md">
+                <div class="row q-col-gutter-md">
+                    <div class="col-6">
+                        <q-input v-model="formData.noPembelian" label="No Pembelian *" outlined dense
+                            :rules="[val => !!val || 'No Pembelian is required']" />
+                    </div>
+                    <div class="col-3">
+                        <q-input v-model="formData.tanggalPembelian" label="Tanggal Pembelian" outlined dense
+                            type="date" stack-label />
+                    </div>
+                </div>
 
-                <q-card-section class="q-pt-none">
-                    <q-form @submit="savePembelian">
-                        <div class="row q-col-gutter-md">
-                            <div class="col-6">
-                                <q-input v-model="formData.noPembelian" label="No Pembelian *" outlined dense
-                                    :rules="[val => !!val || 'No Pembelian is required']" />
-                            </div>
-                            <div class="col-3">
-                                <q-input v-model="formData.tanggalPembelian" label="Tanggal Pembelian" outlined dense
-                                    type="date" stack-label />
-                            </div>
-                        </div>
+                <div class="row q-col-gutter-md">
+                    <div class="col-6">
+                        <q-input v-model="formData.namaSupplier" label="Nama Supplier *" outlined dense
+                            :rules="[val => !!val || 'Nama Supplier is required']" />
 
-                        <div class="row q-col-gutter-md">
-                            <div class="col-6">
-                                <q-input v-model="formData.namaSupplier" label="Nama Supplier *" outlined dense
-                                    :rules="[val => !!val || 'Nama Supplier is required']" />
+                    </div>
 
-                            </div>
-
-                        </div>
+                </div>
 
 
-                        <div class="row q-col-gutter-md">
-                            <div class="col-6">
-                                <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense
-                                    type="number" prefix="Rp" />
+                <div class="row q-col-gutter-md">
+                    <div class="col-6">
+                        <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense type="number"
+                            prefix="Rp" />
 
-                            </div>
-                            <div class="col-3">
-                                <q-select v-model="formData.jenisPembayaran" label="Jenis Pembayaran" outlined dense
-                                    :options="['CASH', 'CREDIT', 'TRANSFER']" />
+                    </div>
+                    <div class="col-3">
+                        <q-select v-model="formData.jenisPembayaran" label="Jenis Pembayaran" outlined dense
+                            :options="['CASH', 'CREDIT', 'TRANSFER']" />
 
-                            </div>
-                            <div class="col-3">
-                                <q-select v-model="formData.statusPembayaran" label="Status Pembayaran" outlined dense
-                                    :options="statusOptions" />
+                    </div>
+                    <div class="col-3">
+                        <q-select v-model="formData.statusPembayaran" label="Status Pembayaran" outlined dense
+                            :options="statusOptions" />
 
-                            </div>
-                        </div>
+                    </div>
+                </div>
 
-                        <div class="q-my-md">
-                            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea"
-                                rows="3" />
-                        </div>
-
-
-
-
-
-                        <div class="row justify-end q-gutter-sm">
-                            <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-                            <q-btn label="Save" type="submit" color="primary" :loading="saving" />
-                        </div>
-                    </q-form>
-                </q-card-section>
-            </q-card>
-        </q-dialog>
+                <div class="q-my-md">
+                    <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="3" />
+                </div>
+            </q-form>
+            <template #actions>
+                <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+                <q-btn label="Save" type="submit" form="pembelian-barang-form" color="primary" :loading="saving" />
+            </template>
+        </GenericDialog>
 
         <!-- Delete Confirmation Dialog -->
-        <q-dialog v-model="showDeleteDialog" persistent>
-            <q-card>
-                <q-card-section>
-                    <div class="text-h6">Confirm Delete</div>
-                </q-card-section>
-
-                <q-card-section class="q-pt-none">
-                    Are you sure you want to delete Pembelian <strong>{{ itemToDelete?.noPembelian }}</strong>?
-                </q-card-section>
-
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-                    <q-btn flat label="Delete" color="negative" @click="deletePembelian" :loading="deleting" />
-                </q-card-actions>
-            </q-card>
-        </q-dialog>
+        <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
+            Are you sure you want to delete Pembelian <strong>{{ itemToDelete?.noPembelian }}</strong>?
+            <template #actions>
+                <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
+                <q-btn flat label="Delete" color="negative" @click="deletePembelian" :loading="deleting" />
+            </template>
+        </GenericDialog>
     </q-page>
 </template>
 
@@ -142,6 +120,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import GenericDialog from 'components/GenericDialog.vue'
 
 const $q = useQuasar()
 

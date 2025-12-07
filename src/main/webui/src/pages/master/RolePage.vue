@@ -45,47 +45,28 @@
     </div>
 
     <!-- Create/Edit Dialog -->
-    <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 500px">
-        <q-card-section>
-          <div class="text-h6">{{ isEditMode ? 'Edit Role' : 'Create Role' }}</div>
-        </q-card-section>
+    <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit Role' : 'Create Role'" min-width="500px">
+      <q-form @submit="saveRole" id="role-form" class="q-gutter-md">
+        <q-input v-model="formData.name" label="Name *" outlined dense :rules="[val => !!val || 'Name is required']" />
 
-        <q-card-section class="q-pt-none">
-          <q-form @submit="saveRole" class="q-gutter-md">
-            <q-input v-model="formData.name" label="Name *" outlined dense
-              :rules="[val => !!val || 'Name is required']" />
+        <q-input v-model="formData.description" label="Description" outlined dense type="textarea" rows="3" />
 
-            <q-input v-model="formData.description" label="Description" outlined dense type="textarea" rows="3" />
-
-            <q-checkbox v-model="formData.active" label="Active" />
-
-            <div class="row justify-end q-gutter-sm">
-              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+        <q-checkbox v-model="formData.active" label="Active" />
+      </q-form>
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+        <q-btn label="Save" type="submit" form="role-form" color="primary" :loading="saving" />
+      </template>
+    </GenericDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <q-dialog v-model="showDeleteDialog" persistent>
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Confirm Delete</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          Are you sure you want to delete <strong>{{ itemToDelete?.name }}</strong>?
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn flat label="Delete" color="negative" @click="deleteRole" :loading="deleting" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
+      Are you sure you want to delete <strong>{{ itemToDelete?.name }}</strong>?
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
+        <q-btn flat label="Delete" color="negative" @click="deleteRole" :loading="deleting" />
+      </template>
+    </GenericDialog>
   </q-page>
 </template>
 
@@ -94,6 +75,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import GenericDialog from 'components/GenericDialog.vue'
 
 const router = useRouter()
 const $q = useQuasar()

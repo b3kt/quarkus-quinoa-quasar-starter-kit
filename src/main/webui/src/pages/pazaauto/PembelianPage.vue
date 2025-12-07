@@ -68,218 +68,191 @@
         </div>
 
         <!-- Create/Edit Dialog -->
-        <q-dialog v-model="showDialog" persistent>
-            <q-card class="dialog-pembelian">
-                <q-card-section>
-                    <div class="text-h6">{{ isEditMode ? 'Edit Pembelian' : 'Create Pembelian' }}</div>
-                </q-card-section>
+        <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit Pembelian' : 'Create Pembelian'"
+            min-width="90vw">
+            <q-form @submit="savePembelian" id="pembelian-form">
+                <!-- Purchase Type Selector -->
+                <div class="row q-mb-md">
+                    <q-option-group v-model="formData.jenisPembelian" :options="jenisPembelianRadioOptions"
+                        color="primary" inline @update:model-value="onJenisPembelianChange" />
+                </div>
 
-                <q-card-section class="q-pt-none">
-                    <q-form @submit="savePembelian">
-                        <!-- Purchase Type Selector -->
-                        <div class="row q-mb-md">
-                            <q-option-group v-model="formData.jenisPembelian" :options="jenisPembelianRadioOptions"
-                                color="primary" inline @update:model-value="onJenisPembelianChange" />
-                        </div>
+                <div class="row q-col-gutter-md">
+                    <div class="col-6">
+                        <q-input v-model="formData.noPembelian" label="No Pembelian *" outlined dense
+                            :rules="[val => !!val || 'No Pembelian is required']" />
+                    </div>
+                    <div class="col-6">
+                        <q-input v-model="formData.tanggalPembelian" label="Tanggal Pembelian" outlined dense
+                            type="datetime-local" stack-label />
+                    </div>
+                </div>
 
-                        <div class="row q-col-gutter-md">
-                            <div class="col-6">
-                                <q-input v-model="formData.noPembelian" label="No Pembelian *" outlined dense
-                                    :rules="[val => !!val || 'No Pembelian is required']" />
-                            </div>
-                            <div class="col-6">
-                                <q-input v-model="formData.tanggalPembelian" label="Tanggal Pembelian" outlined dense
-                                    type="datetime-local" stack-label />
-                            </div>
-                        </div>
+                <!-- Operational Expense Fields -->
+                <div v-if="formData.jenisPembelian === 'OPERASIONAL'" class="row q-col-gutter-md q-mt-sm">
+                    <div class="col-6">
+                        <q-input v-model="formData.jenisOperasional" label="Jenis Operasional *" outlined dense
+                            placeholder="e.g., Electricity, Rent, Maintenance"
+                            :rules="[val => !!val || 'Jenis Operasional is required for operational expenses']" />
+                    </div>
+                    <div class="col-6">
+                        <q-select v-model="formData.kategoriOperasional" label="Kategori Operasional *" outlined dense
+                            :options="kategoriOperasionalOptions"
+                            :rules="[val => !!val || 'Kategori is required for operational expenses']" />
+                    </div>
+                </div>
 
-                        <!-- Operational Expense Fields -->
-                        <div v-if="formData.jenisPembelian === 'OPERASIONAL'" class="row q-col-gutter-md q-mt-sm">
-                            <div class="col-6">
-                                <q-input v-model="formData.jenisOperasional" label="Jenis Operasional *" outlined dense
-                                    placeholder="e.g., Electricity, Rent, Maintenance"
-                                    :rules="[val => !!val || 'Jenis Operasional is required for operational expenses']" />
-                            </div>
-                            <div class="col-6">
-                                <q-select v-model="formData.kategoriOperasional" label="Kategori Operasional *" outlined
-                                    dense :options="kategoriOperasionalOptions"
-                                    :rules="[val => !!val || 'Kategori is required for operational expenses']" />
-                            </div>
-                        </div>
-
-                        <!-- Supplier Field -->
-                        <div class="row q-col-gutter-md q-mt-sm">
-                            <div class="col-6">
-                                <q-select v-model="formData.supplierId" label="Supplier" outlined dense use-input
-                                    input-debounce="300" :options="supplierOptions" option-value="id"
-                                    option-label="namaSupplier" @filter="filterSuppliers" clearable
-                                    :rules="formData.jenisPembelian === 'SPAREPART' ? [val => !!val || 'Supplier is required for sparepart purchases'] : []">
-                                    <template v-slot:no-option>
-                                        <q-item>
-                                            <q-item-section class="text-grey">
-                                                No results
-                                            </q-item-section>
-                                        </q-item>
-                                    </template>
-                                </q-select>
-                            </div>
-                            <div class="col-6">
-                                <q-select v-model="formData.statusPembayaran" label="Status Pembayaran" outlined dense
-                                    :options="statusOptions" />
-                            </div>
-                        </div>
-
-                        <div class="row q-col-gutter-md q-mt-sm">
-                            <div class="col-4">
-                                <q-select v-model="formData.jenisPembayaran" label="Jenis Pembayaran" outlined dense
-                                    :options="['CASH', 'CREDIT', 'TRANSFER']" />
-                            </div>
-                            <div class="col-4">
-                                <q-input v-model.number="formData.diskon" label="Diskon" outlined dense type="number"
-                                    prefix="Rp" />
-                            </div>
-                            <div class="col-4">
-                                <q-input v-model.number="formData.ppn" label="PPN" outlined dense type="number"
-                                    prefix="Rp" />
-                            </div>
-                        </div>
-
-                        <div class="q-my-md">
-                            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea"
-                                rows="2" />
-                        </div>
-
-                        <!-- Detail Items Section -->
-                        <q-separator class="q-my-md" />
-                        <div class="text-subtitle1 q-mb-md">Detail Items</div>
-
-                        <div v-for="(detail, index) in formData.details" :key="index"
-                            class="row q-col-gutter-md q-mb-md">
-                            <!-- Sparepart Purchase Detail -->
-                            <template v-if="formData.jenisPembelian === 'SPAREPART'">
-                                <div class="col-4">
-                                    <q-select v-model="detail.sparepartId" label="Sparepart *" outlined dense use-input
-                                        input-debounce="300" :options="sparepartOptions" option-value="kodeBarang"
-                                        option-label="namaSparepart" @filter="filterSpareparts"
-                                        @update:model-value="onSparepartSelected(detail)"
-                                        :rules="[val => !!val || 'Sparepart is required']">
-                                        <template v-slot:no-option>
-                                            <q-item>
-                                                <q-item-section class="text-grey">
-                                                    No results
-                                                </q-item-section>
-                                            </q-item>
-                                        </template>
-                                    </q-select>
-                                </div>
-                                <div class="col-2">
-                                    <q-input v-model.number="detail.harga" label="Harga *" outlined dense type="number"
-                                        prefix="Rp" :rules="[val => !!val || 'Harga is required']" readonly />
-                                </div>
-                                <div class="col-2">
-                                    <q-input v-model.number="detail.kuantiti" label="Qty *" outlined dense type="number"
-                                        :rules="[val => !!val || 'Quantity is required']"
-                                        @update:model-value="calculateDetailTotal(detail)" />
-                                </div>
-                                <div class="col-2">
-                                    <q-input v-model.number="detail.total" label="Total" outlined dense type="number"
-                                        prefix="Rp" readonly />
-                                </div>
+                <!-- Supplier Field -->
+                <div class="row q-col-gutter-md q-mt-sm">
+                    <div class="col-6">
+                        <q-select v-model="formData.supplierId" label="Supplier" outlined dense use-input
+                            input-debounce="300" :options="supplierOptions" option-value="id"
+                            option-label="namaSupplier" @filter="filterSuppliers" clearable
+                            :rules="formData.jenisPembelian === 'SPAREPART' ? [val => !!val || 'Supplier is required for sparepart purchases'] : []">
+                            <template v-slot:no-option>
+                                <q-item>
+                                    <q-item-section class="text-grey">
+                                        No results
+                                    </q-item-section>
+                                </q-item>
                             </template>
+                        </q-select>
+                    </div>
+                    <div class="col-6">
+                        <q-select v-model="formData.statusPembayaran" label="Status Pembayaran" outlined dense
+                            :options="statusOptions" />
+                    </div>
+                </div>
 
-                            <!-- Operational Expense Detail -->
-                            <template v-else>
-                                <div class="col-4">
-                                    <q-input v-model="detail.namaItem" label="Item Name *" outlined dense
-                                        :rules="[val => !!val || 'Item name is required']" />
-                                </div>
-                                <div class="col-2">
-                                    <q-input v-model.number="detail.harga" label="Harga *" outlined dense type="number"
-                                        prefix="Rp" :rules="[val => !!val || 'Harga is required']"
-                                        @update:model-value="calculateDetailTotal(detail)" />
-                                </div>
-                                <div class="col-2">
-                                    <q-input v-model.number="detail.kuantiti" label="Qty *" outlined dense type="number"
-                                        :rules="[val => !!val || 'Quantity is required']"
-                                        @update:model-value="calculateDetailTotal(detail)" />
-                                </div>
-                                <div class="col-2">
-                                    <q-input v-model.number="detail.total" label="Total" outlined dense type="number"
-                                        prefix="Rp" readonly />
-                                </div>
-                            </template>
+                <div class="row q-col-gutter-md q-mt-sm">
+                    <div class="col-4">
+                        <q-select v-model="formData.jenisPembayaran" label="Jenis Pembayaran" outlined dense
+                            :options="['CASH', 'CREDIT', 'TRANSFER']" />
+                    </div>
+                    <div class="col-4">
+                        <q-input v-model.number="formData.diskon" label="Diskon" outlined dense type="number"
+                            prefix="Rp" />
+                    </div>
+                    <div class="col-4">
+                        <q-input v-model.number="formData.ppn" label="PPN" outlined dense type="number" prefix="Rp" />
+                    </div>
+                </div>
 
-                            <div class="col-2 flex items-center">
-                                <q-btn flat dense round icon="delete" color="negative" @click="removeDetail(index)" />
-                            </div>
+                <div class="q-my-md">
+                    <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2" />
+                </div>
+
+                <!-- Detail Items Section -->
+                <q-separator class="q-my-md" />
+                <div class="text-subtitle1 q-mb-md">Detail Items</div>
+
+                <div v-for="(detail, index) in formData.details" :key="index" class="row q-col-gutter-md q-mb-md">
+                    <!-- Sparepart Purchase Detail -->
+                    <template v-if="formData.jenisPembelian === 'SPAREPART'">
+                        <div class="col-4">
+                            <q-select v-model="detail.sparepartId" label="Sparepart *" outlined dense use-input
+                                input-debounce="300" :options="sparepartOptions" option-value="kodeBarang"
+                                option-label="namaSparepart" @filter="filterSpareparts"
+                                @update:model-value="onSparepartSelected(detail)"
+                                :rules="[val => !!val || 'Sparepart is required']">
+                                <template v-slot:no-option>
+                                    <q-item>
+                                        <q-item-section class="text-grey">
+                                            No results
+                                        </q-item-section>
+                                    </q-item>
+                                </template>
+                            </q-select>
                         </div>
-
-                        <q-btn flat label="Add Item" icon="add" color="primary" @click="addDetail" class="q-mb-md" />
-
-                        <q-separator class="q-my-md" />
-
-                        <!-- Grand Total -->
-                        <div class="row justify-end">
-                            <div class="col-4">
-                                <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense
-                                    type="number" prefix="Rp" readonly />
-                            </div>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.harga" label="Harga *" outlined dense type="number"
+                                prefix="Rp" :rules="[val => !!val || 'Harga is required']" readonly />
                         </div>
-
-                        <div class="row justify-end q-gutter-sm q-mt-md">
-                            <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-                            <q-btn label="Save" type="submit" color="primary" :loading="saving" />
+                        <div class="col-2">
+                            <q-input v-model.number="detail.kuantiti" label="Qty *" outlined dense type="number"
+                                :rules="[val => !!val || 'Quantity is required']"
+                                @update:model-value="calculateDetailTotal(detail)" />
                         </div>
-                    </q-form>
-                </q-card-section>
-            </q-card>
-        </q-dialog>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.total" label="Total" outlined dense type="number"
+                                prefix="Rp" readonly />
+                        </div>
+                    </template>
+
+                    <!-- Operational Expense Detail -->
+                    <template v-else>
+                        <div class="col-4">
+                            <q-input v-model="detail.namaItem" label="Item Name *" outlined dense
+                                :rules="[val => !!val || 'Item name is required']" />
+                        </div>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.harga" label="Harga *" outlined dense type="number"
+                                prefix="Rp" :rules="[val => !!val || 'Harga is required']"
+                                @update:model-value="calculateDetailTotal(detail)" />
+                        </div>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.kuantiti" label="Qty *" outlined dense type="number"
+                                :rules="[val => !!val || 'Quantity is required']"
+                                @update:model-value="calculateDetailTotal(detail)" />
+                        </div>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.total" label="Total" outlined dense type="number"
+                                prefix="Rp" readonly />
+                        </div>
+                    </template>
+
+                    <div class="col-2 flex items-center">
+                        <q-btn flat dense round icon="delete" color="negative" @click="removeDetail(index)" />
+                    </div>
+                </div>
+
+                <q-btn flat label="Add Item" icon="add" color="primary" @click="addDetail" class="q-mb-md" />
+
+                <q-separator class="q-my-md" />
+
+                <!-- Grand Total -->
+                <div class="row justify-end">
+                    <div class="col-4">
+                        <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense type="number"
+                            prefix="Rp" readonly />
+                    </div>
+                </div>
+            </q-form>
+            <template #actions>
+                <q-btn flat label="Cancel" color="primary" @click="showDialog = false" />
+                <q-btn label="Save" type="submit" form="pembelian-form" color="primary" :loading="saving" />
+            </template>
+        </GenericDialog>
 
         <!-- Delete Confirmation Dialog -->
-        <q-dialog v-model="showDeleteDialog" persistent>
-            <q-card>
-                <q-card-section>
-                    <div class="text-h6">Confirm Delete</div>
-                </q-card-section>
-
-                <q-card-section class="q-pt-none">
-                    Are you sure you want to delete Pembelian <strong>{{ itemToDelete?.noPembelian }}</strong>?
-                </q-card-section>
-
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-                    <q-btn flat label="Delete" color="negative" @click="deletePembelian" :loading="deleting" />
-                </q-card-actions>
-            </q-card>
-        </q-dialog>
+        <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
+            Are you sure you want to delete Pembelian <strong>{{ itemToDelete?.noPembelian }}</strong>?
+            <template #actions>
+                <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
+                <q-btn flat label="Delete" color="negative" @click="deletePembelian" :loading="deleting" />
+            </template>
+        </GenericDialog>
 
         <!-- View Details Dialog -->
-        <q-dialog v-model="showDetailsDialog">
-            <q-card style="min-width: 600px">
-                <q-card-section>
-                    <div class="text-h6">Pembelian Details - {{ selectedItem?.noPembelian }}</div>
-                </q-card-section>
+        <GenericDialog v-model="showDetailsDialog" :title="`Pembelian Details - ${selectedItem?.noPembelian}`"
+            min-width="600px">
+            <q-list bordered separator>
+                <q-item v-for="detail in itemDetails" :key="detail.id">
+                    <q-item-section>
+                        <q-item-label>{{ detail.namaItem }}</q-item-label>
+                        <q-item-label caption>{{ detail.keterangan }}</q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                        <q-item-label>{{ detail.kuantiti }} x {{ formatCurrency(detail.harga) }}</q-item-label>
+                        <q-item-label caption>{{ formatCurrency(detail.total) }}</q-item-label>
+                    </q-item-section>
+                </q-item>
+            </q-list>
 
-                <q-card-section class="q-pt-none">
-                    <q-list bordered separator>
-                        <q-item v-for="detail in itemDetails" :key="detail.id">
-                            <q-item-section>
-                                <q-item-label>{{ detail.namaItem }}</q-item-label>
-                                <q-item-label caption>{{ detail.keterangan }}</q-item-label>
-                            </q-item-section>
-                            <q-item-section side>
-                                <q-item-label>{{ detail.kuantiti }} x {{ formatCurrency(detail.harga) }}</q-item-label>
-                                <q-item-label caption>{{ formatCurrency(detail.total) }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                    </q-list>
-                </q-card-section>
-
-                <q-card-actions align="right">
-                    <q-btn flat label="Close" color="primary" v-close-popup />
-                </q-card-actions>
-            </q-card>
-        </q-dialog>
+            <template #actions>
+                <q-btn flat label="Close" color="primary" v-close-popup />
+            </template>
+        </GenericDialog>
     </q-page>
 </template>
 
@@ -287,6 +260,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import GenericDialog from 'components/GenericDialog.vue'
 
 const $q = useQuasar()
 

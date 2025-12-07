@@ -1,142 +1,109 @@
 <template>
   <q-page padding>
-    <div class="q-pa-md">
-      <!-- Toolbar with Create button and Search -->
-      <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn flat :label="$t('create') + ' User'" icon="add" color="white" class="bg-primary"
-          @click="openCreateDialog" />
-        <q-space />
-        <div class="col-6">
-          <q-input dense standout="bg-secondary" v-model="searchText" input-class="search-field text-left"
-            class="q-ml-md" placeholder="Search by username or email...">
-            <template v-slot:append>
-              <q-icon v-if="searchText === ''" name="search" />
-              <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
-            </template>
-          </q-input>
-        </div>
-      </q-toolbar>
-
-      <!-- Data Table -->
-      <q-table class="my-sticky-header-table" flat bordered :rows="rows" :columns="columns" row-key="id"
-        :loading="loading" v-model:pagination="pagination" @request="onRequest" binary-state-sort>
-        <template v-slot:body-cell-active="props">
-          <q-td :props="props">
-            <q-badge :color="props.row.active ? 'green' : 'red'">
-              {{ props.row.active ? 'Active' : 'Inactive' }}
-            </q-badge>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-actions="props">
-          <q-td :props="props">
-            <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
-              <q-tooltip>Edit</q-tooltip>
-            </q-btn>
-            <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
-              <q-tooltip>Delete</q-tooltip>
-            </q-btn>
-          </q-td>
-        </template>
-      </q-table>
-    </div>
+    <GenericTable :rows="rows" :columns="columns" :loading="loading" :pagination="pagination"
+      @update:pagination="pagination = $event" @request="onRequest" @search="onSearch" :on-create="openCreateDialog"
+      :on-edit="openEditDialog" :on-delete="confirmDelete" create-label="Create User"
+      search-placeholder="Search by username or email...">
+      <template v-slot:body-cell-active="props">
+        <q-td :props="props">
+          <q-badge :color="props.row.active ? 'green' : 'red'">
+            {{ props.row.active ? 'Active' : 'Inactive' }}
+          </q-badge>
+        </q-td>
+      </template>
+    </GenericTable>
 
     <!-- Create/Edit Dialog -->
-    <q-dialog v-model="showDialog" persistent>
-      <q-card style="min-width: 500px">
-        <q-card-section>
-          <div class="text-h6">{{ isEditMode ? 'Edit User' : 'Create User' }}</div>
-        </q-card-section>
+    <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit User' : 'Create User'" min-width="500px">
+      <q-form @submit="handleSave" id="user-form" class="q-gutter-md">
+        <q-input v-model="formData.username" label="Username *" outlined dense
+          :rules="[val => !!val || 'Username is required']" />
 
-        <q-card-section class="q-pt-none">
-          <q-form @submit="saveUser" class="q-gutter-md">
-            <q-input v-model="formData.username" label="Username *" outlined dense
-              :rules="[val => !!val || 'Username is required']" />
+        <q-input v-model="formData.email" label="Email *" outlined dense type="email"
+          :rules="[val => !!val || 'Email is required']" />
 
-            <q-input v-model="formData.email" label="Email *" outlined dense type="email"
-              :rules="[val => !!val || 'Email is required']" />
+        <q-input v-model="formData.passwordHash" label="Password *" outlined dense
+          :type="showPassword ? 'text' : 'password'" :rules="[val => !!val || 'Password is required']">
+          <template v-slot:append>
+            <q-icon :name="showPassword ? 'visibility_off' : 'visibility'" class="cursor-pointer"
+              @click="showPassword = !showPassword" />
+          </template>
+        </q-input>
 
-            <q-input v-model="formData.passwordHash" label="Password *" outlined dense
-              :type="showPassword ? 'text' : 'password'" :rules="[val => !!val || 'Password is required']">
-              <template v-slot:append>
-                <q-icon :name="showPassword ? 'visibility_off' : 'visibility'" class="cursor-pointer"
-                  @click="showPassword = !showPassword" />
-              </template>
-            </q-input>
+        <q-select v-model="formData.karyawanId" :options="filteredKaryawanOptions" option-value="id"
+          option-label="namaKaryawan" emit-value map-options label="Pilih Karyawan" outlined dense use-input
+          input-debounce="300" @filter="filterKaryawan" clearable>
+          <template v-slot:no-option>
+            <q-item>
+              <q-item-section class="text-grey">
+                No results
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
 
-            <q-select v-model="formData.karyawanId" :options="filteredKaryawanOptions" option-value="id"
-              option-label="namaKaryawan" emit-value map-options label="Pilih Karyawan" outlined dense use-input
-              input-debounce="300" @filter="filterKaryawan" clearable>
-              <template v-slot:no-option>
-                <q-item>
-                  <q-item-section class="text-grey">
-                    No results
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-
-            <q-checkbox v-model="formData.active" label="Active" />
-
-            <div class="row justify-end q-gutter-sm">
-              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
-              <q-btn label="Save" type="submit" color="primary" :loading="saving" />
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+        <q-checkbox v-model="formData.active" label="Active" />
+      </q-form>
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="showDialog = false" />
+        <q-btn label="Save" type="submit" form="user-form" color="primary" :loading="saving" />
+      </template>
+    </GenericDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <q-dialog v-model="showDeleteDialog" persistent>
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Confirm Delete</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          Are you sure you want to delete <strong>{{ itemToDelete?.username }}</strong>?
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn flat label="Delete" color="negative" @click="deleteUser" :loading="deleting" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
+      Are you sure you want to delete <strong>{{ itemToDelete?.username }}</strong>?
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
+        <q-btn flat label="Delete" color="negative" @click="deleteItem" :loading="deleting" />
+      </template>
+    </GenericDialog>
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { api } from 'boot/axios'
-import { useQuasar } from 'quasar'
+import GenericTable from 'components/GenericTable.vue'
+import GenericDialog from 'components/GenericDialog.vue'
+import { useCrud } from 'src/composables/useCrud'
 
-const $q = useQuasar()
-
-// State
-const loading = ref(false)
-const saving = ref(false)
-const deleting = ref(false)
-const searchText = ref('')
-const rows = ref([])
-const showDialog = ref(false)
-const showDeleteDialog = ref(false)
-const isEditMode = ref(false)
-const karyawanOptions = ref([])
-const filteredKaryawanOptions = ref([])
-const itemToDelete = ref(null)
-const showPassword = ref(false)
-
-const pagination = ref({
-  sortBy: null,
-  descending: false,
-  page: 1,
-  rowsPerPage: 10,
-  rowsNumber: 0
+// Use CRUD Composable
+const {
+  rows,
+  loading,
+  saving,
+  deleting,
+  showDialog,
+  showDeleteDialog,
+  isEditMode,
+  itemToDelete,
+  pagination,
+  fetchData,
+  onRequest,
+  onSearch,
+  saveData,
+  confirmDelete,
+  deleteItem,
+  openCreateDialog: baseOpenCreateDialog,
+  openEditDialog: baseOpenEditDialog
+} = useCrud({
+  baseApiUrl: '/api/users',
+  defaultPagination: {
+    sortBy: null,
+    descending: false,
+    page: 1,
+    rowsPerPage: 10,
+    rowsNumber: 0
+  }
 })
 
-// Form data
+// Additional State
+const showPassword = ref(false)
+const karyawanOptions = ref([])
+const filteredKaryawanOptions = ref([])
+
+// Form Data
 const formData = ref({
   id: null,
   username: '',
@@ -146,7 +113,61 @@ const formData = ref({
   active: true
 })
 
-// Table columns
+const resetForm = () => {
+  formData.value = {
+    id: null,
+    username: '',
+    email: '',
+    passwordHash: '',
+    karyawanId: null,
+    active: true
+  }
+  showPassword.value = false
+}
+
+const openCreateDialog = async () => {
+  baseOpenCreateDialog(resetForm)
+  await fetchKaryawan()
+}
+
+const openEditDialog = async (row) => {
+  baseOpenEditDialog(row, (r) => {
+    formData.value = { ...r }
+  })
+  await fetchKaryawan()
+}
+
+const handleSave = async () => {
+  await saveData(formData.value)
+}
+
+// Karyawan Logic
+const fetchKaryawan = async () => {
+  try {
+    const response = await api.get('/api/pazaauto/karyawan')
+    if (response.data.success) {
+      karyawanOptions.value = response.data.data || []
+      filteredKaryawanOptions.value = karyawanOptions.value
+    }
+  } catch (error) {
+    console.error('Failed to fetch karyawan:', error)
+  }
+}
+
+const filterKaryawan = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredKaryawanOptions.value = karyawanOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      filteredKaryawanOptions.value = karyawanOptions.value.filter(
+        v => v.namaKaryawan.toLowerCase().indexOf(needle) > -1
+      )
+    }
+  })
+}
+
+// Table Columns
 const columns = [
   {
     name: 'username',
@@ -179,198 +200,11 @@ const columns = [
   }
 ]
 
-// Methods
-const fetchUsers = async (paginationData = pagination.value) => {
-  loading.value = true
-  try {
-    const params = {
-      page: paginationData.page,
-      rowsPerPage: paginationData.rowsPerPage
-    }
-
-    // Add sorting if specified
-    if (paginationData.sortBy) {
-      params.sortBy = paginationData.sortBy
-      params.descending = paginationData.descending
-    }
-
-    // Add search if specified
-    if (searchText.value) {
-      params.search = searchText.value
-    }
-
-    const response = await api.get('/api/users/paginated', { params })
-    if (response.data.success) {
-      const pageData = response.data.data
-      rows.value = pageData.rows || []
-      pagination.value.rowsNumber = pageData.rowsNumber
-      pagination.value.page = pageData.page
-      pagination.value.rowsPerPage = pageData.rowsPerPage
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to fetch users',
-      caption: error.response?.data?.message || error.message
-    })
-  } finally {
-    loading.value = false
-  }
-}
-
-const onRequest = (props) => {
-  const { page, rowsPerPage, sortBy, descending } = props.pagination
-  pagination.value.page = page
-  pagination.value.rowsPerPage = rowsPerPage
-  pagination.value.sortBy = sortBy
-  pagination.value.descending = descending
-  fetchUsers(pagination.value)
-}
-
-const fetchKaryawan = async () => {
-  try {
-    const response = await api.get('/api/pazaauto/karyawan')
-    if (response.data.success) {
-      karyawanOptions.value = response.data.data || []
-      filteredKaryawanOptions.value = karyawanOptions.value
-    }
-  } catch (error) {
-    console.error('Failed to fetch karyawan:', error)
-  }
-}
-
-const filterKaryawan = (val, update) => {
-  update(() => {
-    if (val === '') {
-      filteredKaryawanOptions.value = karyawanOptions.value
-    } else {
-      const needle = val.toLowerCase()
-      filteredKaryawanOptions.value = karyawanOptions.value.filter(
-        v => v.namaKaryawan.toLowerCase().indexOf(needle) > -1
-      )
-    }
-  })
-}
-
-const openCreateDialog = async () => {
-  isEditMode.value = false
-  resetForm()
-  await fetchKaryawan()
-  showDialog.value = true
-}
-
-const openEditDialog = async (row) => {
-  isEditMode.value = true
-  formData.value = { ...row }
-  await fetchKaryawan()
-  showDialog.value = true
-}
-
-const closeDialog = () => {
-  showDialog.value = false
-  resetForm()
-}
-
-const resetForm = () => {
-  formData.value = {
-    id: null,
-    username: '',
-    email: '',
-    passwordHash: '',
-    karyawanId: null,
-    active: true
-  }
-  showPassword.value = false
-}
-
-const saveUser = async () => {
-  saving.value = true
-  try {
-    let response
-    if (isEditMode.value) {
-      response = await api.put(`/api/users/${formData.value.id}`, formData.value)
-    } else {
-      response = await api.post('/api/users', formData.value)
-    }
-
-    if (response.data.success) {
-      $q.notify({
-        type: 'positive',
-        message: isEditMode.value ? 'User updated successfully' : 'User created successfully'
-      })
-      closeDialog()
-      await fetchUsers()
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to save user',
-      caption: error.response?.data?.message || error.message
-    })
-  } finally {
-    saving.value = false
-  }
-}
-
-const confirmDelete = (row) => {
-  itemToDelete.value = row
-  showDeleteDialog.value = true
-}
-
-const deleteUser = async () => {
-  deleting.value = true
-  try {
-    const response = await api.delete(`/api/users/${itemToDelete.value.id}`)
-    if (response.data.success) {
-      $q.notify({
-        type: 'positive',
-        message: 'User deleted successfully'
-      })
-      showDeleteDialog.value = false
-      itemToDelete.value = null
-      await fetchUsers()
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to delete user',
-      caption: error.response?.data?.message || error.message
-    })
-  } finally {
-    deleting.value = false
-  }
-}
-
-// Watchers
-let searchTimeout = null
-watch(searchText, (newVal) => {
-  console.log('searchText changed to:', newVal)
-  // Debounce search to avoid too many API calls
-  if (searchTimeout) {
-    clearTimeout(searchTimeout)
-  }
-  searchTimeout = setTimeout(() => {
-    // Reset to page 1 when searching
-    pagination.value.page = 1
-    fetchUsers()
-  }, 500)
-})
-
 // Lifecycle
 onMounted(() => {
-  fetchUsers()
+  fetchData()
 })
 </script>
 
 <style lang="sass" scoped>
-.my-sticky-header-table
-  max-height: 70vh
-
-  thead tr th
-    position: sticky
-    z-index: 1
-    background-color: #ffffff
-
-  thead tr:first-child th
-    top: 0
 </style>

@@ -61,6 +61,7 @@ export default defineConfig((ctx) => {
       // minify: false,
       // polyfillModulePreload: true,
       // distDir
+      gzip: true,
 
       extendViteConf(viteConf) {
         // Workaround for crypto.hash issue in Node 24

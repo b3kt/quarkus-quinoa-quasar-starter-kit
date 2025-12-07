@@ -56,9 +56,8 @@
         </div>
 
         <!-- Create/Edit Dialog -->
-        <q-dialog v-model="showDialog" persistent>
-            <q-card style="min-width: 700px; max-width: 800px">
-                <!-- Invoice Header -->
+        <GenericDialog v-model="showDialog" min-width="700px" max-width="800px">
+            <template #header>
                 <q-card-section class="bg-primary text-white">
                     <div class="row items-center">
                         <div class="col">
@@ -73,102 +72,88 @@
                         </div>
                     </div>
                 </q-card-section>
+            </template>
 
-                <q-separator />
+            <q-separator />
 
-                <q-card-section class="q-pt-none">
-                    <q-form @submit.prevent="closeDialog" class="q-gutter-md">
-                        <!-- Invoice Information Section -->
-                        <div class="q-mt-md">
-                            <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Invoice Information</div>
-                            <div class="row q-col-gutter-md">
-                                <div class="col-6">
-                                    <q-input v-model="formData.noPenjualan" label="No Penjualan" outlined dense
-                                        readonly />
-                                </div>
-                                <div class="col-6">
-                                    <q-input v-model="formData.tanggalJamPenjualan" label="Tanggal Penjualan" outlined
-                                        dense type="datetime-local" stack-label readonly />
-                                </div>
-                            </div>
-                            <div class="row q-col-gutter-md q-mt-xs">
-                                <div class="col-6">
-                                    <q-input v-model="formData.noSpk" label="No SPK" outlined dense readonly />
-                                </div>
-                                <div class="col-6">
-                                    <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense
-                                        type="number" prefix="Rp" readonly />
-                                </div>
-                            </div>
+            <q-form @submit.prevent="closeDialog" class="q-gutter-md q-mt-md">
+                <!-- Invoice Information Section -->
+                <div>
+                    <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Invoice Information</div>
+                    <div class="row q-col-gutter-md">
+                        <div class="col-6">
+                            <q-input v-model="formData.noPenjualan" label="No Penjualan" outlined dense readonly />
                         </div>
-
-                        <q-separator class="q-my-md" />
-
-                        <!-- Payment Details Section -->
-                        <div class="bg-grey-2 q-pa-md rounded-borders">
-                            <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Payment Details</div>
-                            <div class="row q-col-gutter-md">
-                                <div class="col-4">
-                                    <q-input v-model="formData.statusPembayaran" label="Status Pembayaran" outlined
-                                        dense readonly />
-                                </div>
-                                <div class="col-4">
-                                    <q-input v-model="formData.metodePembayaran" label="Metode Pembayaran" outlined
-                                        dense readonly />
-                                </div>
-                                <div class="col-4">
-                                    <q-input v-model.number="formData.uangDibayar" label="Uang Dibayar" outlined dense
-                                        type="number" prefix="Rp" readonly />
-                                </div>
-                            </div>
-                            <div class="row q-col-gutter-md q-mt-xs">
-                                <div class="col-6">
-                                    <q-input v-model.number="formData.kembalian" label="Kembalian" outlined dense
-                                        type="number" prefix="Rp" readonly />
-                                </div>
-                                <div class="col-6">
-                                    <q-input v-model.number="formData.diskon" label="Diskon" outlined dense
-                                        type="number" prefix="Rp" readonly />
-                                </div>
-                            </div>
+                        <div class="col-6">
+                            <q-input v-model="formData.tanggalJamPenjualan" label="Tanggal Penjualan" outlined dense
+                                type="datetime-local" stack-label readonly />
                         </div>
-
-                        <q-separator class="q-my-md" />
-
-                        <!-- Additional Notes -->
-                        <div>
-                            <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Additional Information
-                            </div>
-                            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea"
-                                rows="3" readonly />
+                    </div>
+                    <div class="row q-col-gutter-md q-mt-xs">
+                        <div class="col-6">
+                            <q-input v-model="formData.noSpk" label="No SPK" outlined dense readonly />
                         </div>
-
-                        <!-- Actions -->
-                        <div class="row justify-end q-gutter-sm q-mt-md">
-                            <q-btn label="Close" color="primary" @click="closeDialog" />
+                        <div class="col-6">
+                            <q-input v-model.number="formData.grandTotal" label="Grand Total" outlined dense
+                                type="number" prefix="Rp" readonly />
                         </div>
-                    </q-form>
-                </q-card-section>
-            </q-card>
-        </q-dialog>
+                    </div>
+                </div>
+
+                <q-separator class="q-my-md" />
+
+                <!-- Payment Details Section -->
+                <div class="bg-grey-2 q-pa-md rounded-borders">
+                    <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Payment Details</div>
+                    <div class="row q-col-gutter-md">
+                        <div class="col-4">
+                            <q-input v-model="formData.statusPembayaran" label="Status Pembayaran" outlined dense
+                                readonly />
+                        </div>
+                        <div class="col-4">
+                            <q-input v-model="formData.metodePembayaran" label="Metode Pembayaran" outlined dense
+                                readonly />
+                        </div>
+                        <div class="col-4">
+                            <q-input v-model.number="formData.uangDibayar" label="Uang Dibayar" outlined dense
+                                type="number" prefix="Rp" readonly />
+                        </div>
+                    </div>
+                    <div class="row q-col-gutter-md q-mt-xs">
+                        <div class="col-6">
+                            <q-input v-model.number="formData.kembalian" label="Kembalian" outlined dense type="number"
+                                prefix="Rp" readonly />
+                        </div>
+                        <div class="col-6">
+                            <q-input v-model.number="formData.diskon" label="Diskon" outlined dense type="number"
+                                prefix="Rp" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <q-separator class="q-my-md" />
+
+                <!-- Additional Notes -->
+                <div>
+                    <div class="text-subtitle1 text-weight-bold text-grey-8 q-mb-md">Additional Information
+                    </div>
+                    <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="3"
+                        readonly />
+                </div>
+            </q-form>
+            <template #actions>
+                <q-btn label="Close" color="primary" @click="closeDialog" />
+            </template>
+        </GenericDialog>
 
         <!-- Delete Confirmation Dialog -->
-        <q-dialog v-model="showDeleteDialog" persistent>
-            <q-card>
-                <q-card-section>
-                    <div class="text-h6">Confirm Delete</div>
-                </q-card-section>
-
-                <q-card-section class="q-pt-none">
-                    Are you sure you want to delete Penjualan <strong>{{ itemToDelete?.noPenjualan }}</strong>?
-                </q-card-section>
-
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-                    <q-btn flat label="Delete" color="negative" @click="deletePenjualan" :loading="deleting" />
-                </q-card-actions>
-            </q-card>
-        </q-dialog>
+        <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
+            Are you sure you want to delete Penjualan <strong>{{ itemToDelete?.noPenjualan }}</strong>?
+            <template #actions>
+                <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
+                <q-btn flat label="Delete" color="negative" @click="deletePenjualan" :loading="deleting" />
+            </template>
+        </GenericDialog>
     </q-page>
 </template>
 
@@ -176,6 +161,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import GenericDialog from 'components/GenericDialog.vue'
 
 const $q = useQuasar()
 

@@ -154,40 +154,30 @@
             </q-card>
 
             <!-- Mark Absence Dialog (Admin) -->
-            <q-dialog v-model="showMarkAbsenceDialog" persistent>
-                <q-card style="min-width: 400px">
-                    <q-card-section>
-                        <div class="text-h6">Mark Absence</div>
-                    </q-card-section>
+            <GenericDialog v-model="showMarkAbsenceDialog" title="Mark Absence" min-width="400px">
+                <q-form @submit="markAbsence" id="absence-form" class="q-gutter-md">
+                    <q-input v-model="absenceForm.tanggal" label="Date *" outlined dense type="date"
+                        :rules="[val => !!val || 'Date is required']" />
 
-                    <q-card-section class="q-pt-none">
-                        <q-form @submit="markAbsence" class="q-gutter-md">
-                            <q-input v-model="absenceForm.tanggal" label="Date *" outlined dense type="date"
-                                :rules="[val => !!val || 'Date is required']" />
+                    <q-select v-model="absenceForm.status" label="Status *" outlined dense
+                        :options="['IZIN', 'SAKIT', 'ALPHA', 'CUTI']" :rules="[val => !!val || 'Status is required']" />
 
-                            <q-select v-model="absenceForm.status" label="Status *" outlined dense
-                                :options="['IZIN', 'SAKIT', 'ALPHA', 'CUTI']"
-                                :rules="[val => !!val || 'Status is required']" />
-
-                            <q-input v-model="absenceForm.keterangan" label="Notes" outlined dense type="textarea"
-                                rows="3" />
-
-                            <div class="row justify-end q-gutter-sm">
-                                <q-btn flat label="Cancel" color="primary" @click="closeMarkAbsenceDialog" />
-                                <q-btn label="Save" type="submit" color="primary" :loading="marking" />
-                            </div>
-                        </q-form>
-                    </q-card-section>
-                </q-card>
-            </q-dialog>
+                    <q-input v-model="absenceForm.keterangan" label="Notes" outlined dense type="textarea" rows="3" />
+                </q-form>
+                <template #actions>
+                    <q-btn flat label="Cancel" color="primary" @click="closeMarkAbsenceDialog" />
+                    <q-btn label="Save" type="submit" form="absence-form" color="primary" :loading="marking" />
+                </template>
+            </GenericDialog>
         </div>
     </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import GenericDialog from 'components/GenericDialog.vue'
 
 const $q = useQuasar()
 
@@ -471,7 +461,6 @@ onBeforeUnmount(() => {
 })
 
 // Watch selectedKaryawan
-import { watch } from 'vue'
 watch(selectedKaryawan, watchSelectedKaryawan)
 </script>
 

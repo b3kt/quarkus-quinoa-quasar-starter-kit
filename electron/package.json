@@ -1,0 +1,9 @@
+"build": {
+  "extraResources": [
+    {
+      "from": "resources/",
+      "to": "resources/"
+    }
+  ]
+}
+

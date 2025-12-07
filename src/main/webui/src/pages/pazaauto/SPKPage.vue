@@ -3,17 +3,24 @@
     <div class="q-pa-md">
       <!-- Toolbar with Create button and Search -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn flat :label="$t('create') + ' SPK'" icon="add" color="white" class="bg-primary"
-          @click="openCreateDialog" />
+        <q-btn flat icon="add" color="white" class="bg-primary col-sm-1" @click="openCreateDialog">
+          <slot name="label">
+            <span class="gt-sm ">Tambah SPK</span>
+          </slot>
+        </q-btn>
         <q-space />
-        <div class="col-auto q-mr-md">
-          <q-checkbox v-model="filterToday" label="Filter SPK hari ini" dense />
+        <div class="col-auto q-mr-md col-xs-1 col-sm-2">
+          <q-checkbox v-model="filterToday" dense>
+            <slot name="label">
+              <span class="gt-xs">Filter SPK hari ini</span>
+            </slot>
+          </q-checkbox>
         </div>
-        <div class="col-1">
+        <div class="col-1 col-xs-4">
           <q-select v-model="filterStatus" multiple :options="statusOptions" label="Status" dense options-dense flat
             outlined />
         </div>
-        <div class="col-6">
+        <div class="col-md-6 col-xs-4 col-sm-4">
           <q-input dense standout="bg-secondary" v-model="searchText" input-class="search-field text-left"
             class="q-ml-md" placeholder="Search by SPK number, nopol, or employee name...">
             <template v-slot:append>
@@ -69,248 +76,239 @@
     </div>
 
     <!-- Create/Edit Dialog -->
-    <q-dialog v-model="showDialog" persistent>
-      <q-card class="dialog-spk">
-        <q-card-section class="row">
-          <div class="text-h6 col-6">
-            {{ isEditMode ? 'Edit SPK' : 'Tambah SPK' }}
-          </div>
-          <q-space />
-          <span class="text-caption text-middle q-py-sm">STATUS:</span>
-          <q-chip square tooltip="Status" :color="getStatusColor(formData.statusSpk)">{{
-            formData.statusSpk
-            }}</q-chip>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-form @submit="saveSpk" class="q-gutter-md">
-            <q-card class="row col-12" flat bordered>
-              <q-card-section class="col-6 q-pr-none">
-                <div class="q-mb-md">
-                  <span class="text-caption text-bold">Informasi SPK</span>
-                </div>
-                <div class="q-mb-md">
-                  <q-input v-model="formData.tanggalJamSpk" label="Tanggal" outlined dense
-                    placeholder="YYYY-MM-DD HH:mm:ss" disable />
-                </div>
-                <div class="q-mb-md">
-                  <q-input v-model="formData.noSpk" label="No SPK" outlined dense disable />
-                </div>
-                <div class="q-mb-md">
-                  <q-select v-model="formData.nopol" label="No Polisi *" outlined dense
-                    :options="filteredPelangganOptions" :option-label="constructNopolOptions" option-value="nopol"
-                    emit-value map-options use-input input-debounce="300" @filter="filterPelanggan"
-                    @update:model-value="onNopolChange" :loading="loadingPelanggan" :disable="!isEditable"
-                    new-value-mode="add-unique" :rules="[val => !!val || 'No Polisi is required']">
-                    <template v-slot:no-option>
-                      <q-item>
-                        <q-item-section class="text-grey">
-                          No results
-                        </q-item-section>
-                      </q-item>
-                    </template>
-                  </q-select>
-                </div>
-
-                <div class="q-mb-md">
-                  <q-select v-model="selectedMekaniks" label="Select Mechanics" outlined dense multiple
-                    :options="karyawanOptions" option-label="namaKaryawan" option-value="id" use-chips use-input
-                    input-debounce="300" @filter="filterKaryawan" :loading="loadingKaryawan" :disable="!isEditable"
-                    emit-value map-options>
-                    <template v-slot:option="{ itemProps, opt }">
-                      <q-item v-bind="itemProps">
-                        <q-item-section side>
-                          <q-checkbox :model-value="isSelected(opt.id)" @update:model-value="toggleMechanic(opt)" />
-                        </q-item-section>
-                        <q-item-section @click.stop>
-                          <q-item-label>{{ opt.namaKaryawan }}</q-item-label>
-                        </q-item-section>
-                        <q-item-section @click.stop side v-if="isSelected(opt.id)">
-                          <q-select :model-value="getMekanikTugas(opt.id)"
-                            @update:model-value="setMekanikTugas(opt.id, $event)" :options="['Utama', 'Pembantu']" dense
-                            outlined style="min-width: 120px" />
-                        </q-item-section>
-                      </q-item>
-                    </template>
-                  </q-select>
-                </div>
-                <div>
-                  <q-input v-model.number="formData.km" label="KM" outlined dense type="number"
-                    :rules="[val => !!val || 'KM is required number']" :disable="!isEditable" />
-                </div>
-                <!-- <div class="q-mb-md">
-                  <q-input v-model.number="formData.noAntrian" label="No Antrian" outlined dense type="number" />
-                </div> -->
-                <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2"
-                  :disable="!isEditable" autogrow />
-              </q-card-section>
-
-              <q-card-section class="col-6">
-                <div class="q-mb-md">
-                  <span class="text-caption text-bold">Informasi Pelanggan</span>
-                </div>
-                <div class="q-mb-md">
-                  <q-input v-model="formData.namaPelanggan" label="Nama *" outlined dense :readonly="!isNewCustomer"
-                    :rules="isNewCustomer ? [val => !!val || 'Nama is required'] : []" />
-                </div>
-                <div class="q-mb-md">
-                  <q-input v-model="formData.alamat" label="Alamat" outlined dense :readonly="!isNewCustomer"
-                    type="textarea" rows="4" />
-                </div>
-                <div class="q-mb-md">
-                  <q-input v-model="formData.nopol" label="Kendaraan" outlined dense readonly />
-                </div>
-                <div class="row q-col-gutter-sm">
-                  <div class="q-mb-md col-6">
-                    <q-input v-model="formData.merk" label="Merk *" outlined dense :readonly="!isNewCustomer"
-                      :rules="isNewCustomer ? [val => !!val || 'Merk is required'] : []" />
-                  </div>
-                  <div class="q-mb-md col-6">
-                    <q-input v-model="formData.jenis" label="Jenis" outlined dense :readonly="!isNewCustomer" />
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
-
-
-            <!-- Split Layout for Jasa and Barang -->
-            <div class="row q-col-gutter-md q-mb-md q-pl-md q-py-md">
-              <!-- Left: Jasa -->
-              <div class="col-12 col-md-6">
-                <q-card flat bordered class="full-height">
-                  <q-card-section class="bg-grey-2 q-py-xs">
-                    <div class="text-subtitle2">LAYANAN PERBAIKAN / SERVIS</div>
-                  </q-card-section>
-                  <q-card-section class="q-pa-none">
-                    <q-table flat :rows="jasaRows" :columns="jasaColumns" row-key="tempId" dense hide-pagination
-                      separator="cell">
-                      <template v-slot:body="props">
-                        <q-tr :props="props">
-                          <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
-                          <q-td key="namaJasa" :props="props">{{ props.row.namaItem }}</q-td>
-                          <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
-                          }}</q-td>
-                          <q-td key="jumlah" :props="props">
-                            {{ props.row.jumlah }}
-                            <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">
-                              <q-input v-model.number="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-                            </q-popup-edit>
-                          </q-td>
-                          <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
-                            props.row.jumlah) }}</q-td>
-                          <q-td key="actions" :props="props" class="text-center"
-                            v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
-                            <q-btn flat dense round icon="delete" color="negative" size="sm"
-                              @click="removeDetail(props.row)" />
-                          </q-td>
-                        </q-tr>
-                      </template>
-                    </q-table>
-                    <!-- Inline Add Jasa -->
-                    <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
-                      v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
-                      <div class="col-grow">
-                        <q-select v-model="newJasa.item" :options="jasaOptions" option-label="namaJasa" dense outlined
-                          label="Pilih Jasa" use-input input-debounce="300" @filter="filterJasa" emit-value map-options>
-                          <template v-slot:option="scope">
-                            <q-item v-bind="scope.itemProps">
-                              <q-item-section>
-                                <q-item-label>{{ scope.opt.namaJasa }}</q-item-label>
-                                <q-item-label caption>{{ formatCurrency(scope.opt.hargaJasa) }}</q-item-label>
-                              </q-item-section>
-                            </q-item>
-                          </template>
-                        </q-select>
-                      </div>
-                      <!-- <div class="col-2">
-                        <q-input v-model.number="newJasa.jumlah" type="number" dense outlined label="Qty" />
-                      </div> -->
-                      <div class="col-auto">
-                        <q-btn icon="add" color="primary" dense round size="sm" @click="addJasa"
-                          :disable="!newJasa.item" />
-                      </div>
-                    </div>
-                  </q-card-section>
-                  <q-separator />
-                  <q-card-section class="q-py-xs text-right bg-grey-2">
-                    <span class="text-weight-bold">Sub Total: {{ formatCurrency(subtotalJasa) }}</span>
-                  </q-card-section>
-                </q-card>
-              </div>
-
-              <!-- Right: Barang -->
-              <div class="col-12 col-md-6">
-                <q-card flat bordered class="full-height">
-                  <q-card-section class="bg-grey-2 q-py-xs">
-                    <div class="text-subtitle2">BARANG / SPAREPART</div>
-                  </q-card-section>
-                  <q-card-section class="q-pa-none">
-                    <q-table flat :rows="barangRows" :columns="barangColumns" row-key="tempId" dense hide-pagination
-                      separator="cell">
-                      <template v-slot:body="props">
-                        <q-tr :props="props">
-                          <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
-                          <q-td key="namaBarang" :props="props">{{ props.row.namaItem }}</q-td>
-                          <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
-                          }}</q-td>
-                          <q-td key="jumlah" :props="props">
-                            {{ props.row.jumlah }}
-                            <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">
-                              <q-input v-model.number="scope.value" dense autofocus counter @keyup.enter="scope.set" />
-                            </q-popup-edit>
-                          </q-td>
-                          <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
-                            props.row.jumlah) }}</q-td>
-                          <q-td key="actions" :props="props" class="text-center"
-                            v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
-                            <q-btn flat dense round icon="delete" color="negative" size="sm"
-                              @click="removeDetail(props.row)" />
-                          </q-td>
-                        </q-tr>
-                      </template>
-                    </q-table>
-                    <!-- Inline Add Barang -->
-                    <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
-                      v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
-                      <div class="col-grow">
-                        <q-select v-model="newBarang.item" :options="barangOptions" option-label="namaBarang" dense
-                          outlined label="Pilih Barang" use-input input-debounce="300" @filter="filterBarang" emit-value
-                          map-options>
-                          <template v-slot:option="scope">
-                            <q-item v-bind="scope.itemProps">
-                              <q-item-section>
-                                <q-item-label>{{ scope.opt.namaBarang }}</q-item-label>
-                                <q-item-label caption>Stok: {{ scope.opt.stok }} | {{
-                                  formatCurrency(scope.opt.hargaJual) }}</q-item-label>
-                              </q-item-section>
-                            </q-item>
-                          </template>
-                        </q-select>
-                      </div>
-                      <div class="col-2">
-                        <q-input v-model.number="newBarang.jumlah" type="number" dense outlined label="Qty"
-                          :rules="[(val) => val > 0 || 'Qty must be greater than 0']" />
-                      </div>
-                      <div class="col-auto">
-                        <q-btn icon="add" color="primary" dense round size="sm" @click="addBarang"
-                          :disable="!newBarang.item" />
-                      </div>
-                    </div>
-                  </q-card-section>
-                  <q-separator />
-                  <q-card-section class="q-py-xs text-right bg-grey-2">
-                    <span class="text-weight-bold">Sub Total: {{ formatCurrency(subtotalBarang) }}</span>
-                  </q-card-section>
-                </q-card>
-              </div>
+    <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit SPK' : 'Tambah SPK'" min-width="90vw">
+      <template #header-extra>
+        <span class="text-caption text-middle q-py-sm q-mr-sm">STATUS:</span>
+        <q-chip square tooltip="Status" :color="getStatusColor(formData.statusSpk)">{{
+          formData.statusSpk
+          }}</q-chip>
+      </template>
+      <q-form @submit="saveSpk" class="q-gutter-md">
+        <q-card class="row col-12" flat bordered>
+          <q-card-section class="col-6 q-pr-none">
+            <div class="q-mb-md">
+              <span class="text-caption text-bold">Informasi SPK</span>
+            </div>
+            <div class="q-mb-md">
+              <q-input v-model="formData.tanggalJamSpk" label="Tanggal" outlined dense placeholder="YYYY-MM-DD HH:mm:ss"
+                disable />
+            </div>
+            <div class="q-mb-md">
+              <q-input v-model="formData.noSpk" label="No SPK" outlined dense disable />
+            </div>
+            <div class="q-mb-md">
+              <q-select v-model="formData.nopol" label="No Polisi *" outlined dense :options="filteredPelangganOptions"
+                :option-label="constructNopolOptions" option-value="nopol" emit-value map-options use-input
+                input-debounce="300" @filter="filterPelanggan" @update:model-value="onNopolChange"
+                :loading="loadingPelanggan" :disable="!isEditable" new-value-mode="add-unique"
+                :rules="[val => !!val || 'No Polisi is required']">
+                <template v-slot:no-option>
+                  <q-item>
+                    <q-item-section class="text-grey">
+                      No results
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
             </div>
 
-            <!-- Grand Total -->
-            <div class="row justify-end q-mb-md q-gutter-sm">
-              <div class="text-h6 bg-grey-3 q-px-md q-py-sm rounded-borders">
-                GRAND TOTAL: {{ formatCurrency(grandTotal) }}
+            <div class="q-mb-md">
+              <q-select v-model="selectedMekaniks" label="Select Mechanics" outlined dense multiple
+                :options="karyawanOptions" option-label="namaKaryawan" option-value="id" use-chips use-input
+                input-debounce="300" @filter="filterKaryawan" :loading="loadingKaryawan" :disable="!isEditable"
+                emit-value map-options>
+                <template v-slot:option="{ itemProps, opt }">
+                  <q-item v-bind="itemProps">
+                    <q-item-section side>
+                      <q-checkbox :model-value="isSelected(opt.id)" @update:model-value="toggleMechanic(opt)" />
+                    </q-item-section>
+                    <q-item-section @click.stop>
+                      <q-item-label>{{ opt.namaKaryawan }}</q-item-label>
+                    </q-item-section>
+                    <q-item-section @click.stop side v-if="isSelected(opt.id)">
+                      <q-select :model-value="getMekanikTugas(opt.id)"
+                        @update:model-value="setMekanikTugas(opt.id, $event)" :options="['Utama', 'Pembantu']" dense
+                        outlined style="min-width: 120px" />
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
+            </div>
+            <div>
+              <q-input v-model.number="formData.km" label="KM" outlined dense type="number"
+                :rules="[val => !!val || 'KM is required number']" :disable="!isEditable" />
+            </div>
+            <!-- <div class="q-mb-md">
+                  <q-input v-model.number="formData.noAntrian" label="No Antrian" outlined dense type="number" />
+                </div> -->
+            <q-input v-model="formData.keterangan" label="Keterangan" outlined dense type="textarea" rows="2"
+              :disable="!isEditable" autogrow />
+          </q-card-section>
+
+          <q-card-section class="col-6">
+            <div class="q-mb-md">
+              <span class="text-caption text-bold">Informasi Pelanggan</span>
+            </div>
+            <div class="q-mb-md">
+              <q-input v-model="formData.namaPelanggan" label="Nama *" outlined dense :readonly="!isNewCustomer"
+                :rules="isNewCustomer ? [val => !!val || 'Nama is required'] : []" />
+            </div>
+            <div class="q-mb-md">
+              <q-input v-model="formData.alamat" label="Alamat" outlined dense :readonly="!isNewCustomer"
+                type="textarea" rows="4" />
+            </div>
+            <div class="q-mb-md">
+              <q-input v-model="formData.nopol" label="Kendaraan" outlined dense readonly />
+            </div>
+            <div class="row q-col-gutter-sm">
+              <div class="q-mb-md col-6">
+                <q-input v-model="formData.merk" label="Merk *" outlined dense :readonly="!isNewCustomer"
+                  :rules="isNewCustomer ? [val => !!val || 'Merk is required'] : []" />
               </div>
-              <!-- 
+              <div class="q-mb-md col-6">
+                <q-input v-model="formData.jenis" label="Jenis" outlined dense :readonly="!isNewCustomer" />
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+
+        <!-- Split Layout for Jasa and Barang -->
+        <div class="row q-col-gutter-md q-mb-md q-pl-md q-py-md">
+          <!-- Left: Jasa -->
+          <div class="col-12 col-md-6">
+            <q-card flat bordered class="full-height">
+              <q-card-section class="bg-grey-2 q-py-xs">
+                <div class="text-subtitle2">LAYANAN PERBAIKAN / SERVIS</div>
+              </q-card-section>
+              <q-card-section class="q-pa-none">
+                <q-table flat :rows="jasaRows" :columns="jasaColumns" row-key="tempId" dense hide-pagination
+                  separator="cell">
+                  <template v-slot:body="props">
+                    <q-tr :props="props">
+                      <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
+                      <q-td key="namaJasa" :props="props">{{ props.row.namaItem }}</q-td>
+                      <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
+                        }}</q-td>
+                      <q-td key="jumlah" :props="props">
+                        {{ props.row.jumlah }}
+                        <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">
+                          <q-input v-model.number="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+                        </q-popup-edit>
+                      </q-td>
+                      <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
+                        props.row.jumlah) }}</q-td>
+                      <q-td key="actions" :props="props" class="text-center"
+                        v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
+                        <q-btn flat dense round icon="delete" color="negative" size="sm"
+                          @click="removeDetail(props.row)" />
+                      </q-td>
+                    </q-tr>
+                  </template>
+                </q-table>
+                <!-- Inline Add Jasa -->
+                <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
+                  v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
+                  <div class="col-grow">
+                    <q-select v-model="newJasa.item" :options="jasaOptions" option-label="namaJasa" dense outlined
+                      label="Pilih Jasa" use-input input-debounce="300" @filter="filterJasa" emit-value map-options>
+                      <template v-slot:option="scope">
+                        <q-item v-bind="scope.itemProps">
+                          <q-item-section>
+                            <q-item-label>{{ scope.opt.namaJasa }}</q-item-label>
+                            <q-item-label caption>{{ formatCurrency(scope.opt.hargaJasa) }}</q-item-label>
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <!-- <div class="col-2">
+                        <q-input v-model.number="newJasa.jumlah" type="number" dense outlined label="Qty" />
+                      </div> -->
+                  <div class="col-auto">
+                    <q-btn icon="add" color="primary" dense round size="sm" @click="addJasa" :disable="!newJasa.item" />
+                  </div>
+                </div>
+              </q-card-section>
+              <q-separator />
+              <q-card-section class="q-py-xs text-right bg-grey-2">
+                <span class="text-weight-bold">Sub Total: {{ formatCurrency(subtotalJasa) }}</span>
+              </q-card-section>
+            </q-card>
+          </div>
+
+          <!-- Right: Barang -->
+          <div class="col-12 col-md-6">
+            <q-card flat bordered class="full-height">
+              <q-card-section class="bg-grey-2 q-py-xs">
+                <div class="text-subtitle2">BARANG / SPAREPART</div>
+              </q-card-section>
+              <q-card-section class="q-pa-none">
+                <q-table flat :rows="barangRows" :columns="barangColumns" row-key="tempId" dense hide-pagination
+                  separator="cell">
+                  <template v-slot:body="props">
+                    <q-tr :props="props">
+                      <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
+                      <q-td key="namaBarang" :props="props">{{ props.row.namaItem }}</q-td>
+                      <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
+                        }}</q-td>
+                      <q-td key="jumlah" :props="props">
+                        {{ props.row.jumlah }}
+                        <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">
+                          <q-input v-model.number="scope.value" dense autofocus counter @keyup.enter="scope.set" />
+                        </q-popup-edit>
+                      </q-td>
+                      <q-td key="total" :props="props" class="text-right">{{ formatCurrency(props.row.harga *
+                        props.row.jumlah) }}</q-td>
+                      <q-td key="actions" :props="props" class="text-center"
+                        v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
+                        <q-btn flat dense round icon="delete" color="negative" size="sm"
+                          @click="removeDetail(props.row)" />
+                      </q-td>
+                    </q-tr>
+                  </template>
+                </q-table>
+                <!-- Inline Add Barang -->
+                <div class="row q-pa-sm q-col-gutter-xs items-center bg-grey-1"
+                  v-if="isEditable || (formData.statusSpk !== 'SELESAI' && formData.statusSpk !== 'BATAL')">
+                  <div class="col-grow">
+                    <q-select v-model="newBarang.item" :options="barangOptions" option-label="namaBarang" dense outlined
+                      label="Pilih Barang" use-input input-debounce="300" @filter="filterBarang" emit-value map-options>
+                      <template v-slot:option="scope">
+                        <q-item v-bind="scope.itemProps">
+                          <q-item-section>
+                            <q-item-label>{{ scope.opt.namaBarang }}</q-item-label>
+                            <q-item-label caption>Stok: {{ scope.opt.stok }} | {{
+                              formatCurrency(scope.opt.hargaJual) }}</q-item-label>
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-select>
+                  </div>
+                  <div class="col-2">
+                    <q-input v-model.number="newBarang.jumlah" type="number" dense outlined label="Qty"
+                      :rules="[(val) => val > 0 || 'Qty must be greater than 0']" />
+                  </div>
+                  <div class="col-auto">
+                    <q-btn icon="add" color="primary" dense round size="sm" @click="addBarang"
+                      :disable="!newBarang.item" />
+                  </div>
+                </div>
+              </q-card-section>
+              <q-separator />
+              <q-card-section class="q-py-xs text-right bg-grey-2">
+                <span class="text-weight-bold">Sub Total: {{ formatCurrency(subtotalBarang) }}</span>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <!-- Grand Total -->
+        <div class="row justify-end q-mb-md q-gutter-sm">
+          <div class="text-h6 bg-grey-3 q-px-md q-py-sm rounded-borders">
+            GRAND TOTAL: {{ formatCurrency(grandTotal) }}
+          </div>
+          <!-- 
               <div class="text-h6 bg-grey-3 q-px-md q-py-sm rounded-borders">
                 <q-input v-model="formData.namaPelanggan" label="Dibayar" outlined dense :readonly="!isNewCustomer"
                   :rules="isNewCustomer ? [val => !!val || 'Nama is required'] : []" />
@@ -320,131 +318,111 @@
                 <q-input v-model="formData.namaPelanggan" label="Kembalian" outlined dense :readonly="!isNewCustomer"
                   :rules="isNewCustomer ? [val => !!val || 'Nama is required'] : []" />
               </div> -->
-            </div>
+        </div>
 
-            <div class="row justify-end q-gutter-sm">
+        <div class="row justify-end q-gutter-sm">
 
-              <q-space />
+          <q-space />
 
-              <q-btn flat label="Cancel" color="primary" @click="closeDialog" />
+          <q-btn flat label="Cancel" color="primary" @click="showDialog = false" />
 
-              <q-btn label="Simpan" type="submit" color="primary" :loading="saving"
-                v-if="formData.statusSpk != 'SELESAI' && formData.statusSpk != 'BATAL'" />
-
-
-              <div v-if="formData.statusSpk == 'PROSES'">
-                <q-btn label="Bayar" type="button" color="green" @click="finishProcess" style="width: 100px;"
-                  :loading="saving" />
-              </div>
-              <div v-if="isEditMode && formData.statusSpk == 'OPEN'">
-                <q-btn label="Mulai Proses" type="button" color="green" @click="startProcess" :loading="saving" />
-              </div>
+          <q-btn label="Simpan" type="submit" color="primary" :loading="saving"
+            v-if="formData.statusSpk != 'SELESAI' && formData.statusSpk != 'BATAL'" />
 
 
-            </div>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+          <div v-if="formData.statusSpk == 'PROSES'">
+            <q-btn label="Bayar" type="button" color="green" @click="finishProcess" style="width: 100px;"
+              :loading="saving" />
+          </div>
+          <div v-if="isEditMode && formData.statusSpk == 'OPEN'">
+            <q-btn label="Mulai Proses" type="button" color="green" @click="startProcess" :loading="saving" />
+          </div>
+
+
+        </div>
+      </q-form>
+    </GenericDialog>
 
     <!-- Add Item Dialog Removed (Inline) -->
 
     <!-- Delete Confirmation Dialog -->
-    <q-dialog v-model="showDeleteDialog" persistent>
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Confirm Delete</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          Are you sure you want to delete SPK <strong>{{ itemToDelete?.noSpk }}</strong>?
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
-          <q-btn flat label="Delete" color="negative" @click="deleteSpk" :loading="deleting" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
+      Are you sure you want to delete SPK <strong>{{ itemToDelete?.noSpk }}</strong>?
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="showDeleteDialog = false" />
+        <q-btn flat label="Delete" color="negative" @click="deleteSpk" :loading="deleting" />
+      </template>
+    </GenericDialog>
 
     <!-- Payment Invoice Dialog -->
-    <q-dialog v-model="showPaymentDialog" persistent>
-      <q-card style="min-width: 800px; max-width: 900px">
-        <!-- Invoice Header -->
-        <q-card-section class="bg-primary text-white">
-          <div class="row items-center">
-            <div class="col">
-              <div class="text-h5">INVOICE</div>
-              <div class="text-subtitle2">{{ paymentData.noPenjualan || 'Generating...' }}</div>
-            </div>
-            <div class="col-auto text-right">
-              <div class="text-subtitle2">Date: {{ new Date().toLocaleDateString('id-ID') }}</div>
-              <div class="text-subtitle2">SPK: {{ formData.noSpk }}</div>
-            </div>
+    <GenericDialog v-model="showPaymentDialog" min-width="800px">
+      <template #title>
+        <div class="row items-center full-width">
+          <div class="col">
+            <div class="text-h5">INVOICE</div>
+            <div class="text-subtitle2">{{ paymentData.noPenjualan || 'Generating...' }}</div>
           </div>
-        </q-card-section>
+          <div class="col-auto text-right">
+            <div class="text-subtitle2">Date: {{ new Date().toLocaleDateString('id-ID') }}</div>
+            <div class="text-subtitle2">SPK: {{ formData.noSpk }}</div>
+          </div>
+        </div>
+      </template>
 
-        <q-separator />
-
+      <div class="q-pa-md">
         <!-- Customer Information -->
-        <q-card-section>
-          <div class="row q-col-gutter-md">
-            <div class="col-6">
-              <div class="text-weight-bold text-grey-8 q-mb-xs">Bill To:</div>
-              <div>{{ formData.namaPelanggan }}</div>
-              <div class="text-caption text-grey-7">{{ formData.alamat }}</div>
-              <div class="text-caption text-grey-7">{{ formData.nopol }} - {{ formData.merk }} {{ formData.jenis }}
-              </div>
-            </div>
-            <div class="col-6 text-right">
-              <div class="text-weight-bold text-grey-8 q-mb-xs">Total Due:</div>
-              <div class="text-h4 text-primary">{{ formatCurrency(grandTotal) }}</div>
+        <div class="row q-col-gutter-md q-mb-md">
+          <div class="col-6">
+            <div class="text-weight-bold text-grey-8 q-mb-xs">Bill To:</div>
+            <div>{{ formData.namaPelanggan }}</div>
+            <div class="text-caption text-grey-7">{{ formData.alamat }}</div>
+            <div class="text-caption text-grey-7">{{ formData.nopol }} - {{ formData.merk }} {{ formData.jenis }}
             </div>
           </div>
-        </q-card-section>
+          <div class="col-6 text-right">
+            <div class="text-weight-bold text-grey-8 q-mb-xs">Total Due:</div>
+            <div class="text-h4 text-primary">{{ formatCurrency(grandTotal) }}</div>
+          </div>
+        </div>
 
-        <q-separator />
+        <q-separator class="q-mb-md" />
 
         <!-- Items Table -->
-        <q-card-section class="q-pa-none">
-          <q-table flat :rows="invoiceItems" :columns="invoiceColumns" row-key="id" hide-pagination dense
-            separator="horizontal">
-            <template v-slot:body-cell-price="props">
-              <q-td :props="props" class="text-right">
-                {{ formatCurrency(props.row.price) }}
-              </q-td>
-            </template>
-            <template v-slot:body-cell-total="props">
-              <q-td :props="props" class="text-right">
-                {{ formatCurrency(props.row.total) }}
-              </q-td>
-            </template>
-          </q-table>
-        </q-card-section>
+        <q-table flat :rows="invoiceItems" :columns="invoiceColumns" row-key="id" hide-pagination dense
+          separator="horizontal" class="q-mb-md">
+          <template v-slot:body-cell-price="props">
+            <q-td :props="props" class="text-right">
+              {{ formatCurrency(props.row.price) }}
+            </q-td>
+          </template>
+          <template v-slot:body-cell-total="props">
+            <q-td :props="props" class="text-right">
+              {{ formatCurrency(props.row.total) }}
+            </q-td>
+          </template>
+        </q-table>
 
-        <q-separator />
+        <q-separator class="q-mb-md" />
 
         <!-- Totals Section -->
-        <q-card-section>
-          <div class="row justify-end">
-            <div class="col-4">
-              <div class="row justify-between q-mb-sm">
-                <span class="text-grey-7">Subtotal:</span>
-                <span class="text-weight-bold">{{ formatCurrency(grandTotal) }}</span>
-              </div>
-              <q-separator class="q-my-sm" />
-              <div class="row justify-between q-mb-md">
-                <span class="text-weight-bold text-h6">Total:</span>
-                <span class="text-weight-bold text-h6 text-primary">{{ formatCurrency(grandTotal) }}</span>
-              </div>
+        <div class="row justify-end q-mb-md">
+          <div class="col-4">
+            <div class="row justify-between q-mb-sm">
+              <span class="text-grey-7">Subtotal:</span>
+              <span class="text-weight-bold">{{ formatCurrency(grandTotal) }}</span>
+            </div>
+            <q-separator class="q-my-sm" />
+            <div class="row justify-between q-mb-md">
+              <span class="text-weight-bold text-h6">Total:</span>
+              <span class="text-weight-bold text-h6 text-primary">{{ formatCurrency(grandTotal) }}</span>
             </div>
           </div>
-        </q-card-section>
+        </div>
 
-        <q-separator />
+        <q-separator class="q-mb-md" />
 
         <!-- Payment Input Section -->
-        <q-card-section class="bg-grey-2">
+        <div class="bg-grey-2 q-pa-md rounded-borders">
           <div class="text-h6 q-mb-md">Payment Details</div>
           <div class="row q-col-gutter-md">
             <div class="col-4">
@@ -464,16 +442,15 @@
           <div v-if="paymentData.kembalian < 0" class="text-negative q-mt-sm">
             <q-icon name="warning" /> Insufficient payment amount
           </div>
-        </q-card-section>
+        </div>
+      </div>
 
-        <!-- Actions -->
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Cancel" color="primary" @click="closePaymentDialog" />
-          <q-btn label="Confirm Payment" color="primary" @click="confirmPayment" :loading="saving"
-            :disable="paymentData.uangDibayar <= 0 || !paymentData.metodePembayaran" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+      <template #actions>
+        <q-btn flat label="Cancel" color="primary" @click="closePaymentDialog" />
+        <q-btn label="Confirm Payment" color="primary" @click="confirmPayment" :loading="saving"
+          :disable="paymentData.uangDibayar <= 0 || !paymentData.metodePembayaran" />
+      </template>
+    </GenericDialog>
   </q-page>
 </template>
 
@@ -481,6 +458,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
+import GenericDialog from 'components/GenericDialog.vue'
 
 const $q = useQuasar()
 

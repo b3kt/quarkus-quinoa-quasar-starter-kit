@@ -1,29 +1,34 @@
 <template>
-    <div class="q-pa-md">
+    <div class="q-pa-sm">
         <!-- Toolbar -->
-        <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-            <div class="gt-xs col-sm-3">
-                <slot name="toolbar-actions">
-                    <q-btn v-if="onCreate" flat :label="createLabel" icon="add" color="white" class="bg-primary"
-                        @click="onCreate" />
-                </slot>
-            </div>
+        <q-toolbar class="shadow-1 rounded-borders q-mb-lg ">
 
-            <q-space class="gt-md" />
-
-            <div class="col-4 col-md-2 col-sm-2">
-                <slot name="toolbar-filters"></slot>
-            </div>
-
-            <div class="col-8 col-md-6 col-sm-7" v-if="enableSearch">
+            <div class="col-8 col-md-6 col-sm-7 col-xs-12" v-if="enableSearch">
                 <q-input dense standout="bg-primary" v-model="internalSearch" input-class="search-field text-left"
-                    class="q-ml-md" :placeholder="searchPlaceholder">
+                    :placeholder="searchPlaceholder">
                     <template v-slot:append>
                         <q-icon v-if="internalSearch === ''" name="search" />
                         <q-icon v-else name="clear" class="cursor-pointer" @click="internalSearch = ''" />
                     </template>
                 </q-input>
             </div>
+
+            <div class="col-4 col-md-2 col-sm-2 gt-xs">
+                <slot name="toolbar-filters"></slot>
+            </div>
+
+            <q-space class="gt-md" />
+            <div class="gt-xs col-sm-3 text-right">
+                <slot name="toolbar-actions">
+                    <q-btn v-if="onCreate" flat label="new" icon="add" color="white" class="bg-primary"
+                        @click="onCreate">
+                        <q-tooltip>
+                            {{ createLabel }}
+                        </q-tooltip>
+                    </q-btn>
+                </slot>
+            </div>
+
         </q-toolbar>
 
         <!-- Table -->
@@ -129,15 +134,24 @@ const hasActions = computed(() => {
 })
 </script>
 
-<style lang="sass" scoped>
+<style lang="sass">
 .my-sticky-header-table
-  max-height: 70vh
+  height: 75vh
+
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th
+    background-color: #fafafa
 
   thead tr th
     position: sticky
     z-index: 1
-    background-color: #ffffff
-
   thead tr:first-child th
     top: 0
+
+  &.q-table--loading thead tr:last-child th
+    top: 48px
+
+  tbody
+    scroll-margin-top: 48px
 </style>

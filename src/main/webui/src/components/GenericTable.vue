@@ -32,8 +32,9 @@
         </q-toolbar>
 
         <!-- Table -->
-        <q-table class="my-sticky-header-table" flat bordered :rows="rows" :columns="columns" :row-key="rowKey"
-            :loading="loading" v-model:pagination="internalPagination" @request="onRequest" binary-state-sort>
+        <q-table class="my-sticky-header-table" :class="{ 'cursor-pointer-rows': !!onEdit }" flat bordered :rows="rows"
+            :columns="columns" :row-key="rowKey" :loading="loading" v-model:pagination="internalPagination"
+            @request="onRequest" @row-click="onRowClick" binary-state-sort>
             <!-- Pass through all slots -->
             <template v-for="(_, slot) in $slots" v-slot:[slot]="scope">
                 <slot :name="slot" v-bind="scope" />
@@ -41,11 +42,9 @@
 
             <!-- Default Actions Slot if not provided but actions exist -->
             <template v-if="!$slots['body-cell-actions'] && hasActions" v-slot:body-cell-actions="props">
-                <q-td :props="props">
-                    <q-btn v-if="onEdit" flat dense round icon="edit" color="primary" @click="onEdit(props.row)">
-                        <q-tooltip>Edit</q-tooltip>
-                    </q-btn>
-                    <q-btn v-if="onDelete" flat dense round icon="delete" color="negative" @click="onDelete(props.row)">
+                <q-td :props="props" class="text-right">
+                    <q-btn v-if="onDelete" flat dense round icon="delete" color="negative"
+                        @click.stop="onDelete(props.row)">
                         <q-tooltip>Delete</q-tooltip>
                     </q-btn>
                 </q-td>
@@ -129,6 +128,13 @@ const onRequest = (requestProp) => {
     emit('request', requestProp)
 }
 
+const onRowClick = (evt, row, index) => {
+    if (props.onEdit) {
+        console.log(index)
+        props.onEdit(row)
+    }
+}
+
 const hasActions = computed(() => {
     return props.columns.some(col => col.name === 'actions')
 })
@@ -154,4 +160,8 @@ const hasActions = computed(() => {
 
   tbody
     scroll-margin-top: 48px
+
+.cursor-pointer-rows
+  tbody tr
+    cursor: pointer
 </style>

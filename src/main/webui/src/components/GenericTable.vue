@@ -5,7 +5,7 @@
 
             <div class="col-8 col-md-6 col-sm-7 col-xs-12" v-if="enableSearch">
                 <q-input dense standout="bg-primary" v-model="internalSearch" input-class="search-field text-left"
-                    :placeholder="searchPlaceholder">
+                    :placeholder="!searchPlaceholder ? searchPlaceholder : $t('search')">
                     <template v-slot:append>
                         <q-icon v-if="internalSearch === ''" name="search" />
                         <q-icon v-else name="clear" class="cursor-pointer" @click="internalSearch = ''" />
@@ -13,14 +13,14 @@
                 </q-input>
             </div>
 
-            <div class="col-4 col-md-2 col-sm-2 gt-xs">
+            <div class="col-4 col-md-2 col-sm-2 gt-xs q-pl-sm">
                 <slot name="toolbar-filters"></slot>
             </div>
 
             <q-space class="gt-md" />
             <div class="gt-xs col-sm-3 text-right">
                 <slot name="toolbar-actions">
-                    <q-btn v-if="onCreate" flat label="new" icon="add" color="white" class="bg-primary"
+                    <q-btn v-if="onCreate" flat :label="$t('createLabel')" icon="add" color="white" class="bg-primary"
                         @click="onCreate">
                         <q-tooltip>
                             {{ createLabel }}

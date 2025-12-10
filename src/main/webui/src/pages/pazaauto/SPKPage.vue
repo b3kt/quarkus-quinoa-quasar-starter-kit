@@ -3,16 +3,19 @@
     <div class="q-pa-md">
       <!-- Toolbar with Create button and Search -->
       <q-toolbar class="shadow-1 rounded-borders q-mb-lg">
-        <q-btn flat icon="add" color="white" class="bg-primary col-sm-1" @click="openCreateDialog">
-          <slot name="label">
-            <span class="gt-sm ">Tambah SPK</span>
-          </slot>
-        </q-btn>
-        <q-space />
-        <div class="col-auto q-mr-md col-xs-1 col-sm-2">
-          <q-checkbox v-model="filterToday" dense>
+        <div class="col-4 col-md-4 col-sm-6 col-xs-12">
+          <q-input dense standout="bg-secondary" v-model="searchText" input-class="search-field text-left"
+            placeholder="Search by SPK number, nopol, or employee name...">
+            <template v-slot:append>
+              <q-icon v-if="searchText === ''" name="search" />
+              <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
+            </template>
+          </q-input>
+        </div>
+        <div class="col-auto q-mr-md col-xs-1 col-sm-1">
+          <q-checkbox v-model="filterToday" dense class="q-mx-md">
             <slot name="label">
-              <span class="gt-xs">Filter SPK hari ini</span>
+              <span class="gt-xs text-caption" style="line-height: 0.5;">Filter SPK hari ini</span>
             </slot>
           </q-checkbox>
         </div>
@@ -20,20 +23,20 @@
           <q-select v-model="filterStatus" multiple :options="statusOptions" label="Status" dense options-dense flat
             outlined />
         </div>
-        <div class="col-md-6 col-xs-4 col-sm-4">
-          <q-input dense standout="bg-secondary" v-model="searchText" input-class="search-field text-left"
-            class="q-ml-md" placeholder="Search by SPK number, nopol, or employee name...">
-            <template v-slot:append>
-              <q-icon v-if="searchText === ''" name="search" />
-              <q-icon v-else name="clear" class="cursor-pointer" @click="searchText = ''" />
-            </template>
-          </q-input>
+        <q-space class="gt-md" />
+        <div class="gt-xs col-sm-3 text-right">
+          <q-btn flat icon="add" color="white" class="bg-primary col-sm-1" @click="openCreateDialog">
+            <slot name="label">
+              <span class="gt-sm ">Tambah SPK</span>
+            </slot>
+          </q-btn>
         </div>
       </q-toolbar>
 
       <!-- Data Table -->
-      <q-table class="my-sticky-header-table" flat bordered :rows="rows" :columns="columns" row-key="id"
-        :loading="loading" v-model:pagination="pagination" @request="onRequest" binary-state-sort>
+      <q-table class="my-sticky-header-table cursor-pointer-rows" flat bordered :rows="rows" :columns="columns"
+        row-key="id" :loading="loading" v-model:pagination="pagination" @request="onRequest" @row-click="handleRowClick"
+        binary-state-sort>
         <template v-slot:body-cell-statusSpk="props">
           <q-td :props="props">
             <q-badge :color="getStatusColor(props.row.statusSpk)">
@@ -58,16 +61,8 @@
           <q-td :props="props">
 
             <div v-if="props.row.statusSpk !== 'SELESAI' && props.row.statusSpk !== 'BATAL'">
-              <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
-                <q-tooltip>Edit</q-tooltip>
-              </q-btn>
-              <q-btn flat dense round icon="delete" color="negative" @click="confirmDelete(props.row)">
+              <q-btn flat dense round icon="delete" color="negative" @click.stop="confirmDelete(props.row)">
                 <q-tooltip>Delete</q-tooltip>
-              </q-btn>
-            </div>
-            <div v-else>
-              <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
-                <q-tooltip>View</q-tooltip>
               </q-btn>
             </div>
           </q-td>
@@ -749,6 +744,10 @@ const columns = [
 
 
 // Methods
+const handleRowClick = (evt, row) => {
+  openEditDialog(row)
+}
+
 const fetchSpk = async (paginationData = pagination.value) => {
   loading.value = true
   try {
@@ -1503,4 +1502,8 @@ onMounted(() => {
 
   thead tr:first-child th
     top: 0
+
+.cursor-pointer-rows
+  :deep(tbody tr)
+    cursor: pointer
 </style>

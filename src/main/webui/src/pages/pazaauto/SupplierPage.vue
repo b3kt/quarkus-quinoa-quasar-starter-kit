@@ -2,11 +2,12 @@
   <q-page padding>
     <GenericTable :rows="rows" :columns="columns" :loading="loading" :pagination="pagination"
       @update:pagination="pagination = $event" @request="onRequest" @search="onSearch" :on-create="openCreateDialog"
-      :on-edit="openEditDialog" :on-delete="confirmDelete" create-label="Create Supplier"
+      :on-edit="openEditDialog" :on-delete="confirmDelete" :create-label="$t('create') + ' supplier'"
       search-placeholder="Search by name or email..." />
 
     <!-- Create/Edit Dialog -->
-    <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit Supplier' : 'Create Supplier'" min-width="600px">
+    <GenericDialog v-model="showDialog" :title="isEditMode ? $t('edit') + ' Supplier' : $t('create') + ' Supplier'"
+      min-width="600px">
       <q-form @submit="handleSave" id="supplier-form" class="q-gutter-md">
         <q-input v-model="formData.namaSupplier" label="Nama Supplier *" outlined dense
           :rules="[val => !!val || 'Nama Supplier is required']" />

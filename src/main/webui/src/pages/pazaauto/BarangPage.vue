@@ -5,8 +5,8 @@
       :on-edit="openEditDialog" :on-delete="confirmDelete">
       <template v-slot:toolbar-filters>
         <div class="col-2">
-          <q-select v-model="filterStatus" multiple :options="statusOptions" label="Availability" dense options-dense
-            flat outlined />
+          <q-select v-model="filterStatus" multiple :options="statusOptions" :label="$t('availability')" dense
+            options-dense flat outlined />
         </div>
       </template>
 

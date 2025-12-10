@@ -4,13 +4,11 @@
 export default {
   failed: 'Gagal',
   success: 'Berhasil',
-  create: 'Tambah',
-  createLabel: 'Data baru',
-  edit: 'Edit',
+  create: 'Tambah ',
+  edit: 'Ubah',
   delete: 'Hapus',
   search: "Pencarian..",
   availability: "Ketersediaan",
-  logout: "Keluar",
 
   app: {
     constant: {

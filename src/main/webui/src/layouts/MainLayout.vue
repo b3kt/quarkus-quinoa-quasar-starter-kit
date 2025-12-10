@@ -4,12 +4,12 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title>
+        <q-toolbar-title class="text-uppercase text-bold">
           {{ $t('app.constant.app_name') }}
         </q-toolbar-title>
 
         <div class="q-gutter-sm">
-          <q-btn v-if="authStore.isLoggedIn" flat dense icon="logout" label="Logout" @click="handleLogout" />
+          <q-btn v-if="authStore.isLoggedIn" flat dense icon="logout" :label="$t('logout')" @click="handleLogout" />
           <span v-else>Quasar v{{ $q.version }}</span>
         </div>
       </q-toolbar>

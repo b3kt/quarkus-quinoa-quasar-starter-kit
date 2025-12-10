@@ -7,14 +7,7 @@
         </q-toolbar-title>
 
         <div class="q-gutter-sm">
-          <q-btn
-            v-if="authStore.isLoggedIn"
-            flat
-            dense
-            icon="logout"
-            label="Logout"
-            @click="handleLogout"
-          />
+          <q-btn v-if="authStore.isLoggedIn" flat dense icon="logout" :label="$t('logout')" @click="handleLogout" />
           <span v-else>Quasar v{{ $q.version }}</span>
         </div>
       </q-toolbar>
@@ -35,7 +28,7 @@ const router = useRouter()
 const $q = useQuasar()
 const authStore = useAuthStore()
 
-async function handleLogout () {
+async function handleLogout() {
   await authStore.logout()
   $q.notify({
     type: 'info',

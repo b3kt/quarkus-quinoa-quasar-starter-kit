@@ -40,7 +40,8 @@ public class RbacServiceImpl implements RbacService {
 
     private void checkRbacEnabled() {
         if (!rbacProperties.enabled()) {
-            throw new IllegalStateException("RBAC module is not enabled. Set app.rbac.enabled=true to use RBAC features.");
+            throw new IllegalStateException(
+                    "RBAC module is not enabled. Set app.rbac.enabled=true to use RBAC features.");
         }
     }
 
@@ -152,7 +153,8 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     @Transactional
-    public Permission updatePermission(Long permissionId, String name, String description, String resource, String action) {
+    public Permission updatePermission(Long permissionId, String name, String description, String resource,
+            String action) {
         checkRbacEnabled();
         PermissionEntity entity = permissionEntityRepository.findByIdOptional(permissionId)
                 .orElseThrow(() -> new IllegalArgumentException("Permission not found with id: " + permissionId));
@@ -297,7 +299,7 @@ public class RbacServiceImpl implements RbacService {
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
         RoleEntity role = roleEntityRepository.findByIdOptional(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
-        user.getRbacRoles().add(role);
+        user.getRoles().add(role);
         userEntityRepository.persist(user);
     }
 
@@ -309,7 +311,7 @@ public class RbacServiceImpl implements RbacService {
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
         RoleEntity role = roleEntityRepository.findByIdOptional(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
-        user.getRbacRoles().remove(role);
+        user.getRoles().remove(role);
         userEntityRepository.persist(user);
     }
 
@@ -318,7 +320,7 @@ public class RbacServiceImpl implements RbacService {
         checkRbacEnabled();
         UserEntity user = userEntityRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
-        return user.getRbacRoles().stream()
+        return user.getRoles().stream()
                 .map(RoleEntity::toDomain)
                 .collect(Collectors.toSet());
     }
@@ -329,7 +331,7 @@ public class RbacServiceImpl implements RbacService {
         UserEntity user = userEntityRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
         Set<Permission> permissions = new HashSet<>();
-        for (RoleEntity role : user.getRbacRoles()) {
+        for (RoleEntity role : user.getRoles()) {
             if (role.isActive()) {
                 for (PermissionEntity permission : role.getPermissions()) {
                     if (permission.isActive()) {
@@ -354,8 +356,7 @@ public class RbacServiceImpl implements RbacService {
         checkRbacEnabled();
         UserEntity user = userEntityRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
-        return user.getRbacRoles().stream()
+        return user.getRoles().stream()
                 .anyMatch(r -> r.getName().equals(roleName) && r.isActive());
     }
 }
-

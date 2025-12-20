@@ -2,6 +2,8 @@ package com.github.b3kt.application.mapper;
 
 import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.domain.model.User;
+import com.github.b3kt.infrastructure.persistence.entity.RoleEntity;
+import java.util.stream.Collectors;
 
 /**
  * Mapper for converting between domain entities and DTOs.
@@ -13,10 +15,8 @@ public class UserMapper {
             return null;
         }
         return new UserInfo(
-            user.getUsername(),
-            user.getEmail(),
-            user.getRoles()
-        );
+                user.getUsername(),
+                user.getEmail(),
+                user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet()));
     }
 }
-

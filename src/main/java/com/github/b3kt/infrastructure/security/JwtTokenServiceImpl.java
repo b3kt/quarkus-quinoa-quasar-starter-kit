@@ -5,6 +5,8 @@ import com.github.b3kt.application.properties.RbacProperties;
 import com.github.b3kt.application.service.RbacService;
 import com.github.b3kt.domain.model.Permission;
 import com.github.b3kt.domain.model.User;
+import com.github.b3kt.infrastructure.persistence.entity.RoleEntity;
+
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -38,7 +40,7 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         io.smallrye.jwt.build.JwtClaimsBuilder jwtBuilder = Jwt.issuer(issuer)
                 .upn(user.getUsername())
                 .subject(user.getUsername())
-                .groups(user.getRoles())
+                .groups(user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet()))
                 .claim("email", user.getEmail())
                 .expiresIn(Duration.ofHours(expirationHours));
 
@@ -53,7 +55,8 @@ public class JwtTokenServiceImpl implements JwtTokenService {
             } catch (Exception e) {
                 // If RBAC is enabled but user permissions can't be fetched, log and continue
                 // This allows the token to be generated without permissions
-                System.err.println("Warning: Could not fetch permissions for user " + user.getUsername() + ": " + e.getMessage());
+                System.err.println(
+                        "Warning: Could not fetch permissions for user " + user.getUsername() + ": " + e.getMessage());
             }
         }
 
@@ -67,11 +70,11 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         java.util.Set<String> roles = jwt.getGroups();
 
         UserInfo userInfo = new UserInfo(username, email, roles);
-        
+
         // If RBAC is enabled, permissions are already in the token but not in UserInfo
         // UserInfo currently only contains roles, not permissions
         // If you need permissions in UserInfo, you would need to extend UserInfo DTO
-        
+
         return userInfo;
     }
 
@@ -80,4 +83,3 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         return Duration.ofHours(expirationHours).getSeconds();
     }
 }
-

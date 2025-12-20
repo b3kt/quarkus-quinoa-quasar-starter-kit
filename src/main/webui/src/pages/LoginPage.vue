@@ -4,53 +4,27 @@
       <q-card-section>
         <div class="text-h6 text-center q-mb-md">Login</div>
         <q-form @submit="onSubmit" class="q-gutter-md">
-          <q-input
-            v-model="username"
-            label="Username"
-            :rules="[val => !!val || 'Username is required']"
-            outlined
-            dense
-          >
+          <q-input v-model="username" label="Username" :rules="[val => !!val || 'Username is required']" outlined dense>
             <template v-slot:prepend>
               <q-icon name="person" />
             </template>
           </q-input>
 
-          <q-input
-            v-model="password"
-            label="Password"
-            type="password"
-            :rules="[val => !!val || 'Password is required']"
-            outlined
-            dense
-          >
+          <q-input v-model="password" label="Password" type="password" :rules="[val => !!val || 'Password is required']"
+            outlined dense>
             <template v-slot:prepend>
               <q-icon name="lock" />
             </template>
           </q-input>
 
-          <q-banner
-            v-if="error"
-            class="bg-negative text-white q-mt-md"
-            dense
-          >
+          <q-banner v-if="error" class="bg-negative text-white q-mt-md" dense>
             {{ error }}
           </q-banner>
 
           <div>
-            <q-btn
-              label="Login"
-              type="submit"
-              color="primary"
-              class="full-width"
-              :loading="loading"
-            />
+            <q-btn label="Login" type="submit" color="primary" class="full-width" :loading="loading" />
           </div>
         </q-form>
-
-        <div class="q-mt-md text-caption text-center text-grey-6">
-          Demo credentials: admin / admin123
-        </div>
       </q-card-section>
     </q-card>
   </q-page>
@@ -77,7 +51,7 @@ const onSubmit = async () => {
 
   try {
     const result = await authStore.login(username.value, password.value)
-    if(result) {
+    if (result) {
       if (result.success) {
         $q.notify({
           type: 'positive',
@@ -103,4 +77,3 @@ const onSubmit = async () => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 </style>
-

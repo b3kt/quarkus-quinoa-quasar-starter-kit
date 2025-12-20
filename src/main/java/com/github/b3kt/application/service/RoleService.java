@@ -103,7 +103,7 @@ public class RoleService extends AbstractCrudService<RoleEntity, Long> {
 
         // Remove this role from all currently assigned users
         for (UserEntity user : currentUsers) {
-            user.getRbacRoles().remove(role);
+            user.getRoles().remove(role);
             userRepository.persist(user);
         }
 
@@ -114,10 +114,10 @@ public class RoleService extends AbstractCrudService<RoleEntity, Long> {
                         .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
 
                 // Add role to user's rbacRoles set
-                if (user.getRbacRoles() == null) {
-                    user.setRbacRoles(new HashSet<>());
+                if (user.getRoles() == null) {
+                    user.setRoles(new HashSet<>());
                 }
-                user.getRbacRoles().add(role);
+                user.getRoles().add(role);
                 userRepository.persist(user);
             }
         }

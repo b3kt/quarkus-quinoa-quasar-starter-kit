@@ -66,15 +66,13 @@ export default defineConfig((ctx) => {
       extendViteConf(viteConf) {
         // Workaround for crypto.hash issue in Node 24
         if (typeof viteConf.define === 'undefined') {
+          viteConf.server = {
+            port: 80,
+            allowedHosts: [
+              '.trycloudflare.com']
+          }
           viteConf.define = {
-            server: {
-              port: 80,
-              allowedHosts: [
-                'hired-statement-couples-she.trycloudflare.com']
-            },
-            define: {
-              __API_URL__: JSON.stringify("hired-statement-couples-she.trycloudflare.com")
-            }
+            __API_URL__: JSON.stringify(".trycloudflare.com")
           }
         }
       },

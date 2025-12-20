@@ -76,7 +76,7 @@
         <span class="text-caption text-middle q-py-sm q-mr-sm">STATUS:</span>
         <q-chip square tooltip="Status" :color="getStatusColor(formData.statusSpk)">{{
           formData.statusSpk
-          }}</q-chip>
+        }}</q-chip>
       </template>
       <q-form @submit="saveSpk" class="q-gutter-md">
         <q-card class="row col-12" flat bordered>
@@ -184,7 +184,7 @@
                       <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
                       <q-td key="namaJasa" :props="props">{{ props.row.namaItem }}</q-td>
                       <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
-                        }}</q-td>
+                      }}</q-td>
                       <q-td key="jumlah" :props="props">
                         {{ props.row.jumlah }}
                         <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">
@@ -246,7 +246,7 @@
                       <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
                       <q-td key="namaBarang" :props="props">{{ props.row.namaItem }}</q-td>
                       <q-td key="harga" :props="props" class="text-right">{{ formatCurrency(props.row.harga)
-                        }}</q-td>
+                      }}</q-td>
                       <q-td key="jumlah" :props="props">
                         {{ props.row.jumlah }}
                         <q-popup-edit v-model.number="props.row.jumlah" v-slot="scope">

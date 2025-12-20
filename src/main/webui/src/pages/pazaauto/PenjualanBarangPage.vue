@@ -44,6 +44,9 @@
 
                 <template v-slot:body-cell-actions="props">
                     <q-td :props="props">
+                        <q-btn flat dense round icon="print" color="secondary" @click="printPenjualan(props.row)">
+                            <q-tooltip>Print</q-tooltip>
+                        </q-btn>
                         <q-btn flat dense round icon="edit" color="primary" @click="openEditDialog(props.row)">
                             <q-tooltip>Edit</q-tooltip>
                         </q-btn>
@@ -389,6 +392,168 @@ const getStatusColor = (status) => {
         case 'BELUM_LUNAS': return 'red'
         case 'DP': return 'orange'
         default: return 'grey'
+    }
+}
+
+const printPenjualan = async (row) => {
+    try {
+        const response = await api.get(`/api/pazaauto/penjualan/${row.noPenjualan}/print`)
+        if (response.data.success) {
+            const data = response.data.data
+            // Create invisible iframe
+            let iframe = document.getElementById('print-iframe')
+            if (!iframe) {
+                iframe = document.createElement('iframe')
+                iframe.id = 'print-iframe'
+                iframe.style.position = 'absolute'
+                iframe.style.width = '0px'
+                iframe.style.height = '0px'
+                iframe.style.border = 'none'
+                document.body.appendChild(iframe)
+            }
+
+            const doc = iframe.contentWindow.document
+            doc.open()
+            doc.write(`
+                    <html>
+                    <head>
+                        <title>Print Penjualan ${data.noPenjualan}</title>
+                        <style>
+                            body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; }
+                            .header { text-align: center; margin-bottom: 20px; }
+                            .header h2 { margin: 0; }
+                            .info-table { width: 100%; margin-bottom: 20px; }
+                            .info-table td { vertical-align: top; padding: 2px; }
+                            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            .items-table th, .items-table td { border-bottom: 1px dashed #000; padding: 5px; text-align: left; }
+                            .items-table th { border-top: 1px dashed #000; }
+                            .text-right { text-align: right !important; }
+                            .totals-table { width: 100%; }
+                            .totals-table td { padding: 2px; }
+                            .footer { margin-top: 30px; text-align: center; font-size: 10px; }
+                            @media print {
+                                @page { margin: 0; }
+                                body { margin: 1cm; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h2>PAZAAUTO</h2>
+                            <div>Jl. Raya Example No. 123, City</div>
+                            <div>Telp: 0812-3456-7890</div>
+                        </div>
+                        
+                        <table class="info-table">
+                            <tr>
+                                <td width="15%">No Faktur</td>
+                                <td width="35%">: ${data.noPenjualan}</td>
+                                <td width="15%">Pelanggan</td>
+                                <td width="35%">: ${data.namaPelanggan || '-'}</td>
+                            </tr>
+                            <tr>
+                                <td>Tanggal</td>
+                                <td>: ${data.tanggal}</td>
+                                <td>Alamat</td>
+                                <td>: ${data.alamatPelanggan || '-'}</td>
+                            </tr>
+                            <tr>
+                                <td>No SPK</td>
+                                <td>: ${data.noSpk}</td>
+                                <td>No HP</td>
+                                <td>: ${data.noHpPelanggan || '-'}</td>
+                            </tr>
+                            <tr>
+                                <td>Nopol</td>
+                                <td>: ${data.nopol || '-'}</td>
+                                <td>Kendaraan</td>
+                                <td>: ${data.merk || '-'} ${data.model || ''}</td>
+                            </tr>
+                            <tr>
+                                <td>KM</td>
+                                <td>: ${data.km || '-'}</td>
+                                <td>Mekanik</td>
+                                <td>: ${data.namaMekanik || '-'}</td> 
+                            </tr>
+                        </table>
+
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th width="5%">No</th>
+                                    <th width="45%">Deskripsi</th>
+                                    <th width="10%" class="text-right">Qty</th>
+                                    <th width="20%" class="text-right">Harga</th>
+                                    <th width="20%" class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.items.map((item, index) => `
+                                    <tr>
+                                        <td>${index + 1}</td>
+                                        <td>${item.nama}</td>
+                                        <td class="text-right">${item.qty}</td>
+                                        <td class="text-right">${formatCurrency(item.harga)}</td>
+                                        <td class="text-right">${formatCurrency(item.subTotal)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        <table class="totals-table">
+                            <tr>
+                                <td width="60%"></td>
+                                <td width="20%">Sub Total</td>
+                                <td width="20%" class="text-right">${formatCurrency(data.subTotal)}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>Diskon</td>
+                                <td class="text-right">${formatCurrency(data.diskon)}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>PPN</td>
+                                <td class="text-right">${formatCurrency(data.ppn)}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td style="border-top: 1px dashed #000; font-weight: bold;">Grand Total</td>
+                                <td class="text-right" style="border-top: 1px dashed #000; font-weight: bold;">${formatCurrency(data.grandTotal)}</td>
+                            </tr>
+                             <tr>
+                                <td></td>
+                                <td>Bayar</td>
+                                <td class="text-right">${formatCurrency(data.uangDibayar)}</td>
+                            </tr>
+                             <tr>
+                                <td></td>
+                                <td>Kembali</td>
+                                <td class="text-right">${formatCurrency(data.kembalian)}</td>
+                            </tr>
+                        </table>
+
+                        <div class="footer">
+                            <div>Terima Kasih atas kunjungan Anda</div>
+                            <div>Barang yang sudah dibeli tidak dapat dikembalikan</div>
+                        </div>
+                    </body>
+                    </html>
+                `)
+            doc.close()
+
+            // Wait for content to load then print
+            setTimeout(() => {
+                iframe.contentWindow.focus()
+                iframe.contentWindow.print()
+            }, 500)
+        }
+    } catch (error) {
+        $q.notify({
+            type: 'negative',
+            message: 'Failed to print penjualan',
+            caption: error.response?.data?.message || error.message
+        })
     }
 }
 

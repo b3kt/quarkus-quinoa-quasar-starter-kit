@@ -1,14 +1,21 @@
 package com.github.b3kt.presentation.rest.pazaauto;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
+
 import com.github.b3kt.application.dto.ApiResponse;
 import com.github.b3kt.application.service.pazaauto.AbstractCrudService;
+import com.github.b3kt.application.service.pazaauto.TbKaryawanService;
+import com.github.b3kt.application.service.pazaauto.TbPelangganService;
 import com.github.b3kt.application.service.pazaauto.TbSpkService;
+import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbKaryawanEntity;
+import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbPelangganEntity;
 import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbSpkEntity;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -20,6 +27,12 @@ public class TbSpkResource extends AbstractCrudResource<TbSpkEntity, Long> {
 
     @Inject
     TbSpkService service;
+
+    @Inject
+    TbPelangganService pelangganService;
+
+    @Inject
+    TbKaryawanService karyawanService;
 
     @Override
     protected AbstractCrudService<TbSpkEntity, Long> getService() {
@@ -47,10 +60,27 @@ public class TbSpkResource extends AbstractCrudResource<TbSpkEntity, Long> {
         return Response.ok(ApiResponse.success(nextSpkNumber)).build();
     }
 
+    @POST
+    @Override
+    public Response create(TbSpkEntity entity) {
+
+        fillKaryawanDetail(entity);
+        fillPelangganDetail(entity);
+        fillKendaraanDetail(entity);
+
+        TbSpkEntity created = getService().create(entity);
+        return Response.ok(ApiResponse.success(getEntityName() + " created", created)).build();
+    }
+
     @Override
     @PUT
     @Path("/{id}")
     public Response update(@PathParam("id") String id, TbSpkEntity entity) {
+
+        fillKaryawanDetail(entity);
+        fillPelangganDetail(entity);
+        fillKendaraanDetail(entity);
+
         TbSpkEntity updated = getService().update(parseId(id), entity);
 
         if (updated == null) {
@@ -70,5 +100,31 @@ public class TbSpkResource extends AbstractCrudResource<TbSpkEntity, Long> {
         TbSpkEntity updated = getService().update(parseId(id), entity);
 
         return Response.ok(ApiResponse.success(getEntityName() + " cancelled", updated)).build();
+    }
+
+    private void fillPelangganDetail(TbSpkEntity entity) {
+        if (Objects.isNull(entity.getPelangganId())) {
+            TbPelangganEntity pelanggan = pelangganService.findByNopol(entity.getNopol());
+            if (Objects.nonNull(pelanggan)) {
+                entity.setPelangganId(pelanggan.getId());
+            }
+        }
+    }
+
+    private void fillKaryawanDetail(TbSpkEntity entity) {
+        if (Objects.isNull(entity.getMekanikId())) {
+            long mekanikId = entity.getMekanikList().stream().findFirst().get().getId();
+            TbKaryawanEntity karyawan = karyawanService.findById(mekanikId);
+            if (Objects.nonNull(karyawan)) {
+                entity.setNamaKaryawan(karyawan.getNamaKaryawan());
+                entity.setMekanikId(karyawan.getId());
+            }
+        }
+    }
+
+    private void fillKendaraanDetail(TbSpkEntity entity) {
+        if (Objects.nonNull(entity.getKm())) {
+            entity.setKmSaatIni(entity.getKm());
+        }
     }
 }

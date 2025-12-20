@@ -32,7 +32,7 @@ export default [
    * pluginVue.configs["flat/recommended"]
    *   -> Above, plus rules to enforce subjective community defaults to ensure consistency.
    */
-  ...pluginVue.configs[ 'flat/essential' ],
+  ...pluginVue.configs['flat/essential'],
 
   {
     languageOptions: {
@@ -54,6 +54,7 @@ export default [
     // add your custom rules here
     rules: {
       'prefer-promise-reject-errors': 'off',
+      'no-useless-escape': 'off',
 
       // allow debugger during development only
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
@@ -61,7 +62,7 @@ export default [
   },
 
   {
-    files: [ 'src-pwa/custom-service-worker.js' ],
+    files: ['src-pwa/custom-service-worker.js'],
     languageOptions: {
       globals: {
         ...globals.serviceworker

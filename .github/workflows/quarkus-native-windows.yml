@@ -19,17 +19,17 @@ jobs:
         with:
           distribution: graalvm
           java-version: 21
-          components: native-image
           cache: maven
 
       - name: Verify GraalVM
         run: |
           java -version
           native-image --version
+          mvn -version
 
       - name: Build Quarkus Native Image (Windows)
         run: |
-          mvnw.cmd clean package -Pnative -DskipTests
+          mvn clean package -Pnative -DskipTests
 
       - name: Upload Native EXE
         uses: actions/upload-artifact@v4

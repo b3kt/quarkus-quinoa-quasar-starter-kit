@@ -1,0 +1,38 @@
+name: Build Quarkus Native Image (Windows)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - example/paza-auto
+
+jobs:
+  native-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm
+          java-version: 21
+          components: native-image
+          cache: maven
+
+      - name: Verify GraalVM
+        run: |
+          java -version
+          native-image --version
+
+      - name: Build Quarkus Native Image (Windows)
+        run: |
+          mvnw.cmd clean package -Pnative -DskipTests
+
+      - name: Upload Native EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: quarkus-native-windows
+          path: target\*-runner.exe

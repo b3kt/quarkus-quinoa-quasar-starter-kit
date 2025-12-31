@@ -41,9 +41,6 @@ public class TbKaryawanEntity extends BaseEntity {
     @Column(name = "tanggal_bergabung")
     private LocalDate tanggalBergabung;
 
-    @Column(name = "tanggal_lahir")
-    private LocalDate tanggalLahir;
-
     @Column(name = "id_posisi")
     private Long idPosisi;
 

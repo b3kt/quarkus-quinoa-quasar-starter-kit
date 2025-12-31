@@ -1,19 +1,26 @@
 package com.github.b3kt.domain.model;
 
 import java.util.Set;
-
 import com.github.b3kt.infrastructure.persistence.entity.RoleEntity;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Domain entity representing a User.
  * This is the core domain model with business logic.
  */
+@Getter
+@Setter
 public class User {
     private String username;
     private String email;
     private String passwordHash;
     private Set<RoleEntity> roles;
     private boolean active;
+
+    private transient Long karyawanId;
+    private transient String karyawanNama;
 
     public User() {
     }
@@ -26,44 +33,15 @@ public class User {
         this.active = true;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
+    public User(String username, String email, String passwordHash, Set<RoleEntity> roles, Long karyawanId,
+            String karyawanNama) {
         this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
-    }
-
-    public Set<RoleEntity> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<RoleEntity> roles) {
         this.roles = roles;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
+        this.active = true;
+        this.karyawanId = karyawanId;
+        this.karyawanNama = karyawanNama;
     }
 
     /**

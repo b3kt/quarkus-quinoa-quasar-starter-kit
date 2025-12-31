@@ -3,6 +3,8 @@ package com.github.b3kt.application.mapper;
 import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.domain.model.User;
 import com.github.b3kt.infrastructure.persistence.entity.RoleEntity;
+import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbKaryawanEntity;
+
 import java.util.stream.Collectors;
 
 /**
@@ -17,6 +19,8 @@ public class UserMapper {
         return new UserInfo(
                 user.getUsername(),
                 user.getEmail(),
-                user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet()));
+                user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet()),
+                user.getKaryawanId(),
+                user.getKaryawanNama());
     }
 }

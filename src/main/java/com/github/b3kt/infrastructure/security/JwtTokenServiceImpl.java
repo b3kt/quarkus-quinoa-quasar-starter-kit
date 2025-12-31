@@ -42,6 +42,8 @@ public class JwtTokenServiceImpl implements JwtTokenService {
                 .subject(user.getUsername())
                 .groups(user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet()))
                 .claim("email", user.getEmail())
+                .claim("karyawanId", user.getKaryawanId())
+                .claim("karyawanNama", user.getKaryawanNama())
                 .expiresIn(Duration.ofHours(expirationHours));
 
         // If RBAC is enabled, include permissions in the token
@@ -69,7 +71,9 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         String email = jwt.getClaim("email");
         java.util.Set<String> roles = jwt.getGroups();
 
-        UserInfo userInfo = new UserInfo(username, email, roles);
+        UserInfo userInfo = new UserInfo(username, email, roles,
+                Long.parseLong(jwt.getClaim("karyawanId").toString()),
+                jwt.getClaim("karyawanNama").toString());
 
         // If RBAC is enabled, permissions are already in the token but not in UserInfo
         // UserInfo currently only contains roles, not permissions

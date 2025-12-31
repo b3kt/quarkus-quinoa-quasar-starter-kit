@@ -29,4 +29,3 @@ public class TbBarangResource extends AbstractCrudResource<TbBarangEntity, Long>
         return "Barang";
     }
 }
-

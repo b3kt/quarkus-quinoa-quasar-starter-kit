@@ -12,7 +12,6 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 import java.util.Objects;
@@ -79,5 +78,9 @@ public class TbKaryawanService extends AbstractCrudService<TbKaryawanEntity, Lon
                 .list();
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
+    }
+
+    public List<TbKaryawanEntity> findAllUnregistered() {
+        return repository.findAllUnregistered();
     }
 }

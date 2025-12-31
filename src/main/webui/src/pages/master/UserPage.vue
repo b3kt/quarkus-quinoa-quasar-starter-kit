@@ -144,7 +144,7 @@ const handleSave = async () => {
 // Karyawan Logic
 const fetchKaryawan = async () => {
   try {
-    const response = await api.get('/api/pazaauto/karyawan')
+    const response = await api.get('/api/pazaauto/karyawan/unregistered')
     if (response.data.success) {
       karyawanOptions.value = response.data.data || []
       filteredKaryawanOptions.value = karyawanOptions.value

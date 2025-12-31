@@ -419,123 +419,179 @@ const printPenjualan = async (row) => {
                     <head>
                         <title>Print Penjualan ${data.noPenjualan}</title>
                         <style>
-                            body { font-family: 'Courier New', monospace; font-size: 12px; margin: 0; padding: 10px; }
-                            .header { text-align: center; margin-bottom: 20px; }
-                            .header h2 { margin: 0; }
-                            .info-table { width: 100%; margin-bottom: 20px; }
-                            .info-table td { vertical-align: top; padding: 2px; }
-                            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                            .items-table th, .items-table td { border-bottom: 1px dashed #000; padding: 5px; text-align: left; }
-                            .items-table th { border-top: 1px dashed #000; }
-                            .text-right { text-align: right !important; }
-                            .totals-table { width: 100%; }
-                            .totals-table td { padding: 2px; }
-                            .footer { margin-top: 30px; text-align: center; font-size: 10px; }
-                            @media print {
-                                @page { margin: 0; }
-                                body { margin: 1cm; }
+                            @page { size: letter; margin: 0.5cm; }
+                            body { 
+                                font-family: 'Courier New', Courier, monospace; 
+                                font-size: 9pt; 
+                                margin: 0; 
+                                padding: 10px;
+                                color: #000;
                             }
+                            .container { width: 100%; max-width: 21cm; margin: 0 auto; }
+                            .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                            .company-info { width: 60%; }
+                            .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 5px; }
+                            .invoice-title { width: 40%; text-align: right; }
+                            .invoice-header { font-size: 12pt; font-weight: bold; border: 1px solid #000; padding: 5px 10px; display: inline-block; }
+                            
+                            .info-section { display: flex; margin-bottom: 15px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0; }
+                            .info-left { width: 55%; }
+                            .info-right { width: 45%; }
+                            .info-row { display: flex; margin-bottom: 2px; }
+                            .label { width: 100px; }
+                            .separator { width: 10px; }
+                            .value { flex: 1; }
+
+                            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                            .items-table th { border-bottom: 1px dashed #000; padding: 5px 2px; text-align: left; font-weight: normal; }
+                            .items-table td { padding: 5px 2px; vertical-align: top; }
+                            .text-right { text-align: right !important; }
+                            .text-center { text-align: center !important; }
+                            
+                            .footer-section { display: flex; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px; }
+                            .footer-left { width: 60%; font-size: 8pt; }
+                            .footer-right { width: 40%; }
+                            .total-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+                            .grand-total { font-weight: bold; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin: 5px 0; }
+                            
+                            .signatures { display: flex; justify-content: space-between; margin-top: 30px; text-align: center; }
+                            .sig-box { width: 30%; }
+                            .sig-line { margin-top: 50px; border-top: 1px dashed #000; }
+                            
+                            /* Utility for uppercase */
+                            .uppercase { text-transform: uppercase; }
                         </style>
                     </head>
                     <body>
-                        <div class="header">
-                            <h2>PAZAAUTO</h2>
-                            <div>Jl. Raya Example No. 123, City</div>
-                            <div>Telp: 0812-3456-7890</div>
-                        </div>
-                        
-                        <table class="info-table">
-                            <tr>
-                                <td width="15%">No Faktur</td>
-                                <td width="35%">: ${data.noPenjualan}</td>
-                                <td width="15%">Pelanggan</td>
-                                <td width="35%">: ${data.namaPelanggan || '-'}</td>
-                            </tr>
-                            <tr>
-                                <td>Tanggal</td>
-                                <td>: ${data.tanggal}</td>
-                                <td>Alamat</td>
-                                <td>: ${data.alamatPelanggan || '-'}</td>
-                            </tr>
-                            <tr>
-                                <td>No SPK</td>
-                                <td>: ${data.noSpk}</td>
-                                <td>No HP</td>
-                                <td>: ${data.noHpPelanggan || '-'}</td>
-                            </tr>
-                            <tr>
-                                <td>Nopol</td>
-                                <td>: ${data.nopol || '-'}</td>
-                                <td>Kendaraan</td>
-                                <td>: ${data.merk || '-'} ${data.model || ''}</td>
-                            </tr>
-                            <tr>
-                                <td>KM</td>
-                                <td>: ${data.km || '-'}</td>
-                                <td>Mekanik</td>
-                                <td>: ${data.namaMekanik || '-'}</td> 
-                            </tr>
-                        </table>
+                        <div class="container">
+                            <div class="header">
+                                <div class="company-info">
+                                    <div class="company-name">PAZAAUTO</div>
+                                    <div>JL. REGENSI 2 RUKO WISMA HARAPAN BLOK D5 NO. 25</div>
+                                    <div>GEMBOR, PERIUK, KOTA TANGERANG</div>
+                                    <div>TLP: 0813 8101 46747</div>
+                                </div>
+                                <div class="invoice-title">
+                                    <div class="invoice-header">FAKTUR PENJUALAN</div>
+                                </div>
+                            </div>
 
-                        <table class="items-table">
-                            <thead>
-                                <tr>
-                                    <th width="5%">No</th>
-                                    <th width="45%">Deskripsi</th>
-                                    <th width="10%" class="text-right">Qty</th>
-                                    <th width="20%" class="text-right">Harga</th>
-                                    <th width="20%" class="text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${data.items.map((item, index) => `
+                            <div class="info-section">
+                                <div class="info-left">
+                                    <div class="info-row">
+                                        <div class="label">Kepada Yth</div>
+                                        <div class="separator">:</div>
+                                        <div class="value uppercase">${data.namaPelanggan || 'TUNAI'}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="label">Alamat</div>
+                                        <div class="separator">:</div>
+                                        <div class="value uppercase">${data.alamatPelanggan || '-'}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="label">Merk/Jenis</div>
+                                        <div class="separator">:</div>
+                                        <div class="value uppercase">${data.merk || '-'} ${data.model || ''} / ${data.nopol || '-'}</div>
+                                    </div>
+                                </div>
+                                <div class="info-right">
+                                    <div class="info-row">
+                                        <div class="label">No Faktur</div>
+                                        <div class="separator">:</div>
+                                        <div class="value">${data.noPenjualan}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="label">Tanggal</div>
+                                        <div class="separator">:</div>
+                                        <div class="value">${data.tanggal}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="label">KM</div>
+                                        <div class="separator">:</div>
+                                        <div class="value">${data.km || '-'}</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="label">Mekanik</div>
+                                        <div class="separator">:</div>
+                                        <div class="value uppercase">${data.namaMekanik || '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table class="items-table">
+                                <thead>
                                     <tr>
-                                        <td>${index + 1}</td>
-                                        <td>${item.nama}</td>
-                                        <td class="text-right">${item.qty}</td>
-                                        <td class="text-right">${formatCurrency(item.harga)}</td>
-                                        <td class="text-right">${formatCurrency(item.subTotal)}</td>
+                                        <th width="5%">NO</th>
+                                        <th width="15%">KODE</th>
+                                        <th width="35%">NAMA BARANG / JASA</th>
+                                        <th width="10%" class="text-right">QTY</th>
+                                        <th width="15%" class="text-right">HARGA</th>
+                                        <th width="10%" class="text-right">DISC</th>
+                                        <th width="15%" class="text-right">TOTAL</th>
                                     </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    ${data.items.map((item, index) => `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td>${item.kodeBarang || '-'}</td>
+                                            <td class="uppercase">${item.nama}</td>
+                                            <td class="text-right">${item.qty}</td>
+                                            <td class="text-right">${formatCurrency(item.harga)}</td>
+                                            <td class="text-right">${formatCurrency(item.diskon || 0)}</td>
+                                            <td class="text-right">${formatCurrency(item.subTotal)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
 
-                        <table class="totals-table">
-                            <tr>
-                                <td width="60%"></td>
-                                <td width="20%">Sub Total</td>
-                                <td width="20%" class="text-right">${formatCurrency(data.subTotal)}</td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td>Diskon</td>
-                                <td class="text-right">${formatCurrency(data.diskon)}</td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td>PPN</td>
-                                <td class="text-right">${formatCurrency(data.ppn)}</td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td style="border-top: 1px dashed #000; font-weight: bold;">Grand Total</td>
-                                <td class="text-right" style="border-top: 1px dashed #000; font-weight: bold;">${formatCurrency(data.grandTotal)}</td>
-                            </tr>
-                             <tr>
-                                <td></td>
-                                <td>Bayar</td>
-                                <td class="text-right">${formatCurrency(data.uangDibayar)}</td>
-                            </tr>
-                             <tr>
-                                <td></td>
-                                <td>Kembali</td>
-                                <td class="text-right">${formatCurrency(data.kembalian)}</td>
-                            </tr>
-                        </table>
+                            <div class="footer-section">
+                                <div class="footer-left">
+                                    <div>KETERANGAN:</div>
+                                    <div class="uppercase">${data.keterangan || '-'}</div>
+                                    <br/>
+                                    <div>* Barang yang sudah dibeli tidak dapat dikembalikan</div>
+                                    <div>* Komplain maksimal 1x24 jam</div>
+                                </div>
+                                <div class="footer-right">
+                                    <div class="total-row">
+                                        <div>SUB TOTAL</div>
+                                        <div>${formatCurrency(data.subTotal)}</div>
+                                    </div>
+                                    <div class="total-row">
+                                        <div>DISKON</div>
+                                        <div>${formatCurrency(data.diskon)}</div>
+                                    </div>
+                                    <div class="total-row">
+                                        <div>PPN</div>
+                                        <div>${formatCurrency(data.ppn)}</div>
+                                    </div>
+                                    <div class="total-row grand-total">
+                                        <div>GRAND TOTAL</div>
+                                        <div>${formatCurrency(data.grandTotal)}</div>
+                                    </div>
+                                    <div class="total-row">
+                                        <div>DIBAYAR</div>
+                                        <div>${formatCurrency(data.uangDibayar)}</div>
+                                    </div>
+                                    <div class="total-row">
+                                        <div>KEMBALI</div>
+                                        <div>${formatCurrency(data.kembalian)}</div>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="footer">
-                            <div>Terima Kasih atas kunjungan Anda</div>
-                            <div>Barang yang sudah dibeli tidak dapat dikembalikan</div>
+                            <div class="signatures">
+                                <div class="sig-box">
+                                    <div>Tanda Terima</div>
+                                    <div class="sig-line"></div>
+                                </div>
+                                <div class="sig-box">
+                                    <div>Hormat Kami</div>
+                                    <div class="sig-line"></div>
+                                    <div>( PAZAAUTO )</div>
+                                </div>
+                            </div>
                         </div>
                     </body>
                     </html>

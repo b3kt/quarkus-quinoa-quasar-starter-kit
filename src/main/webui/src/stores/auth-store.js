@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { api } from 'boot/axios'
+import { jwtDecode } from 'jwt-decode'
 
 export const useAuthStore = defineStore('auth', {
   state: () => {
@@ -40,7 +41,10 @@ export const useAuthStore = defineStore('auth', {
           this.token = tokenObject.data.token
           this.user = {
             username: tokenObject.data.username,
-            email: tokenObject.data.email
+            email: tokenObject.data.email,
+            roles: jwtDecode(tokenObject.data.token).groups,
+            karyawanId: jwtDecode(tokenObject.data.token).karyawanId,
+            karyawanNama: jwtDecode(tokenObject.data.token).karyawanNama
           }
           this.isAuthenticated = true
 

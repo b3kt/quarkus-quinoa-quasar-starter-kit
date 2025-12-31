@@ -6,6 +6,8 @@ import com.github.b3kt.application.mapper.UserMapper;
 import com.github.b3kt.application.service.AuthService;
 import com.github.b3kt.domain.exception.AuthenticationException;
 import com.github.b3kt.domain.model.User;
+import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbKaryawanEntity;
+import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbKaryawanRepository;
 import com.github.b3kt.infrastructure.repository.UserRepository;
 import com.github.b3kt.infrastructure.security.JwtTokenService;
 import com.github.b3kt.infrastructure.security.PasswordEncoder;
@@ -25,6 +27,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Inject
     UserRepository userRepository;
+
+    @Inject
+    TbKaryawanRepository tbKaryawanRepository;
 
     @Inject
     JwtTokenService jwtTokenService;
@@ -50,6 +55,13 @@ public class AuthServiceImpl implements AuthService {
         if (!Objects.equals(password, user.getPasswordHash())) {
             throw new AuthenticationException("Invalid username or password");
         }
+
+        // Get related karyawan info
+        tbKaryawanRepository.findByUsername(username)
+                .ifPresent(karyawan -> {
+                    user.setKaryawanId(karyawan.getId());
+                    user.setKaryawanNama(karyawan.getNamaKaryawan());
+                });
 
         // Generate token
         String token = jwtTokenService.generateToken(user);

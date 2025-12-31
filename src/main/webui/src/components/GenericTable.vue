@@ -7,6 +7,7 @@
                 <q-input dense standout="bg-primary" v-model="internalSearch" input-class="search-field text-left"
                     :placeholder="!searchPlaceholder ? searchPlaceholder : $t('search')">
                     <template v-slot:append>
+                        <slot name="search-append"></slot>
                         <q-icon v-if="internalSearch === ''" name="search" />
                         <q-icon v-else name="clear" class="cursor-pointer" @click="internalSearch = ''" />
                     </template>
@@ -89,6 +90,10 @@ const props = defineProps({
         type: Boolean,
         default: true
     },
+    searchValue: {
+        type: String,
+        default: ''
+    },
     onCreate: {
         type: Function,
         default: null
@@ -103,7 +108,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['update:pagination', 'request', 'search'])
+const emit = defineEmits(['update:pagination', 'request', 'search', 'update:searchValue'])
 
 // Internal state for two-way binding
 const internalPagination = computed({
@@ -111,11 +116,19 @@ const internalPagination = computed({
     set: (val) => emit('update:pagination', val)
 })
 
-const internalSearch = ref('')
+const internalSearch = ref(props.searchValue)
 let searchTimeout = null
+
+// Watch prop to update internal state
+watch(() => props.searchValue, (newVal) => {
+    if (newVal !== internalSearch.value) {
+        internalSearch.value = newVal
+    }
+})
 
 // Watch search text for debouncing
 watch(internalSearch, (newVal) => {
+    emit('update:searchValue', newVal)
     if (searchTimeout) {
         clearTimeout(searchTimeout)
     }

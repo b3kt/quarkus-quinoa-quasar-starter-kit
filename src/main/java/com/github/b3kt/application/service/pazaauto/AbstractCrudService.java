@@ -72,8 +72,10 @@ public abstract class AbstractCrudService<T, ID> {
 
     @Transactional
     public void delete(ID id) {
-        boolean deleted = getRepository().deleteById(id);
-        if (!deleted) {
+        T entity = findById(id);
+        try {
+            getRepository().delete(entity);
+        } catch (Exception e) {
             throw new EntityNotFoundException("Entity not found with id: " + id);
         }
     }

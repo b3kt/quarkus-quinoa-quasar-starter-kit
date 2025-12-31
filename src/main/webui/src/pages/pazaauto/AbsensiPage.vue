@@ -22,10 +22,11 @@
 
                         <!-- Employee Selector -->
                         <div class="col-12 col-md-8">
-                            <q-select v-model="selectedKaryawan" label="Select Employee *" outlined dense
-                                :options="filteredKaryawanOptions" option-label="namaKaryawan" option-value="id"
-                                emit-value map-options use-input input-debounce="300" @filter="filterKaryawan"
-                                :loading="loadingKaryawan">
+
+                            <q-select v-if="!role.includes('Karyawan')" v-model="selectedKaryawan"
+                                label="Select Employee *" outlined dense :options="filteredKaryawanOptions"
+                                option-label="namaKaryawan" option-value="id" emit-value map-options use-input
+                                input-debounce="300" @filter="filterKaryawan" :loading="loadingKaryawan">
                                 <template v-slot:no-option>
                                     <q-item>
                                         <q-item-section class="text-grey">
@@ -34,6 +35,12 @@
                                     </q-item>
                                 </template>
                             </q-select>
+                            <div v-else>
+                                <q-input v-model="user.karyawanNama" label="Employee Name" outlined dense readonly />
+                                <q-input style="display: none;" v-model="selectedKaryawan" label="Employee ID" outlined
+                                    dense readonly />
+                            </div>
+
 
                             <!-- Today's Status Card -->
                             <q-card v-if="todayAttendance" flat bordered class="q-mt-md">
@@ -80,7 +87,7 @@
                                 <div class="col-6">
                                     <q-btn unelevated color="negative" icon="logout" label="Clock Out"
                                         class="full-width" @click="clockOut" :loading="clocking"
-                                        :disable="!selectedKaryawan || !todayAttendance || !todayAttendance.jamMasuk || todayAttendance.jamKeluar" />
+                                        :disable="!selectedKaryawan || !todayAttendance || !todayAttendance.jamMasuk || todayAttendance.jamKeluar || !user.roles.includes('Karyawan')" />
                                 </div>
                             </div>
                         </div>
@@ -178,13 +185,18 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 import GenericDialog from 'components/GenericDialog.vue'
+import { useAuthStore } from 'stores/auth-store'
+import { computed } from 'vue'
 
 const $q = useQuasar()
+const authStore = useAuthStore()
+const user = computed(() => authStore.user)
+const role = computed(() => user.value.roles)
 
 // State
 const currentTime = ref('')
 const currentDate = ref('')
-const selectedKaryawan = ref(null)
+const selectedKaryawan = ref(user.value.karyawanId)
 const todayAttendance = ref(null)
 const clocking = ref(false)
 const loadingKaryawan = ref(false)
@@ -451,7 +463,11 @@ const watchSelectedKaryawan = () => {
 onMounted(() => {
     updateClock()
     clockInterval = setInterval(updateClock, 1000)
-    fetchKaryawan()
+    if (user.value.roles.includes('Admin')) {
+        fetchKaryawan()
+    } else {
+        fetchTodayAttendance();
+    }
 })
 
 onBeforeUnmount(() => {

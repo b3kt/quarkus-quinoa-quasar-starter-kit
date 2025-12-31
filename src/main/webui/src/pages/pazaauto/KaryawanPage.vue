@@ -55,9 +55,6 @@
 
         <div class="row q-col-gutter">
           <div class="col-6">
-            <q-input v-model="formData.tanggalLahir" label="Tanggal Lahir" outlined dense type="date" class="q-mr-sm" />
-          </div>
-          <div class="col-6">
             <q-input v-model="formData.tanggalBergabung" label="Tanggal Bergabung" outlined dense type="date"
               class="q-ml-sm" />
           </div>
@@ -158,7 +155,6 @@ const formData = ref({
   noTelepon: '',
   alamat: '',
   jenisKelamin: null,
-  tanggalLahir: null,
   tanggalBergabung: null,
   idPosisi: null
 })
@@ -171,7 +167,6 @@ const resetForm = () => {
     noTelepon: '',
     alamat: '',
     jenisKelamin: null,
-    tanggalLahir: null,
     tanggalBergabung: null,
     idPosisi: null
   }

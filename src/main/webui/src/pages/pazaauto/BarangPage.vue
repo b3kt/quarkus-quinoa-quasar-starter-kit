@@ -2,7 +2,10 @@
   <q-page padding>
     <GenericTable :rows="rows" :columns="columns" :loading="loading" :pagination="pagination"
       @update:pagination="pagination = $event" @request="onRequest" @search="onSearch" :on-create="openCreateDialog"
-      :on-edit="openEditDialog" :on-delete="confirmDelete">
+      :on-edit="openEditDialog" :on-delete="confirmDelete" v-model:search-value="searchText">
+      <template v-slot:search-append>
+        <q-btn round dense flat icon="qr_code_scanner" @click="openScanDialog('search')" />
+      </template>
       <template v-slot:toolbar-filters>
         <div class="col-2">
           <q-select v-model="filterStatus" multiple :options="statusOptions" :label="$t('availability')" dense
@@ -34,8 +37,16 @@
     <!-- Create/Edit Dialog -->
     <GenericDialog v-model="showDialog" :title="isEditMode ? 'Edit Barang' : 'Create Barang'" min-width="500px">
       <q-form @submit="handleSave" id="barang-form" class="q-gutter-md">
-        <q-input v-model="formData.kodeBarang" label="Kode Barang *" outlined dense
-          :rules="[val => !!val || 'Kode Barang is required']" />
+        <div class="row items-center q-col-gutter-sm">
+          <div class="col">
+            <q-input v-model="formData.kodeBarang" label="Kode Barang *" outlined dense
+              :rules="[val => !!val || 'Kode Barang is required']">
+              <template v-slot:append>
+                <q-btn round dense flat icon="qr_code_scanner" @click="openScanDialog('edit')" />
+              </template>
+            </q-input>
+          </div>
+        </div>
 
         <q-input v-model="formData.namaBarang" label="Nama Barang *" outlined dense
           :rules="[val => !!val || 'Nama Barang is required']" />
@@ -84,6 +95,32 @@
       </template>
     </GenericDialog>
 
+    <!-- Scanner Dialog -->
+    <q-dialog v-model="showScanDialog" @hide="onScanDialogHide">
+      <q-card style="width: 500px; max-width: 80vw;">
+        <q-card-section class="row items-center">
+          <div class="text-h6">Scan Barcode</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-none" style="height: 400px; position: relative;">
+          <qrcode-stream @detect="onDetect" @camera-on="onCameraReady" @error="onError" :formats="['ean_13', 'ean_8']">
+            <div
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 2px solid red; opacity: 0.5;">
+            </div>
+            <div v-if="error" class="absolute-full flex flex-center bg-negative text-white text-center q-pa-md">
+              <div>
+                <div class="q-mb-md">{{ error }}</div>
+                <q-btn v-if="showPermissionButton" label="Request Permission" @click="requestPermission" outline
+                  color="white" />
+              </div>
+            </div>
+          </qrcode-stream>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
     <!-- Delete Confirmation Dialog -->
     <GenericDialog v-model="showDeleteDialog" title="Confirm Delete" min-width="400px">
       Are you sure you want to delete <strong>{{ itemToDelete?.namaBarang }}</strong>?
@@ -96,12 +133,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { api } from 'boot/axios'
 // import { useQuasar } from 'quasar'
 import GenericTable from 'components/GenericTable.vue'
 import GenericDialog from 'components/GenericDialog.vue'
 import { useCrud } from 'src/composables/useCrud'
+import { QrcodeStream } from 'vue-qrcode-reader'
 
 //const $q = useQuasar()
 
@@ -129,6 +167,7 @@ const saveFilterToStorage = (filter) => {
 }
 
 // Filter State
+const searchText = ref('')
 const filterStatus = ref(loadFilterFromStorage())
 const statusOptions = ref([
   'AVAILABLE',
@@ -187,7 +226,7 @@ const fetchBarang = async () => {
 // We should modify the hook to accept a `getCustomParams` function or similar.
 // OR, we can just override the `fetchData` in the returned object if it was a class, but it's a closure.
 // Wait, `fetchData` is returned. If I change `fetchData` here, `onRequest` inside the hook still uses the original one.
-// So I should probably update `useCrud` to accept a `params` getter.
+// So I should probably update `useCrud` to accept a "params getter".
 // For now, let's just watch the filter and call `fetchBarang`.
 // And for pagination, we might need to update `useCrud` to support dynamic params.
 // Let's update `useCrud` to accept `extraParams` ref or function.
@@ -286,6 +325,87 @@ const openEditDialog = (row) => {
 
 const handleSave = async () => {
   await saveData(formData.value)
+}
+
+// Scanner Logic
+const showScanDialog = ref(false)
+const scanMode = ref('edit') // 'edit' or 'search'
+// const selectedDevice = ref(null)
+// const devices = ref([])
+
+const openScanDialog = (mode = 'edit') => {
+  scanMode.value = mode
+  showScanDialog.value = true
+}
+
+const onDetect = (detectedCodes) => {
+  if (detectedCodes && detectedCodes.length > 0) {
+    const code = detectedCodes[0].rawValue
+    console.log(`Code matched = ${code}`)
+
+    if (scanMode.value === 'edit') {
+      formData.value.kodeBarang = code
+    } else if (scanMode.value === 'search') {
+      searchText.value = code
+      // Trigger search immediately if needed, but GenericTable watches searchText
+    }
+
+    showScanDialog.value = false
+  }
+}
+
+const error = ref('')
+const showPermissionButton = ref(false)
+
+const onCameraReady = async (capabilities) => {
+  error.value = ''
+  showPermissionButton.value = false
+  console.log('Camera ready:', capabilities)
+}
+
+const onError = (err) => {
+  console.error('QR Code Stream Error:', err)
+  if (err.name === 'NotAllowedError') {
+    error.value = 'Camera access denied. Please grant permission.'
+    showPermissionButton.value = true
+  } else if (err.name === 'NotFoundError') {
+    error.value = 'No camera found on this device.'
+  } else if (err.name === 'NotSupportedError') {
+    error.value = 'Secure context required (HTTPS, localhost).'
+  } else if (err.name === 'NotReadableError') {
+    error.value = 'Camera is already in use.'
+  } else if (err.name === 'OverconstrainedError') {
+    error.value = 'Installed cameras are not suitable.'
+  } else if (err.name === 'StreamApiNotSupportedError') {
+    error.value = 'Stream API is not supported in this browser.'
+  } else if (err.name === 'InsecureContextError') {
+    error.value = 'Camera access is only permitted in secure context. Use HTTPS or localhost.'
+  } else {
+    error.value = `Camera error: ${err.name}`
+  }
+}
+
+const requestPermission = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      // Reload the component to retry
+      showScanDialog.value = false
+      nextTick(() => {
+        showScanDialog.value = true
+      })
+    }
+  } catch (err) {
+    console.error('Permission request failed', err)
+    onError(err)
+  }
+}
+
+const onScanDialogHide = () => {
+  // QrcodeStream handles stopping the camera automatically when destroyed/unmounted
+  error.value = ''
+  showPermissionButton.value = false
 }
 
 // Table Columns

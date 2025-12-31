@@ -48,7 +48,7 @@
             ]" option-label="label" option-value="value" emit-value map-options class="q-mr-md" />
           </div>
           <div class="col-6">
-            <q-input v-model="formData.tanggalLahir" label="Tanggal Lahir" outlined dense type="date" />
+            <q-input v-model="formData.tanggalJoin" label="Tanggal Join" outlined dense type="date" />
           </div>
         </div>
 
@@ -129,7 +129,7 @@ const formData = ref({
   kota: '',
   kodePos: '',
   jenisKelamin: null,
-  tanggalLahir: null,
+  tanggalJoin: null,
   merk: '',
   jenis: '',
   keterangan: ''
@@ -146,7 +146,7 @@ const resetForm = () => {
     kota: '',
     kodePos: '',
     jenisKelamin: null,
-    tanggalLahir: null,
+    tanggalJoin: null,
     merk: '',
     jenis: '',
     keterangan: ''

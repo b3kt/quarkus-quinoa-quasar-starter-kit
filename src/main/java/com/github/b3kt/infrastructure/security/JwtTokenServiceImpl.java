@@ -42,9 +42,14 @@ public class JwtTokenServiceImpl implements JwtTokenService {
                 .subject(user.getUsername())
                 .groups(user.getRoles().stream().map(RoleEntity::getName).collect(Collectors.toSet()))
                 .claim("email", user.getEmail())
-                .claim("karyawanId", user.getKaryawanId())
-                .claim("karyawanNama", user.getKaryawanNama())
                 .expiresIn(Duration.ofHours(expirationHours));
+
+        if (user.getKaryawanId() != null) {
+            jwtBuilder.claim("karyawanId", user.getKaryawanId());
+        }
+        if (user.getKaryawanNama() != null) {
+            jwtBuilder.claim("karyawanNama", user.getKaryawanNama());
+        }
 
         // If RBAC is enabled, include permissions in the token
         if (rbacProperties.enabled()) {
@@ -71,9 +76,21 @@ public class JwtTokenServiceImpl implements JwtTokenService {
         String email = jwt.getClaim("email");
         java.util.Set<String> roles = jwt.getGroups();
 
+        Long karyawanId = null;
+        Object karyawanIdClaim = jwt.getClaim("karyawanId");
+        if (karyawanIdClaim != null) {
+            karyawanId = Long.parseLong(karyawanIdClaim.toString());
+        }
+
+        String karyawanNama = null;
+        Object karyawanNamaClaim = jwt.getClaim("karyawanNama");
+        if (karyawanNamaClaim != null) {
+            karyawanNama = karyawanNamaClaim.toString();
+        }
+
         UserInfo userInfo = new UserInfo(username, email, roles,
-                Long.parseLong(jwt.getClaim("karyawanId").toString()),
-                jwt.getClaim("karyawanNama").toString());
+                karyawanId,
+                karyawanNama);
 
         // If RBAC is enabled, permissions are already in the token but not in UserInfo
         // UserInfo currently only contains roles, not permissions

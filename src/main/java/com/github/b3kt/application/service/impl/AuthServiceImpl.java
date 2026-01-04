@@ -6,7 +6,6 @@ import com.github.b3kt.application.mapper.UserMapper;
 import com.github.b3kt.application.service.AuthService;
 import com.github.b3kt.domain.exception.AuthenticationException;
 import com.github.b3kt.domain.model.User;
-import com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbKaryawanEntity;
 import com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbKaryawanRepository;
 import com.github.b3kt.infrastructure.repository.UserRepository;
 import com.github.b3kt.infrastructure.security.JwtTokenService;

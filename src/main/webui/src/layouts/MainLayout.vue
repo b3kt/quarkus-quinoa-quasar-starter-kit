@@ -30,7 +30,7 @@
 
               <q-item-section>
                 <q-item-label>{{ user.username }}</q-item-label>
-                <q-item-label caption>{{ user.roles.join(', ') }}</q-item-label>
+                <q-item-label caption>{{ user?.roles?.join(', ') }}</q-item-label>
               </q-item-section>
 
             </q-item>
@@ -63,41 +63,43 @@ const authStore = useAuthStore()
 
 const user = computed(() => authStore.user)
 
-console.log(user.value.roles.includes('Karyawan'))
+const hasRole = (role) => {
+  return user.value?.roles?.includes(role) || false
+}
 
-const linksList = [
+const linksList = computed(() => [
   {
     title: t('app.menu.master.title'),
     caption: t('app.menu.master.caption'),
     icon: 'warehouse',
-    visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+    visible: hasRole('Admin') || hasRole('Owner'),
     children: [
       {
         title: t('app.menu.master.product.title'),
         caption: t('app.menu.master.product.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/barang'
       },
       {
         title: t('app.menu.master.service.title'),
         caption: t('app.menu.master.service.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/jasa'
       },
       {
         title: t('app.menu.master.supplier.title'),
         caption: t('app.menu.master.supplier.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/supplier'
       },
       {
         title: t('app.menu.master.sparepart.title'),
         caption: t('app.menu.master.sparepart.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/sparepart'
       },
 
@@ -105,28 +107,28 @@ const linksList = [
         title: t('app.menu.master.customer.title'),
         caption: t('app.menu.master.customer.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/pelanggan'
       },
       {
         title: t('app.menu.master.vehicle.title'),
         caption: t('app.menu.master.vehicle.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/kendaraan'
       },
       {
         title: t('app.menu.master.employee.title'),
         caption: t('app.menu.master.employee.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/karyawan'
       },
       {
         title: t('app.menu.master.employee_role.title'),
         caption: t('app.menu.master.employee_role.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/karyawan-posisi'
       },
     ]
@@ -136,21 +138,21 @@ const linksList = [
     caption: t('app.menu.process.caption'),
     icon: 'conveyor_belt',
     link: 'https://quasar.dev',
-    visible: user.value.roles.includes('Admin') || user.value.roles.includes('Karyawan'),
+    visible: hasRole('Admin') || hasRole('Karyawan'),
     children: [
       {
         title: t('app.menu.process.order.title'),
         caption: t('app.menu.process.order.caption'),
         icon: 'warehouse',
         link: '/pazaauto/spk',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
       },
       {
         title: 'Absensi',
         caption: 'Employee Attendance',
         icon: 'access_time',
         link: '/pazaauto/absensi',
-        visible: user.value.roles.includes('Karyawan'),
+        visible: hasRole('Karyawan'),
       }
     ]
   },
@@ -158,20 +160,20 @@ const linksList = [
     title: t('app.menu.report.title'),
     caption: t('app.menu.report.caption'),
     icon: 'trolley',
-    visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+    visible: hasRole('Admin') || hasRole('Owner'),
     children: [
       {
         title: t('app.menu.sales.buy.title'),
         caption: t('app.menu.sales.buy.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/pembelian-barang'
       },
       {
         title: t('app.menu.sales.sell.title'),
         caption: t('app.menu.sales.sell.caption'),
         icon: 'warehouse',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/pazaauto/penjualan-barang'
       },
     ]
@@ -180,25 +182,25 @@ const linksList = [
     title: t('app.menu.admin.title'),
     caption: t('app.menu.admin.caption'),
     icon: 'dashboard',
-    visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+    visible: hasRole('Admin') || hasRole('Owner'),
     children: [
       {
         title: t('app.menu.admin.user.title'),
         caption: t('app.menu.admin.user.caption'),
         icon: 'user',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/users'
       },
       {
         title: t('app.menu.admin.role.title'),
         caption: t('app.menu.admin.role.caption'),
         icon: 'group',
-        visible: user.value.roles.includes('Admin') || user.value.roles.includes('Owner'),
+        visible: hasRole('Admin') || hasRole('Owner'),
         link: '/roles'
       },
     ]
   }
-]
+])
 
 const leftDrawerOpen = ref(false)
 

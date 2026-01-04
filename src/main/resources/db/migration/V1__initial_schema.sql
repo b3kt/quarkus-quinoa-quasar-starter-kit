@@ -1,24 +1,23 @@
-
 -- public.flyway_schema_history definition
 
 -- Drop table
 
 -- DROP TABLE public.flyway_schema_history;
 
-CREATE TABLE IF NOT EXISTS public.flyway_schema_history (
-	installed_rank int4 NOT NULL,
-	"version" varchar(50) NULL,
-	description varchar(200) NOT NULL,
-	"type" varchar(20) NOT NULL,
-	script varchar(1000) NOT NULL,
-	checksum int4 NULL,
-	installed_by varchar(100) NOT NULL,
-	installed_on timestamp DEFAULT now() NOT NULL,
-	execution_time int4 NOT NULL,
-	success bool NOT NULL,
-	CONSTRAINT flyway_schema_history_pk PRIMARY KEY (installed_rank)
-);
-CREATE INDEX IF NOT EXISTS flyway_schema_history_s_idx ON public.flyway_schema_history USING btree (success);
+-- CREATE TABLE IF NOT EXISTS public.flyway_schema_history (
+-- 	installed_rank int4 NOT NULL,
+-- 	"version" varchar(50) NULL,
+-- 	description varchar(200) NOT NULL,
+-- 	"type" varchar(20) NOT NULL,
+-- 	script varchar(1000) NOT NULL,
+-- 	checksum int4 NULL,
+-- 	installed_by varchar(100) NOT NULL,
+-- 	installed_on timestamp DEFAULT now() NOT NULL,
+-- 	execution_time int4 NOT NULL,
+-- 	success bool NOT NULL,
+-- 	CONSTRAINT flyway_schema_history_pk PRIMARY KEY (installed_rank)
+-- );
+-- CREATE INDEX IF NOT EXISTS flyway_schema_history_s_idx ON public.flyway_schema_history USING btree (success);
 
 -- CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
@@ -798,9 +797,9 @@ CREATE TABLE IF NOT EXISTS permissions (
     CONSTRAINT uk_permissions_name UNIQUE (name)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_permission_name ON permissions (name);
+-- CREATE UNIQUE INDEX IF NOT EXISTS idx_permission_name ON permissions (name);
 
-CREATE INDEX IF NOT EXISTS idx_permission_resource_action ON permissions (resource, action);
+-- CREATE INDEX IF NOT EXISTS idx_permission_resource_action ON permissions (resource, action);
 
 -- --
 -- -- Name: role_permissions; Type: TABLE; Schema: public; Owner: postgres
@@ -814,9 +813,9 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     CONSTRAINT fk_role_permissions_permission FOREIGN KEY (permission_id) REFERENCES permissions (id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions (role_id);
+-- CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions (role_id);
 
-CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions (permission_id);
+-- CREATE INDEX IF NOT EXISTS idx_role_permissions_permission_id ON role_permissions (permission_id);
 
 -- --
 -- -- PostgreSQL database dump complete

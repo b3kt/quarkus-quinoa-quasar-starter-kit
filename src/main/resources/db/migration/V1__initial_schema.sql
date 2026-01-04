@@ -1,3 +1,25 @@
+
+-- public.flyway_schema_history definition
+
+-- Drop table
+
+-- DROP TABLE public.flyway_schema_history;
+
+CREATE TABLE IF NOT EXISTS public.flyway_schema_history (
+	installed_rank int4 NOT NULL,
+	"version" varchar(50) NULL,
+	description varchar(200) NOT NULL,
+	"type" varchar(20) NOT NULL,
+	script varchar(1000) NOT NULL,
+	checksum int4 NULL,
+	installed_by varchar(100) NOT NULL,
+	installed_on timestamp DEFAULT now() NOT NULL,
+	execution_time int4 NOT NULL,
+	success bool NOT NULL,
+	CONSTRAINT flyway_schema_history_pk PRIMARY KEY (installed_rank)
+);
+CREATE INDEX IF NOT EXISTS flyway_schema_history_s_idx ON public.flyway_schema_history USING btree (success);
+
 -- CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 -- COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
@@ -158,25 +180,25 @@ WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS tb_karyawan (
+    id bigint NOT NULL DEFAULT nextval(
+        'tb_karyawan_id_seq'::regclass
+    ),
+    created_at timestamp(6) without time zone,
+    created_by character varying(255),
+    updated_at timestamp(6) without time zone,
+    updated_by character varying(255),
+    version integer,
     jenis_kelamin character varying(1),
     posisi_id integer,
     tanggal_bergabung date,
     tanggal_lahir date,
-    version integer,
-    created_at timestamp(6) without time zone,
-    id bigint NOT NULL DEFAULT nextval(
-        'tb_karyawan_id_seq'::regclass
-    ),
     id_posisi bigint,
-    updated_at timestamp(6) without time zone,
     bergabung character varying(10),
     no_tlpn character varying(15),
     no_telepon character varying(20),
     nama_karyawan character varying(30) NOT NULL,
     email character varying(100),
     alamat character varying(500),
-    created_by character varying(255),
-    updated_by character varying(255),
     PRIMARY KEY (id)
 );
 
@@ -189,16 +211,16 @@ WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS tb_karyawan_posisi (
-    version integer,
-    created_at timestamp(6) without time zone,
     id bigint NOT NULL DEFAULT nextval(
         'tb_karyawan_posisi_id_seq'::regclass
     ),
+    version integer,
+    created_by character varying(255),
+    created_at timestamp(6) without time zone,
+    updated_by character varying(255),
     updated_at timestamp(6) without time zone,
     posisi character varying(20) NOT NULL,
-    created_by character varying(255),
     keterangan character varying(255),
-    updated_by character varying(255),
     PRIMARY KEY (id)
 );
 
@@ -211,17 +233,17 @@ WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS tb_kendaraan (
-    version integer,
-    created_at timestamp(6) without time zone,
     id bigint NOT NULL DEFAULT nextval(
         'tb_kendaraan_id_seq'::regclass
     ),
+    created_by character varying(255),
+    created_at timestamp(6) without time zone,
+    updated_by character varying(255),
     updated_at timestamp(6) without time zone,
+    version integer,
     jenis character varying(50) NOT NULL,
     model character varying(50),
     keterangan character varying(500),
-    created_by character varying(255),
-    updated_by character varying(255),
     merk character varying(50),
     PRIMARY KEY (id)
 );
@@ -235,14 +257,16 @@ WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS tb_pelanggan (
-    jenis_kelamin character varying(1),
-    tanggal_join date,
-    version integer,
-    created_at timestamp(6) without time zone,
     id bigint NOT NULL DEFAULT nextval(
         'tb_pelanggan_id_seq'::regclass
     ),
+    created_by character varying(255),
+    created_at timestamp(6) without time zone,
+    updated_by character varying(255),
     updated_at timestamp(6) without time zone,
+    version integer,
+    jenis_kelamin character varying(1),
+    tanggal_join date,
     kode_pos character varying(10),
     nopol character varying(10) NOT NULL,
     tlpn character varying(15),
@@ -256,8 +280,6 @@ CREATE TABLE IF NOT EXISTS tb_pelanggan (
     nama_pelanggan character varying(100) NOT NULL,
     alamat character varying(500),
     keterangan character varying(500),
-    created_by character varying(255),
-    updated_by character varying(255),
     PRIMARY KEY (id)
 );
 
@@ -273,6 +295,11 @@ CREATE TABLE IF NOT EXISTS tb_pembelian (
     id bigint DEFAULT nextval(
         'tb_pembelian_id_seq'::regclass
     ) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by character varying,
+    updated_at timestamp without time zone,
+    updated_by character varying,
+    version integer,
     no_pembelian character varying(15) NOT NULL,
     no_urut integer,
     tgl_pembelian timestamp without time zone,
@@ -288,11 +315,6 @@ CREATE TABLE IF NOT EXISTS tb_pembelian (
     ppn numeric(18, 2),
     keterangan character varying(500),
     id_karyawan bigint,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by character varying,
-    updated_at timestamp without time zone,
-    updated_by character varying,
-    version integer,
     PRIMARY KEY (id),
     CONSTRAINT chk_jenis_pembelian CHECK (
         (
@@ -335,6 +357,11 @@ CREATE TABLE IF NOT EXISTS tb_pembelian_detail (
     id bigint DEFAULT nextval(
         'tb_pembelian_detail_id_seq'::regclass
     ) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by character varying,
+    updated_at timestamp without time zone,
+    updated_by character varying,
+    version integer,
     id_pembelian bigint NOT NULL,
     nama_item character varying(100) NOT NULL,
     kategori_item character varying(20),
@@ -344,11 +371,6 @@ CREATE TABLE IF NOT EXISTS tb_pembelian_detail (
     keterangan character varying(255),
     id_barang bigint,
     id_sparepart bigint,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by character varying,
-    updated_at timestamp without time zone,
-    updated_by character varying,
-    version integer,
     id_supplier bigint,
     CONSTRAINT chk_kategori_item CHECK (
         (
@@ -372,16 +394,16 @@ CREATE TABLE IF NOT EXISTS tb_pembelian_detail (
 
 CREATE TABLE IF NOT EXISTS tb_pembelian_barang_detail (
     id uuid NOT NULL,
-    no_pembelian character varying(15) NOT NULL,
-    nama_barang character varying(50) NOT NULL,
-    harga_barang integer NOT NULL,
-    kuantiti integer NOT NULL,
-    total integer,
     created_at timestamp without time zone,
     created_by character varying(255),
     updated_at timestamp without time zone,
     updated_by character varying(255),
     version integer,
+    no_pembelian character varying(15) NOT NULL,
+    nama_barang character varying(50) NOT NULL,
+    harga_barang integer NOT NULL,
+    kuantiti integer NOT NULL,
+    total integer,
     keterangan character varying(255),
     id_barang bigint,
     id_sparepart bigint,
@@ -460,14 +482,19 @@ WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS tb_sparepart (
+    id bigint NOT NULL DEFAULT nextval(
+        'tb_sparepart_id_seq'::regclass
+    ),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by character varying,
+    updated_at timestamp without time zone,
+    updated_by character varying,
+    version integer DEFAULT 0,
     harga_beli numeric(18, 2),
     harga_jual numeric(18, 2),
     is_active boolean NOT NULL,
     stok integer,
     stok_minimal integer,
-    id bigint NOT NULL DEFAULT nextval(
-        'tb_sparepart_id_seq'::regclass
-    ),
     id_supplier bigint,
     kd_barang character varying(9) NOT NULL,
     kode_sparepart character varying(20) NOT NULL,
@@ -477,11 +504,6 @@ CREATE TABLE IF NOT EXISTS tb_sparepart (
     tipe_kendaraan character varying(50),
     nama_sparepart character varying(100) NOT NULL,
     keterangan character varying(500),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by character varying,
-    updated_at timestamp without time zone,
-    updated_by character varying,
-    version integer DEFAULT 0,
     PRIMARY KEY (id)
 );
 
@@ -523,19 +545,20 @@ WITH
     1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
 CREATE TABLE IF NOT EXISTS tb_spk_detail (
-    jumlah integer,
-    created_at timestamp(6) without time zone,
-    id_jasa bigint,
-    id_sparepart bigint,
-    updated_at timestamp(6) without time zone,
-    no_spk character varying(11) NOT NULL,
-    nama_jasa character varying(40) NOT NULL,
-    keterangan character varying(500),
-    created_by character varying(255),
-    updated_by character varying(255),
     id bigint DEFAULT nextval(
         'tb_spk_detail_id_seq'::regclass
     ) NOT NULL,
+    created_by character varying(255),
+    created_at timestamp(6) without time zone,
+    updated_by character varying(255),
+    updated_at timestamp(6) without time zone,
+    version integer DEFAULT 0,
+    jumlah integer,
+    id_jasa bigint,
+    id_sparepart bigint,
+    no_spk character varying(11) NOT NULL,
+    nama_jasa character varying(40) NOT NULL,
+    keterangan character varying(500),
     PRIMARY KEY (id)
 );
 
@@ -597,7 +620,7 @@ CREATE TABLE IF NOT EXISTS users (
     username character varying(50) NOT NULL,
     email character varying(100) NOT NULL,
     password_hash character varying(255) NOT NULL,
-    karyawan_id bigint,
+    karyawan_id bigint DEFAULT 0,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     created_by character varying,
     updated_at timestamp without time zone,

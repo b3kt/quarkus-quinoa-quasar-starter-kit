@@ -1,10 +1,12 @@
 package com.github.b3kt.application.dto.pazaauto;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
+@RegisterForReflection
 public class PenjualanPrintDto {
     private String noPenjualan;
     private String tanggal;
@@ -36,6 +38,7 @@ public class PenjualanPrintDto {
     private BigDecimal kembalian;
 
     @Data
+    @RegisterForReflection
     public static class ItemDto {
         private String nama;
         private Integer qty;

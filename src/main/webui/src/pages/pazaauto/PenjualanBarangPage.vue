@@ -165,6 +165,7 @@ import { ref, onMounted, watch } from 'vue'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 import GenericDialog from 'components/GenericDialog.vue'
+import fakturTemplate from 'assets/template/faktur.template?raw'
 
 const $q = useQuasar()
 
@@ -414,188 +415,14 @@ const printPenjualan = async (row) => {
 
             const doc = iframe.contentWindow.document
             doc.open()
-            doc.write(`
-                    <html>
-                    <head>
-                        <title>Print Penjualan ${data.noPenjualan}</title>
-                        <style>
-                            @page { size: letter; margin: 0.5cm; }
-                            body { 
-                                font-family: 'Courier New', Courier, monospace; 
-                                font-size: 9pt; 
-                                margin: 0; 
-                                padding: 10px;
-                                color: #000;
-                            }
-                            .container { width: 100%; max-width: 21cm; margin: 0 auto; }
-                            .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-                            .company-info { width: 60%; }
-                            .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 5px; }
-                            .invoice-title { width: 40%; text-align: right; }
-                            .invoice-header { font-size: 12pt; font-weight: bold; border: 1px solid #000; padding: 5px 10px; display: inline-block; }
-                            
-                            .info-section { display: flex; margin-bottom: 15px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0; }
-                            .info-left { width: 55%; }
-                            .info-right { width: 45%; }
-                            .info-row { display: flex; margin-bottom: 2px; }
-                            .label { width: 100px; }
-                            .separator { width: 10px; }
-                            .value { flex: 1; }
 
-                            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-                            .items-table th { border-bottom: 1px dashed #000; padding: 5px 2px; text-align: left; font-weight: normal; }
-                            .items-table td { padding: 5px 2px; vertical-align: top; }
-                            .text-right { text-align: right !important; }
-                            .text-center { text-align: center !important; }
-                            
-                            .footer-section { display: flex; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px; }
-                            .footer-left { width: 60%; font-size: 8pt; }
-                            .footer-right { width: 40%; }
-                            .total-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-                            .grand-total { font-weight: bold; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin: 5px 0; }
-                            
-                            .signatures { display: flex; justify-content: space-between; margin-top: 30px; text-align: center; }
-                            .sig-box { width: 30%; }
-                            .sig-line { margin-top: 50px; border-top: 1px dashed #000; }
-                            
-                            /* Utility for uppercase */
-                            .uppercase { text-transform: uppercase; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <div class="header">
-                                <div class="company-info">
-                                    <div class="company-name">PAZAAUTO</div>
-                                    <div>JL. REGENSI 2 RUKO WISMA HARAPAN BLOK D5 NO. 25</div>
-                                    <div>GEMBOR, PERIUK, KOTA TANGERANG</div>
-                                    <div>TLP: 0813 8101 46747</div>
-                                </div>
-                                <div class="invoice-title">
-                                    <div class="invoice-header">FAKTUR PENJUALAN</div>
-                                </div>
-                            </div>
+            // Render template
+            const renderedContent = renderTemplate(fakturTemplate, {
+                data,
+                formatCurrency
+            })
 
-                            <div class="info-section">
-                                <div class="info-left">
-                                    <div class="info-row">
-                                        <div class="label">Kepada Yth</div>
-                                        <div class="separator">:</div>
-                                        <div class="value uppercase">${data.namaPelanggan || 'TUNAI'}</div>
-                                    </div>
-                                    <div class="info-row">
-                                        <div class="label">Alamat</div>
-                                        <div class="separator">:</div>
-                                        <div class="value uppercase">${data.alamatPelanggan || '-'}</div>
-                                    </div>
-                                    <div class="info-row">
-                                        <div class="label">Merk/Jenis</div>
-                                        <div class="separator">:</div>
-                                        <div class="value uppercase">${data.merk || '-'} ${data.model || ''} / ${data.nopol || '-'}</div>
-                                    </div>
-                                </div>
-                                <div class="info-right">
-                                    <div class="info-row">
-                                        <div class="label">No Faktur</div>
-                                        <div class="separator">:</div>
-                                        <div class="value">${data.noPenjualan}</div>
-                                    </div>
-                                    <div class="info-row">
-                                        <div class="label">Tanggal</div>
-                                        <div class="separator">:</div>
-                                        <div class="value">${data.tanggal}</div>
-                                    </div>
-                                    <div class="info-row">
-                                        <div class="label">KM</div>
-                                        <div class="separator">:</div>
-                                        <div class="value">${data.km || '-'}</div>
-                                    </div>
-                                    <div class="info-row">
-                                        <div class="label">Mekanik</div>
-                                        <div class="separator">:</div>
-                                        <div class="value uppercase">${data.namaMekanik || '-'}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <table class="items-table">
-                                <thead>
-                                    <tr>
-                                        <th width="5%">NO</th>
-                                        <th width="15%">KODE</th>
-                                        <th width="35%">NAMA BARANG / JASA</th>
-                                        <th width="10%" class="text-right">QTY</th>
-                                        <th width="15%" class="text-right">HARGA</th>
-                                        <th width="10%" class="text-right">DISC</th>
-                                        <th width="15%" class="text-right">TOTAL</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${data.items.map((item, index) => `
-                                        <tr>
-                                            <td>${index + 1}</td>
-                                            <td>${item.kodeBarang || '-'}</td>
-                                            <td class="uppercase">${item.nama}</td>
-                                            <td class="text-right">${item.qty}</td>
-                                            <td class="text-right">${formatCurrency(item.harga)}</td>
-                                            <td class="text-right">${formatCurrency(item.diskon || 0)}</td>
-                                            <td class="text-right">${formatCurrency(item.subTotal)}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-
-                            <div class="footer-section">
-                                <div class="footer-left">
-                                    <div>KETERANGAN:</div>
-                                    <div class="uppercase">${data.keterangan || '-'}</div>
-                                    <br/>
-                                    <div>* Barang yang sudah dibeli tidak dapat dikembalikan</div>
-                                    <div>* Komplain maksimal 1x24 jam</div>
-                                </div>
-                                <div class="footer-right">
-                                    <div class="total-row">
-                                        <div>SUB TOTAL</div>
-                                        <div>${formatCurrency(data.subTotal)}</div>
-                                    </div>
-                                    <div class="total-row">
-                                        <div>DISKON</div>
-                                        <div>${formatCurrency(data.diskon)}</div>
-                                    </div>
-                                    <div class="total-row">
-                                        <div>PPN</div>
-                                        <div>${formatCurrency(data.ppn)}</div>
-                                    </div>
-                                    <div class="total-row grand-total">
-                                        <div>GRAND TOTAL</div>
-                                        <div>${formatCurrency(data.grandTotal)}</div>
-                                    </div>
-                                    <div class="total-row">
-                                        <div>DIBAYAR</div>
-                                        <div>${formatCurrency(data.uangDibayar)}</div>
-                                    </div>
-                                    <div class="total-row">
-                                        <div>KEMBALI</div>
-                                        <div>${formatCurrency(data.kembalian)}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="signatures">
-                                <div class="sig-box">
-                                    <div>Tanda Terima</div>
-                                    <div class="sig-line"></div>
-                                </div>
-                                <div class="sig-box">
-                                    <div>Hormat Kami</div>
-                                    <div class="sig-line"></div>
-                                    <div>( PAZAAUTO )</div>
-                                </div>
-                            </div>
-                        </div>
-                    </body>
-                    </html>
-                `)
+            doc.write(renderedContent)
             doc.close()
 
             // Wait for content to load then print
@@ -610,6 +437,32 @@ const printPenjualan = async (row) => {
             message: 'Failed to print penjualan',
             caption: error.response?.data?.message || error.message
         })
+    }
+}
+
+// Template rendering helper
+const renderTemplate = (template, context) => {
+    const keys = Object.keys(context)
+    const values = Object.values(context)
+    try {
+        // Create a function that destructures context and returns the evaluated template literal
+        // We wrap the template in backticks to make it a template literal
+        // Note: The template file itself should NOT contain backticks wrapping the whole content, 
+        // but it should contain ${} expressions.
+        // However, if the template is just text with ${}, we can wrap it in backticks here.
+        // But wait, the imported string will be a regular string. 
+        // We need to evaluate expressions inside it.
+
+        // Alternative: Use a simple replace for specific variables if it's not too complex, 
+        // OR use the new Function approach if we trust the template source (which is local).
+
+        // The template file currently has ${data.xxx} syntax which is valid for template literals.
+        // So we can do: return new Function(...keys, `return \`${template}\`;`)(...values)
+
+        return new Function(...keys, `return \`${template}\`;`)(...values)
+    } catch (e) {
+        console.error('Template rendering error:', e)
+        return 'Error rendering template'
     }
 }
 

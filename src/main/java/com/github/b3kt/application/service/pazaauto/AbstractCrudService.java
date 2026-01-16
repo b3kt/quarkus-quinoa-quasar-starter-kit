@@ -8,6 +8,7 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ import java.util.List;
  * @param <T>  entity type
  * @param <ID> identifier type
  */
+@Slf4j
 public abstract class AbstractCrudService<T, ID> {
 
     protected abstract PanacheRepositoryBase<T, ID> getRepository();
@@ -72,9 +74,9 @@ public abstract class AbstractCrudService<T, ID> {
 
     @Transactional
     public void delete(ID id) {
-        T entity = findById(id);
         try {
-            getRepository().delete(entity);
+            boolean deleted = getRepository().deleteById(id);
+            log.debug("Entity deleted with id: {}: {}", id, deleted);
         } catch (Exception e) {
             throw new EntityNotFoundException("Entity not found with id: " + id);
         }

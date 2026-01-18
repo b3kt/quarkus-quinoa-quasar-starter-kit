@@ -7,8 +7,6 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.core.Response;
 
 @RequestScoped
 @Path("/api/pazaauto/penjualan")
@@ -49,6 +47,9 @@ public class TbPenjualanResource extends AbstractCrudResource<TbPenjualanEntity,
 
     @Inject
     com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbSparepartRepository sparepartRepository;
+
+    @Inject
+    com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbBarangRepository barangRepository;
 
     @Inject
     com.github.b3kt.infrastructure.persistence.repository.pazaauto.TbPenjualanRepository penjualanRepository;
@@ -162,7 +163,15 @@ public class TbPenjualanResource extends AbstractCrudResource<TbPenjualanEntity,
                         if (sparepart != null) {
                             price = sparepart.getHargaJual();
                             type = "BARANG";
+                        } else {
+                            com.github.b3kt.infrastructure.persistence.entity.pazaauto.TbBarangEntity barang = barangRepository
+                                    .findById(detail.getSparepartId());
+                            if (barang != null) {
+                                price = barang.getHargaJual();
+                                type = "BARANG";
+                            }
                         }
+
                     }
 
                     item.setHarga(price);

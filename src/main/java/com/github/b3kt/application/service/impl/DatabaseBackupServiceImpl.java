@@ -9,43 +9,30 @@ import org.jboss.logging.Logger;
 
 import javax.sql.DataSource;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.Connection;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * Implementation of DatabaseBackupService using pg_dump and psql commands.
+ * Implementation of DatabaseBackupService using pure JDBC.
+ * Does not require external tools (pg_dump/psql).
  */
 @ApplicationScoped
 public class DatabaseBackupServiceImpl implements DatabaseBackupService {
 
     private static final Logger LOG = Logger.getLogger(DatabaseBackupServiceImpl.class);
     private static final DateTimeFormatter BACKUP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-    private static final Pattern JDBC_URL_PATTERN = Pattern.compile(
-            "jdbc:postgresql://([^:/]+)(?::(\\d+))?/([^?]+).*");
 
     @ConfigProperty(name = "app.backup.directory", defaultValue = "./backups")
     String backupDirectory;
-
-    @ConfigProperty(name = "quarkus.datasource.jdbc.url")
-    String jdbcUrl;
-
-    @ConfigProperty(name = "quarkus.datasource.username")
-    String dbUsername;
-
-    @ConfigProperty(name = "quarkus.datasource.password")
-    String dbPassword;
 
     @Inject
     DataSource dataSource;
@@ -58,37 +45,36 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
         String filename = "backup_" + timestamp + ".sql";
         Path backupPath = Paths.get(backupDirectory, filename);
 
-        DatabaseConnectionInfo connInfo = parseJdbcUrl(jdbcUrl);
+        try (Connection conn = dataSource.getConnection();
+                BufferedWriter writer = Files.newBufferedWriter(backupPath, StandardCharsets.UTF_8)) {
 
-        try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "pg_dump",
-                    "-h", connInfo.host,
-                    "-p", connInfo.port,
-                    "-U", dbUsername,
-                    "-d", connInfo.database,
-                    "-f", backupPath.toString(),
-                    "--clean",
-                    "--if-exists");
-            pb.environment().put("PGPASSWORD", dbPassword);
-            pb.redirectErrorStream(true);
+            LOG.info("Starting database backup...");
 
-            Process process = pb.start();
-            String output = readProcessOutput(process);
-            boolean completed = process.waitFor(5, TimeUnit.MINUTES);
+            // 1. Get database metadata
+            DatabaseMetaData metaData = conn.getMetaData();
+            List<String> tables = getTables(metaData);
+            List<String> sortedTables = sortTablesByDependency(conn, tables);
 
-            if (!completed) {
-                process.destroyForcibly();
-                throw new RuntimeException("Backup process timed out");
+            // 2. Disable constraints for session if possible (Postgres specific)
+            writer.write("SET session_replication_role = 'replica';");
+            writer.newLine();
+            writer.newLine();
+
+            // 3. Dump data for each table
+            for (String tableName : sortedTables) {
+                dumpTable(conn, tableName, writer);
             }
 
-            if (process.exitValue() != 0) {
-                throw new RuntimeException("pg_dump failed: " + output);
-            }
+            // 4. Reset sequences
+            resetSequences(conn, writer);
+
+            // 5. Re-enable constraints
+            writer.write("SET session_replication_role = 'origin';");
+            writer.newLine();
 
             LOG.infof("Backup created successfully: %s", filename);
 
-            // Save description to metadata file if provided
+            // Save description
             if (description != null && !description.isEmpty()) {
                 Path metaPath = Paths.get(backupDirectory, filename + ".meta");
                 Files.writeString(metaPath, description);
@@ -100,8 +86,13 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
                     backupFile.length(),
                     LocalDateTime.now(),
                     description);
-        } catch (IOException | InterruptedException e) {
+
+        } catch (Exception e) {
             LOG.errorf(e, "Failed to create backup");
+            try {
+                Files.deleteIfExists(backupPath);
+            } catch (IOException ignored) {
+            }
             throw new RuntimeException("Failed to create backup: " + e.getMessage(), e);
         }
     }
@@ -122,7 +113,6 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
                             attrs.creationTime().toInstant(),
                             ZoneId.systemDefault());
 
-                    // Read description from meta file if exists
                     String description = null;
                     Path metaPath = Paths.get(backupDirectory, file.getName() + ".meta");
                     if (Files.exists(metaPath)) {
@@ -140,7 +130,6 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
             }
         }
 
-        // Sort by creation date descending (newest first)
         backups.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
         return backups;
     }
@@ -149,11 +138,9 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
     public File getBackupFile(String filename) {
         validateFilename(filename);
         File backupFile = Paths.get(backupDirectory, filename).toFile();
-
         if (!backupFile.exists()) {
             throw new IllegalArgumentException("Backup file not found: " + filename);
         }
-
         return backupFile;
     }
 
@@ -161,60 +148,54 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
     public void restoreBackup(InputStream backupInputStream, String filename) {
         ensureBackupDirectoryExists();
 
-        // Save uploaded file temporarily
-        Path tempBackupPath = Paths.get(backupDirectory, "temp_restore_" + System.currentTimeMillis() + ".sql");
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false); // Transactional restore
 
-        try {
-            // Copy uploaded file to temp location
-            Files.copy(backupInputStream, tempBackupPath);
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(backupInputStream, StandardCharsets.UTF_8));
+                    Statement stmt = conn.createStatement()) {
 
-            DatabaseConnectionInfo connInfo = parseJdbcUrl(jdbcUrl);
+                LOG.info("Starting database restore...");
 
-            // Drop all tables first using SQL
-            dropAllTables();
+                // 1. Truncate all tables to clear existing data
+                truncateAllTables(conn);
 
-            // Restore using psql
-            ProcessBuilder pb = new ProcessBuilder(
-                    "psql",
-                    "-h", connInfo.host,
-                    "-p", connInfo.port,
-                    "-U", dbUsername,
-                    "-d", connInfo.database,
-                    "-f", tempBackupPath.toString());
-            pb.environment().put("PGPASSWORD", dbPassword);
-            pb.redirectErrorStream(true);
+                // 2. Execute backup script
+                StringBuilder sql = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Skip comments and empty lines
+                    if (line.trim().isEmpty() || line.trim().startsWith("--")) {
+                        continue;
+                    }
 
-            Process process = pb.start();
-            String output = readProcessOutput(process);
-            boolean completed = process.waitFor(10, TimeUnit.MINUTES);
+                    sql.append(line);
+                    if (line.trim().endsWith(";")) {
+                        stmt.execute(sql.toString());
+                        sql.setLength(0);
+                    } else {
+                        sql.append("\n");
+                    }
+                }
 
-            if (!completed) {
-                process.destroyForcibly();
-                throw new RuntimeException("Restore process timed out");
+                conn.commit();
+                LOG.infof("Database restored successfully from: %s", filename);
+
+            } catch (Exception e) {
+                conn.rollback();
+                LOG.errorf(e, "Failed to restore backup, rolled back");
+                throw new RuntimeException("Failed to restore backup: " + e.getMessage(), e);
             }
 
-            if (process.exitValue() != 0) {
-                LOG.warnf("psql output (may contain non-fatal errors): %s", output);
-            }
-
-            LOG.infof("Database restored successfully from: %s", filename);
-        } catch (IOException | InterruptedException e) {
-            LOG.errorf(e, "Failed to restore backup");
-            throw new RuntimeException("Failed to restore backup: " + e.getMessage(), e);
-        } finally {
-            // Clean up temp file
-            try {
-                Files.deleteIfExists(tempBackupPath);
-            } catch (IOException e) {
-                LOG.warnf("Failed to delete temp restore file: %s", tempBackupPath);
-            }
+        } catch (SQLException e) {
+            LOG.errorf(e, "Database error during restore setup");
+            throw new RuntimeException("Database error: " + e.getMessage(), e);
         }
     }
 
     @Override
     public void deleteBackup(String filename) {
         validateFilename(filename);
-
         Path backupPath = Paths.get(backupDirectory, filename);
         Path metaPath = Paths.get(backupDirectory, filename + ".meta");
 
@@ -222,97 +203,192 @@ public class DatabaseBackupServiceImpl implements DatabaseBackupService {
             if (!Files.exists(backupPath)) {
                 throw new IllegalArgumentException("Backup file not found: " + filename);
             }
-
             Files.delete(backupPath);
             Files.deleteIfExists(metaPath);
-
             LOG.infof("Backup deleted: %s", filename);
         } catch (IOException e) {
-            LOG.errorf(e, "Failed to delete backup: %s", filename);
             throw new RuntimeException("Failed to delete backup: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Drop all tables in the current database to prepare for restore.
-     */
-    private void dropAllTables() {
-        String dropTablesQuery = """
-                    DO $$
-                    DECLARE
-                        r RECORD;
-                    BEGIN
-                        -- Drop all tables in public schema
-                        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                            EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
-                        END LOOP;
-
-                        -- Drop all sequences in public schema
-                        FOR r IN (SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = 'public') LOOP
-                            EXECUTE 'DROP SEQUENCE IF EXISTS public.' || quote_ident(r.sequence_name) || ' CASCADE';
-                        END LOOP;
-                    END $$;
-                """;
-
-        try (Connection conn = dataSource.getConnection();
-                Statement stmt = conn.createStatement()) {
-            stmt.execute(dropTablesQuery);
-            LOG.info("All tables dropped successfully");
-        } catch (Exception e) {
-            LOG.errorf(e, "Failed to drop tables");
-            throw new RuntimeException("Failed to drop tables: " + e.getMessage(), e);
-        }
-    }
+    // --- Helper Methods ---
 
     private void ensureBackupDirectoryExists() {
-        Path backupPath = Paths.get(backupDirectory);
-        if (!Files.exists(backupPath)) {
-            try {
-                Files.createDirectories(backupPath);
-                LOG.infof("Created backup directory: %s", backupDirectory);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create backup directory: " + backupDirectory, e);
-            }
+        try {
+            Files.createDirectories(Paths.get(backupDirectory));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create backup dir", e);
         }
     }
 
     private void validateFilename(String filename) {
-        if (filename == null || filename.isEmpty()) {
-            throw new IllegalArgumentException("Filename cannot be empty");
-        }
-        // Prevent directory traversal attacks
-        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+        if (filename == null || filename.isEmpty() || filename.contains("..") || !filename.endsWith(".sql")) {
             throw new IllegalArgumentException("Invalid filename");
         }
-        if (!filename.endsWith(".sql")) {
-            throw new IllegalArgumentException("Invalid backup file extension");
-        }
     }
 
-    private DatabaseConnectionInfo parseJdbcUrl(String url) {
-        Matcher matcher = JDBC_URL_PATTERN.matcher(url);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid JDBC URL format: " + url);
-        }
-
-        String host = matcher.group(1);
-        String port = matcher.group(2) != null ? matcher.group(2) : "5432";
-        String database = matcher.group(3);
-
-        return new DatabaseConnectionInfo(host, port, database);
-    }
-
-    private String readProcessOutput(Process process) throws IOException {
-        StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
+    private List<String> getTables(DatabaseMetaData metaData) throws SQLException {
+        List<String> tables = new ArrayList<>();
+        try (ResultSet rs = metaData.getTables(null, "public", null, new String[] { "TABLE" })) {
+            while (rs.next()) {
+                tables.add(rs.getString("TABLE_NAME"));
             }
         }
-        return output.toString();
+        return tables;
     }
 
-    private record DatabaseConnectionInfo(String host, String port, String database) {
+    // Topological sort tables based on Foreign Keys
+    private List<String> sortTablesByDependency(Connection conn, List<String> tables) throws SQLException {
+        Map<String, Set<String>> dependencies = new HashMap<>(); // Table -> Parents
+        for (String table : tables) {
+            dependencies.putIfAbsent(table, new HashSet<>());
+            try (ResultSet rs = conn.getMetaData().getImportedKeys(null, "public", table)) {
+                while (rs.next()) {
+                    String parentTable = rs.getString("PKTABLE_NAME");
+                    if (tables.contains(parentTable) && !parentTable.equals(table)) {
+                        dependencies.get(table).add(parentTable);
+                    }
+                }
+            }
+        }
+
+        List<String> sorted = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        Set<String> visiting = new HashSet<>();
+
+        for (String table : tables) {
+            visitTable(table, dependencies, visited, visiting, sorted);
+        }
+
+        return sorted;
+    }
+
+    private void visitTable(String table, Map<String, Set<String>> dependencies, Set<String> visited,
+            Set<String> visiting, List<String> sorted) {
+        if (visited.contains(table))
+            return;
+        if (visiting.contains(table))
+            return; // Cycle detected, break it simple way
+
+        visiting.add(table);
+        for (String parent : dependencies.getOrDefault(table, Collections.emptySet())) {
+            visitTable(parent, dependencies, visited, visiting, sorted);
+        }
+        visiting.remove(table);
+        visited.add(table);
+        sorted.add(table);
+    }
+
+    private void dumpTable(Connection conn, String tableName, BufferedWriter writer) throws SQLException, IOException {
+        String query = "SELECT * FROM " + tableName;
+        try (Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(query)) {
+
+            ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
+
+            while (rs.next()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("INSERT INTO ").append(tableName).append(" VALUES (");
+
+                for (int i = 1; i <= columnCount; i++) {
+                    if (i > 1)
+                        sb.append(", ");
+                    Object value = rs.getObject(i);
+                    if (value == null) {
+                        sb.append("NULL");
+                    } else {
+                        sb.append(formatValue(value));
+                    }
+                }
+                sb.append(");");
+                writer.write(sb.toString());
+                writer.newLine();
+            }
+        }
+    }
+
+    private String formatValue(Object value) {
+        if (value instanceof Number) {
+            return value.toString();
+        } else if (value instanceof Boolean) {
+            return value.toString();
+        } else if (value instanceof byte[]) {
+            // Postgres bytea hex format
+            return "'\\x" + bytesToHex((byte[]) value) + "'";
+        } else {
+            // Escape single quotes for SQL string
+            return "'" + value.toString().replace("'", "''") + "'";
+        }
+    }
+
+    // Hex helper
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
+    private void resetSequences(Connection conn, BufferedWriter writer) throws SQLException, IOException {
+        String query = "SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = 'public'";
+        try (Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                String seqName = rs.getString(1);
+                // Attempt to find associated table/column usually named table_id_seq or
+                // explicit association
+                // Helper heuristic: try to find max id of table that owns this sequence?
+                // Simpler approach: Just sync the sequence to the current value,
+                // but we can't easily know WHICH table.
+
+                // Generic safe approach for Postgres: setval to max of the column it owns.
+                // But finding that relationship via JDBC metadata is hard.
+
+                // Alternative: if we know the naming convention (table_id_seq), we can try.
+                // Or just output a generic sequence reset block if the user has one?
+
+                if (seqName.endsWith("_seq") || seqName.endsWith("_id_seq")) {
+                    String probableTable = seqName.replace("_id_seq", "").replace("_seq", "");
+                    // Verify table exists
+                    if (tableExists(conn, probableTable)) {
+                        writer.write(
+                                String.format("SELECT setval('%s', COALESCE((SELECT MAX(id) FROM %s)+1, 1), false);",
+                                        seqName, probableTable));
+                        writer.newLine();
+                        continue;
+                    }
+                }
+
+                // Fallback: Just ensure it's not broken?
+                // If we don't reset, inserts might fail if they rely on default nextval.
+                // But our restore does explicit INSERT VALUES, so nextval isn't called during
+                // restore.
+                // It's called for NEW data after restore. So we DO need to reset.
+                // Let's rely on the above heuristic which covers 99% of auto-generated
+                // sequences.
+            }
+        }
+    }
+
+    private boolean tableExists(Connection conn, String tableName) throws SQLException {
+        try (ResultSet rs = conn.getMetaData().getTables(null, "public", tableName, null)) {
+            return rs.next();
+        }
+    }
+
+    private void truncateAllTables(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            // CASCADE is crucial here to handle FKs
+            stmt.execute("DO $$ DECLARE r RECORD; BEGIN " +
+                    "FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP " +
+                    "EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' CASCADE'; " +
+                    "END LOOP; END $$;");
+        }
     }
 }

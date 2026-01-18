@@ -11,8 +11,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
-import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST resource for database backup and restore operations.
@@ -102,16 +103,32 @@ public class DatabaseBackupResource {
     @POST
     @Path("/restore")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response restoreBackup(@RestForm("file") FileUpload file) {
-        if (file == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(ApiResponse.error("No backup file provided"))
-                    .build();
-        }
+    public Response restoreBackup(MultipartFormDataInput input) {
+        try {
+            Map<String, List<InputPart>> uploadForm = input.getFormDataMap();
+            List<InputPart> inputParts = uploadForm.get("file");
 
-        try (InputStream inputStream = Files.newInputStream(file.uploadedFile())) {
-            backupService.restoreBackup(inputStream, file.fileName());
-            return Response.ok(ApiResponse.success("Database restored successfully", null)).build();
+            if (inputParts == null || inputParts.isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(ApiResponse.error("No backup file provided"))
+                        .build();
+            }
+
+            InputPart inputPart = inputParts.get(0);
+
+            // Extract filename (optional, for logging)
+            String filename = "uploaded_backup.sql"; // default
+            String[] contentDisposition = inputPart.getHeaders().getFirst("Content-Disposition").split(";");
+            for (String split : contentDisposition) {
+                if (split.trim().startsWith("filename")) {
+                    filename = split.split("=")[1].trim().replaceAll("\"", "");
+                }
+            }
+
+            try (InputStream inputStream = inputPart.getBody(InputStream.class, null)) {
+                backupService.restoreBackup(inputStream, filename);
+                return Response.ok(ApiResponse.success("Database restored successfully", null)).build();
+            }
         } catch (IOException e) {
             LOG.error("Failed to read uploaded file", e);
             return Response.serverError()

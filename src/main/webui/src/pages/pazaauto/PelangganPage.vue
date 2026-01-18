@@ -55,11 +55,13 @@
         <div class="text-subtitle2 q-mt-md">Informasi Kendaraan</div>
         <div class="row q-col-gutter">
           <div class="col-6">
-            <q-input v-model="formData.merk" label="Merk *" outlined dense :rules="[val => !!val || 'Merk is required']"
-              class="q-mr-md" />
+            <q-select v-model="formData.merk" label="Merk *" outlined dense use-input input-debounce="300"
+              new-value-mode="add-unique" :options="filteredMerkOptions" @filter="filterMerk"
+              :rules="[val => !!val || 'Merk is required']" class="q-mr-md" />
           </div>
           <div class="col-6">
-            <q-input v-model="formData.jenis" label="Jenis" outlined dense />
+            <q-select v-model="formData.jenis" label="Jenis" outlined dense use-input input-debounce="300"
+              new-value-mode="add-unique" :options="filteredJenisOptions" @filter="filterJenis" />
           </div>
         </div>
 
@@ -83,7 +85,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { api } from 'boot/axios'
 import GenericTable from 'components/GenericTable.vue'
 import GenericDialog from 'components/GenericDialog.vue'
 import { useCrud } from 'src/composables/useCrud'
@@ -167,6 +170,82 @@ const handleSave = async () => {
   await saveData(formData.value)
 }
 
+// Autocomplete Logic
+const merkOptions = ref([])
+const filteredMerkOptions = ref([])
+const jenisOptions = ref([])
+const filteredJenisOptions = ref([])
+
+const fetchAutocompleteData = async () => {
+  try {
+    const [merkRes, jenisRes] = await Promise.all([
+      api.get('/api/pazaauto/kendaraan/merk/distinct'),
+      api.get('/api/pazaauto/kendaraan/jenis/distinct')
+    ])
+
+    if (merkRes.data.success) {
+      merkOptions.value = merkRes.data.data
+      filteredMerkOptions.value = merkOptions.value
+    }
+
+    if (jenisRes.data.success) {
+      jenisOptions.value = jenisRes.data.data
+      filteredJenisOptions.value = jenisOptions.value
+    }
+  } catch (error) {
+    console.error('Failed to fetch autocomplete data', error)
+  }
+}
+
+const filterMerk = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredMerkOptions.value = merkOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      filteredMerkOptions.value = merkOptions.value.filter(
+        v => v.toLowerCase().indexOf(needle) > -1
+      )
+    }
+  })
+}
+
+const filterJenis = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredJenisOptions.value = jenisOptions.value
+    } else {
+      const needle = val.toLowerCase()
+      filteredJenisOptions.value = jenisOptions.value.filter(
+        v => v.toLowerCase().indexOf(needle) > -1
+      )
+    }
+  })
+}
+
+const fetchFilteredJenis = async (merk) => {
+  try {
+    const response = await api.get('/api/pazaauto/kendaraan/jenis/by-merk', {
+      params: { merk }
+    })
+    if (response.data.success) {
+      jenisOptions.value = response.data.data
+      filteredJenisOptions.value = jenisOptions.value
+    }
+  } catch (error) {
+    console.error('Failed to fetch filtered jenis', error)
+  }
+}
+
+watch(() => formData.value.merk, (newMerk) => {
+  if (newMerk) {
+    fetchFilteredJenis(newMerk)
+  } else {
+    // If merk cleared, reset to all distinct jenis (re-fetch or use initial if plausible, here re-fetch is safest)
+    fetchAutocompleteData() 
+  }
+})
+
 // Table Columns
 const columns = [
   {
@@ -221,6 +300,7 @@ const columns = [
 // Lifecycle
 onMounted(() => {
   fetchData()
+  fetchAutocompleteData()
 })
 </script>
 

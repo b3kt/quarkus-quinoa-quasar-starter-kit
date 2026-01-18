@@ -31,7 +31,7 @@
 
                 <template v-slot:body-cell-jenisPembelian="props">
                     <q-td :props="props">
-                        <q-badge :color="props.row.jenisPembelian === 'SPAREPART' ? 'blue' : 'purple'">
+                        <q-badge :color="props.row.jenisPembelian === 'SPAREPART' ? 'blue' : props.row.jenisPembelian === 'BARANG' ? 'green' : 'purple'">
                             {{ props.row.jenisPembelian }}
                         </q-badge>
                     </q-td>
@@ -80,7 +80,7 @@
                 <div class="row q-col-gutter-md">
                     <div class="col-6">
                         <q-input v-model="formData.noPembelian" label="No Pembelian *" outlined dense
-                            :rules="[val => !!val || 'No Pembelian is required']" />
+                            readonly placeholder="Auto Generated" />
                     </div>
                     <div class="col-6">
                         <q-input v-model="formData.tanggalPembelian" label="Tanggal Pembelian" outlined dense
@@ -104,7 +104,7 @@
 
                 <!-- Supplier Field -->
                 <div class="row q-col-gutter-md q-mt-sm">
-                    <div class="col-6">
+                    <div v-if="formData.jenisPembelian === 'SPAREPART'" class="col-6">
                         <q-select v-model="formData.supplierId" label="Supplier" outlined dense use-input
                             input-debounce="300" :options="supplierOptions" option-value="id"
                             option-label="namaSupplier" @filter="filterSuppliers" clearable
@@ -167,6 +167,39 @@
                         <div class="col-2">
                             <q-input v-model.number="detail.harga" label="Harga *" outlined dense type="number"
                                 prefix="Rp" :rules="[val => !!val || 'Harga is required']" readonly />
+                        </div>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.kuantiti" label="Qty *" outlined dense type="number"
+                                :rules="[val => !!val || 'Quantity is required']"
+                                @update:model-value="calculateDetailTotal(detail)" />
+                        </div>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.total" label="Total" outlined dense type="number"
+                                prefix="Rp" readonly />
+                        </div>
+                    </template>
+
+                    <!-- Barang Purchase Detail -->
+                    <template v-else-if="formData.jenisPembelian === 'BARANG'">
+                        <div class="col-4">
+                            <q-select v-model="detail.barangId" label="Barang *" outlined dense use-input
+                                input-debounce="300" :options="barangOptions" option-value="kodeBarang"
+                                :option-label="opt => opt.kodeBarang + ' - ' + opt.namaBarang" @filter="filterBarang"
+                                @update:model-value="onBarangSelected(detail)"
+                                :rules="[val => !!val || 'Barang is required']">
+                                <template v-slot:no-option>
+                                    <q-item>
+                                        <q-item-section class="text-grey">
+                                            No results
+                                        </q-item-section>
+                                    </q-item>
+                                </template>
+                            </q-select>
+                        </div>
+                        <div class="col-2">
+                            <q-input v-model.number="detail.harga" label="Harga *" outlined dense type="number"
+                                prefix="Rp" :rules="[val => !!val || 'Harga is required']"
+                                @update:model-value="calculateDetailTotal(detail)" />
                         </div>
                         <div class="col-2">
                             <q-input v-model.number="detail.kuantiti" label="Qty *" outlined dense type="number"
@@ -281,9 +314,10 @@ const selectedItem = ref(null)
 const itemDetails = ref([])
 
 // Options
-const jenisPembelianOptions = ['SPAREPART', 'OPERASIONAL']
+const jenisPembelianOptions = ['SPAREPART', 'OPERASIONAL', 'BARANG']
 const jenisPembelianRadioOptions = [
     { label: 'Sparepart Purchase', value: 'SPAREPART' },
+    { label: 'Barang Purchase (Non-Supplier)', value: 'BARANG' },
     { label: 'Operational Expense', value: 'OPERASIONAL' }
 ]
 const kategoriOperasionalOptions = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'ON_DEMAND']
@@ -291,6 +325,7 @@ const statusOptions = ['LUNAS', 'BELUM_LUNAS', 'DP']
 
 const supplierOptions = ref([])
 const sparepartOptions = ref([])
+const barangOptions = ref([])
 
 const pagination = ref({
     sortBy: 'tanggalPembelian',
@@ -430,6 +465,7 @@ const openCreateDialog = () => {
     isEditMode.value = false
     resetForm()
     showDialog.value = true
+    generateNoPembelian() // Generate number on create
 }
 
 const openEditDialog = async (row) => {
@@ -481,6 +517,9 @@ const resetForm = () => {
 const onJenisPembelianChange = () => {
     formData.value.details = []
     addDetail()
+    if (!isEditMode.value) {
+        generateNoPembelian() // Regenerate number when type changes
+    }
 }
 
 const addDetail = () => {
@@ -499,6 +538,23 @@ const addDetail = () => {
 const removeDetail = (index) => {
     formData.value.details.splice(index, 1)
     calculateGrandTotal()
+}
+
+const generateNoPembelian = async () => {
+    try {
+        const response = await api.get('/api/pazaauto/pembelian/generate-no', {
+            params: { jenisPembelian: formData.value.jenisPembelian }
+        })
+        if (response.data.success) {
+            formData.value.noPembelian = response.data.data
+        }
+    } catch (error) {
+        console.error('Failed to generate no pembelian', error)
+        $q.notify({
+            type: 'warning',
+            message: 'Failed to auto-generate No Pembelian'
+        })
+    }
 }
 
 const calculateDetailTotal = (detail) => {
@@ -575,6 +631,41 @@ const filterSpareparts = async (val, update) => {
     }
 }
 
+
+
+const filterBarang = async (val, update) => {
+    if (val === '') {
+        update(() => {
+            barangOptions.value = []
+        })
+        return
+    }
+
+    try {
+        const response = await api.get('/api/pazaauto/barang', {
+            params: { search: val }
+        })
+        update(() => {
+            if (response.data.success) {
+                barangOptions.value = response.data.data || []
+            }
+        })
+    } catch (error) {
+        update(() => {
+            console.error('Error fetching barang:', error)
+            barangOptions.value = []
+        })
+    }
+}
+
+const onBarangSelected = (detail) => {
+    if (detail.barangId) {
+        detail.namaItem = detail.barangId.namaBarang
+        detail.harga = detail.barangId.hargaBeli || 0
+        calculateDetailTotal(detail)
+    }
+}
+
 const savePembelian = async () => {
     saving.value = true
     try {
@@ -589,6 +680,7 @@ const savePembelian = async () => {
         const details = formData.value.details.map(detail => ({
             ...detail,
             sparepartId: detail.sparepartId?.kodeBarang || detail.sparepartId,
+            barangId: detail.barangId?.id || detail.barangId?.kodeBarang || (typeof detail.barangId === 'object' ? detail.barangId.id : detail.barangId), // Handle ID extraction safely
             kategoriItem: formData.value.jenisPembelian,
             supplierId: formData.value.supplierId?.id || formData.value.supplierId
         }))

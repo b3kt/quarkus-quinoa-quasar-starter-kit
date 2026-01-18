@@ -47,6 +47,7 @@ public class TbPembelianService extends AbstractCrudService<TbPembelianEntity, L
     @Override
     @Transactional
     public TbPembelianEntity create(TbPembelianEntity entity) {
+        setNoUrutFromNoPembelian(entity);
         // Save main pembelian record
         TbPembelianEntity saved = super.create(entity);
         return saved;
@@ -54,9 +55,10 @@ public class TbPembelianService extends AbstractCrudService<TbPembelianEntity, L
 
     @Transactional
     public TbPembelianEntity createWithDetails(TbPembelianEntity entity, List<TbPembelianDetailEntity> details) {
+        setNoUrutFromNoPembelian(entity);
         // Save main pembelian record
         TbPembelianEntity saved = super.create(entity);
-
+        
         // Save detail records
         if (details != null && !details.isEmpty()) {
             for (TbPembelianDetailEntity detail : details) {
@@ -110,6 +112,7 @@ public class TbPembelianService extends AbstractCrudService<TbPembelianEntity, L
         // Save new details
         if (details != null && !details.isEmpty()) {
             for (TbPembelianDetailEntity detail : details) {
+                detail.setId(null); // Ensure it's treated as a new entity
                 detail.setPembelianId(updated.getId());
                 detailService.create(detail);
 
@@ -208,5 +211,46 @@ public class TbPembelianService extends AbstractCrudService<TbPembelianEntity, L
                 .list();
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
+    }
+    public String generateNoPembelian(String jenisPembelian) {
+        String code;
+        if ("SPAREPART".equalsIgnoreCase(jenisPembelian)) {
+            code = "FS";
+        } else if ("BARANG".equalsIgnoreCase(jenisPembelian)) {
+            code = "FB";
+        } else {
+            code = "FO";
+        }
+        LocalDateTime now = LocalDateTime.now();
+        String datePart = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+        
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = now.toLocalDate().plusDays(1).atStartOfDay();
+        
+        Integer maxNoUrut = repository.findMaxNoUrut(startOfDay, endOfDay, jenisPembelian);
+        int nextNoUrut = (maxNoUrut == null ? 0 : maxNoUrut) + 1;
+        
+        String noPembelian = String.format("%s-%s-%d", code, datePart, nextNoUrut);
+        
+        // Ensure uniqueness (collision check)
+        while (repository.find("noPembelian", noPembelian).count() > 0) {
+            nextNoUrut++;
+            noPembelian = String.format("%s-%s-%d", code, datePart, nextNoUrut);
+        }
+        
+        return noPembelian;
+    }
+
+    private void setNoUrutFromNoPembelian(TbPembelianEntity entity) {
+        if (entity.getNoPembelian() != null && !entity.getNoPembelian().isEmpty()) {
+            try {
+                String[] parts = entity.getNoPembelian().split("-");
+                if (parts.length >= 3) {
+                    entity.setNoUrut(Integer.parseInt(parts[2]));
+                }
+            } catch (NumberFormatException e) {
+                // Ignore if format is invalid, noUrut will be null
+            }
+        }
     }
 }

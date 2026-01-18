@@ -53,10 +53,17 @@
           </div>
         </div>
 
+
+
         <div class="row q-col-gutter">
           <div class="col-6">
             <q-input v-model="formData.tanggalBergabung" label="Tanggal Bergabung" outlined dense type="date"
               class="q-ml-sm" />
+          </div>
+          <div class="col-6" v-if="!isEditMode">
+            <q-select v-model="formData.roles" label="Assign Roles" outlined dense multiple use-chips
+              :options="roleOptions" option-label="name" option-value="name" emit-value map-options class="q-ml-sm"
+              :loading="loadingRoles" />
           </div>
         </div>
       </q-form>
@@ -145,6 +152,25 @@ const filterPosisi = (val, update) => {
       )
     }
   })
+
+}
+
+// Roles Logic
+const loadingRoles = ref(false)
+const roleOptions = ref([])
+
+const fetchRoles = async () => {
+  loadingRoles.value = true
+  try {
+    const response = await api.get('/api/roles')
+    if (response.data.success) {
+      roleOptions.value = response.data.data || []
+    }
+  } catch (error) {
+    console.error('Failed to fetch roles', error)
+  } finally {
+    loadingRoles.value = false
+  }
 }
 
 // Form Data
@@ -156,7 +182,8 @@ const formData = ref({
   alamat: '',
   jenisKelamin: null,
   tanggalBergabung: null,
-  idPosisi: null
+  idPosisi: null,
+  roles: ['user']
 })
 
 const resetForm = () => {
@@ -168,7 +195,8 @@ const resetForm = () => {
     alamat: '',
     jenisKelamin: null,
     tanggalBergabung: null,
-    idPosisi: null
+    idPosisi: null,
+    roles: ['user']
   }
 }
 
@@ -227,7 +255,7 @@ const columns = [
     name: 'idPosisi',
     label: 'Posisi',
     align: 'center',
-    field: 'idPosisi',
+    field: 'namePosisi',
     sortable: true
   },
   {
@@ -242,6 +270,7 @@ const columns = [
 onMounted(() => {
   fetchData()
   fetchPosisi()
+  fetchRoles()
 })
 </script>
 

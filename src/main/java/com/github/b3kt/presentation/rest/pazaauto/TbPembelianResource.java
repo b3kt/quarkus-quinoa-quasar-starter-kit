@@ -98,4 +98,16 @@ public class TbPembelianResource extends AbstractCrudResource<TbPembelianEntity,
                 request.getDetails());
         return Response.ok(ApiResponse.success(getEntityName() + " updated with details", updated)).build();
     }
+
+    @GET
+    @Path("/generate-no")
+    public Response generateNoPembelian(@QueryParam("jenisPembelian") String jenisPembelian) {
+         try {
+             String noPembelian = service.generateNoPembelian(jenisPembelian);
+             return Response.ok(ApiResponse.success(noPembelian)).build();
+         } catch (Exception e) {
+             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                     .entity(ApiResponse.error("Failed to generate no pembelian: " + e.getMessage())).build();
+         }
+    }
 }

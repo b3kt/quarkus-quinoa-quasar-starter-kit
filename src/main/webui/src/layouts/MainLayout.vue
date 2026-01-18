@@ -167,7 +167,7 @@ const linksList = computed(() => [
         caption: t('app.menu.sales.buy.caption'),
         icon: 'warehouse',
         visible: hasRole('Admin') || hasRole('Owner'),
-        link: '/pazaauto/pembelian-barang'
+        link: '/pazaauto/pembelian'
       },
       {
         title: t('app.menu.sales.sell.title'),

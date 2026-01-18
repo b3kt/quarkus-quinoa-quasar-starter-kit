@@ -135,6 +135,26 @@ const openEditDialog = async (row) => {
     formData.value = { ...r }
   })
   await fetchKaryawan()
+  
+  // If editing a user with an assigned Karyawan, fetch that Karyawan's details
+  // so it appears in the dropdown (it won't be in the unregistered list)
+  if (row.karyawanId) {
+    try {
+      const response = await api.get(`/api/pazaauto/karyawan/${row.karyawanId}`)
+      if (response.data.success && response.data.data) {
+        const currentKaryawan = response.data.data
+        // Check if already in options (shouldn't be, but good to be safe)
+        const exists = karyawanOptions.value.some(k => k.id === currentKaryawan.id)
+        if (!exists) {
+          karyawanOptions.value.push(currentKaryawan)
+          // Re-trigger filter update if needed or just let reactivity handle it
+          filteredKaryawanOptions.value = karyawanOptions.value
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch current karyawan details', error)
+    }
+  }
 }
 
 const handleSave = async () => {

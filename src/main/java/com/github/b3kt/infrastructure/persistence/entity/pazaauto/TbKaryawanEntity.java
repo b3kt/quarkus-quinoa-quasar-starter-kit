@@ -46,4 +46,7 @@ public class TbKaryawanEntity extends BaseEntity {
 
     @Transient
     private String namePosisi;
+
+    @Transient
+    private java.util.List<String> roles;
 }

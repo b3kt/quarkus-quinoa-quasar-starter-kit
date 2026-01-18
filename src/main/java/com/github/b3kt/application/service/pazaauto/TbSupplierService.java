@@ -71,4 +71,11 @@ public class TbSupplierService extends AbstractCrudService<TbSupplierEntity, Int
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
     }
+    public List<TbSupplierEntity> search(String search) {
+        if (search == null || search.isEmpty()) {
+            return repository.listAll();
+        }
+        String searchPattern = "%" + search.toLowerCase() + "%";
+        return repository.find("lower(namaSupplier) like ?1 or lower(email) like ?1", Sort.by("namaSupplier"), searchPattern).list();
+    }
 }

@@ -8,6 +8,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
@@ -39,5 +40,24 @@ public class TbKendaraanResource extends AbstractCrudResource<TbKendaraanEntity,
     public Response getDistinctMerks() {
         List<String> merks = service.findDistinctMerks();
         return Response.ok(ApiResponse.success(merks)).build();
+    }
+
+    @GET
+    @Path("/jenis/distinct")
+    public Response getDistinctJenis() {
+        List<String> jenis = service.findDistinctJenis();
+        return Response.ok(ApiResponse.success(jenis)).build();
+    }
+
+    @GET
+    @Path("/jenis/by-merk")
+    public Response getDistinctJenisByMerk(@QueryParam("merk") String merk) {
+        List<String> jenis;
+        if (merk == null || merk.trim().isEmpty()) {
+             jenis = service.findDistinctJenis();
+        } else {
+             jenis = service.findDistinctJenisByMerk(merk);
+        }
+        return Response.ok(ApiResponse.success(jenis)).build();
     }
 }

@@ -96,4 +96,11 @@ public class TbBarangService extends AbstractCrudService<TbBarangEntity, Long> {
 
         return new PageResponse<>(rows, pageRequest.getPage(), pageRequest.getRowsPerPage(), totalCount);
     }
+    public List<TbBarangEntity> search(String search) {
+        if (search == null || search.isEmpty()) {
+            return repository.listAll();
+        }
+        String searchPattern = "%" + search.toLowerCase() + "%";
+        return repository.find("lower(kodeBarang) like ?1 or lower(namaBarang) like ?1", Sort.by("namaBarang"), searchPattern).list();
+    }
 }

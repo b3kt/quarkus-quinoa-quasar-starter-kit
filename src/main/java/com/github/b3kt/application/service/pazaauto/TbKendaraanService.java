@@ -67,9 +67,14 @@ public class TbKendaraanService extends AbstractCrudService<TbKendaraanEntity, L
     }
 
     public List<String> findDistinctMerks() {
-        return repository
-                .find("SELECT DISTINCT k.merk FROM TbKendaraanEntity k WHERE k.merk IS NOT NULL ORDER BY k.merk")
-                .project(String.class)
-                .list();
+        return repository.findDistinctMerk();
+    }
+
+    public List<String> findDistinctJenis() {
+        return repository.findDistinctJenis();
+    }
+
+    public List<String> findDistinctJenisByMerk(String merk) {
+        return repository.findDistinctJenisByMerk(merk);
     }
 }

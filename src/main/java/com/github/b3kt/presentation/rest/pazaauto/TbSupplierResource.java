@@ -28,4 +28,15 @@ public class TbSupplierResource extends AbstractCrudResource<TbSupplierEntity, I
     protected String getEntityName() {
         return "Supplier";
     }
+    @jakarta.ws.rs.core.Context
+    jakarta.ws.rs.core.UriInfo uriInfo;
+
+    @Override
+    public jakarta.ws.rs.core.Response list() {
+        String search = uriInfo.getQueryParameters().getFirst("search");
+        if (search != null && !search.isEmpty()) {
+            return jakarta.ws.rs.core.Response.ok(com.github.b3kt.application.dto.ApiResponse.success(service.search(search))).build();
+        }
+        return super.list();
+    }
 }

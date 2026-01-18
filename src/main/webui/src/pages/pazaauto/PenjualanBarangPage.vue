@@ -157,6 +157,17 @@
                 <q-btn flat label="Delete" color="negative" @click="deletePenjualan" :loading="deleting" />
             </template>
         </GenericDialog>
+
+        <!-- Print Preview Dialog -->
+        <GenericDialog v-model="showPrintDialog" title="Print Preview" min-width="800px" max-width="90vw">
+            <div class="q-pa-sm" style="height: 70vh; width: 100%;">
+                <iframe :srcdoc="printPreviewContent" style="width: 100%; height: 100%; border: 1px solid #ccc;"></iframe>
+            </div>
+            <template #actions>
+                <q-btn flat label="Cancel" color="primary" @click="showPrintDialog = false" />
+                <q-btn label="Print" icon="print" color="secondary" @click="confirmPrint" />
+            </template>
+        </GenericDialog>
     </q-page>
 </template>
 
@@ -203,6 +214,8 @@ const showDialog = ref(false)
 const showDeleteDialog = ref(false)
 const isEditMode = ref(false)
 const itemToDelete = ref(null)
+const showPrintDialog = ref(false)
+const printPreviewContent = ref('')
 
 // Status options
 const statusOptions = ref([
@@ -401,35 +414,15 @@ const printPenjualan = async (row) => {
         const response = await api.get(`/api/pazaauto/penjualan/${row.noPenjualan}/print`)
         if (response.data.success) {
             const data = response.data.data
-            // Create invisible iframe
-            let iframe = document.getElementById('print-iframe')
-            if (!iframe) {
-                iframe = document.createElement('iframe')
-                iframe.id = 'print-iframe'
-                iframe.style.position = 'absolute'
-                iframe.style.width = '0px'
-                iframe.style.height = '0px'
-                iframe.style.border = 'none'
-                document.body.appendChild(iframe)
-            }
-
-            const doc = iframe.contentWindow.document
-            doc.open()
-
+            
             // Render template
             const renderedContent = renderTemplate(fakturTemplate, {
                 data,
                 formatCurrency
             })
 
-            doc.write(renderedContent)
-            doc.close()
-
-            // Wait for content to load then print
-            setTimeout(() => {
-                iframe.contentWindow.focus()
-                iframe.contentWindow.print()
-            }, 500)
+            printPreviewContent.value = renderedContent
+            showPrintDialog.value = true
         }
     } catch (error) {
         $q.notify({
@@ -438,6 +431,34 @@ const printPenjualan = async (row) => {
             caption: error.response?.data?.message || error.message
         })
     }
+}
+
+const confirmPrint = () => {
+    // Create invisible iframe for actual printing
+    let iframe = document.getElementById('print-iframe')
+    if (iframe) {
+        document.body.removeChild(iframe)
+    }
+    
+    iframe = document.createElement('iframe')
+    iframe.id = 'print-iframe'
+    iframe.style.position = 'absolute'
+    iframe.style.width = '0px'
+    iframe.style.height = '0px'
+    iframe.style.border = 'none'
+    
+    // Set up onload listener BEFORE adding to body/writing content
+    iframe.onload = () => {
+        iframe.contentWindow.focus()
+        iframe.contentWindow.print()
+    }
+    
+    document.body.appendChild(iframe)
+
+    const doc = iframe.contentWindow.document
+    doc.open()
+    doc.write(printPreviewContent.value)
+    doc.close()
 }
 
 // Template rendering helper

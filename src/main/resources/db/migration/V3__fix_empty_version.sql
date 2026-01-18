@@ -64,3 +64,7 @@ BEGIN
     );
   END LOOP;
 END $$;
+
+-- FIX CONSTRAINTS
+ALTER TABLE public.tb_pembelian DROP CONSTRAINT chk_jenis_pembelian;
+ALTER TABLE public.tb_pembelian ADD CONSTRAINT chk_jenis_pembelian CHECK (((jenis_pembelian)::text = ANY (ARRAY[('SPAREPART'::character varying)::text, ('OPERASIONAL'::character varying)::text, ('BARANG'::character varying)::text])))

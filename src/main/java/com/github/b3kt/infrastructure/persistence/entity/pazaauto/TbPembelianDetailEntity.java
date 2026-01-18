@@ -39,6 +39,10 @@ public class TbPembelianDetailEntity extends BaseEntity {
     @Column(name = "id_barang")
     private Long barangId;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_barang", insertable = false, updatable = false)
+    private TbBarangEntity barang;
+
     @Column(name = "id_sparepart", length = 20)
     private Long sparepartId;
 

@@ -183,7 +183,7 @@
                     <template v-else-if="formData.jenisPembelian === 'BARANG'">
                         <div class="col-4">
                             <q-select v-model="detail.barangId" label="Barang *" outlined dense use-input
-                                input-debounce="300" :options="barangOptions" option-value="kodeBarang"
+                                input-debounce="300" :options="barangOptions"
                                 :option-label="opt => opt.kodeBarang + ' - ' + opt.namaBarang" @filter="filterBarang"
                                 @update:model-value="onBarangSelected(detail)"
                                 :rules="[val => !!val || 'Barang is required']">
@@ -476,7 +476,10 @@ const openEditDialog = async (row) => {
     try {
         const response = await api.get(`/api/pazaauto/pembelian-detail/by-pembelian/${row.id}`)
         if (response.data.success) {
-            formData.value.details = response.data.data || []
+            formData.value.details = (response.data.data || []).map(d => ({
+                ...d,
+                barangId: d.barang || d.barangId // Use object if available
+            }))
         }
     } catch (error) {
         $q.notify({

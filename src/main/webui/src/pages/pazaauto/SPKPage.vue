@@ -178,7 +178,7 @@
               </q-card-section>
               <q-card-section class="q-pa-none">
                 <q-table flat :rows="jasaRows" :columns="jasaColumns" row-key="tempId" dense hide-pagination
-                  separator="cell">
+                  :rows-per-page-options="[0]" separator="cell">
                   <template v-slot:body="props">
                     <q-tr :props="props">
                       <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
@@ -240,7 +240,7 @@
               </q-card-section>
               <q-card-section class="q-pa-none">
                 <q-table flat :rows="barangRows" :columns="barangColumns" row-key="tempId" dense hide-pagination
-                  separator="cell">
+                  :rows-per-page-options="[0]" separator="cell">
                   <template v-slot:body="props">
                     <q-tr :props="props">
                       <q-td key="no" :props="props">{{ props.rowIndex + 1 }}</q-td>
@@ -384,7 +384,7 @@
 
         <!-- Items Table -->
         <q-table flat :rows="invoiceItems" :columns="invoiceColumns" row-key="id" hide-pagination dense
-          separator="horizontal" class="q-mb-md">
+          :rows-per-page-options="[0]" separator="horizontal" class="q-mb-md">
           <template v-slot:body-cell-price="props">
             <q-td :props="props" class="text-right">
               {{ formatCurrency(props.row.price) }}

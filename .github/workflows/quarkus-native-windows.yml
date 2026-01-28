@@ -1,14 +1,14 @@
-name: Build Quarkus Native Image (Windows)
+name: Build Quarkus Native Image (Linux)
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - example/paza-auto
+  push:
+    branches:
+      - example/paza-auto
 
 jobs:
-  native-windows:
-    runs-on: windows-latest
+  native-linux:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -17,8 +17,9 @@ jobs:
       - name: Setup GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
-          distribution: graalvm
+          distribution: graalvm-community
           java-version: 21
+          components: native-image
           cache: maven
 
       - name: Verify GraalVM
@@ -27,12 +28,14 @@ jobs:
           native-image --version
           mvn -version
 
-      - name: Build Quarkus Native Image (Windows)
+      - name: Build Quarkus Native Image (Linux)
+        env:
+          GRAALVM_HOME: ${{ env.JAVA_HOME }}
         run: |
           mvn clean package -Pnative -DskipTests
 
-      - name: Upload Native EXE
+      - name: Upload Native Binary runner
         uses: actions/upload-artifact@v4
         with:
-          name: quarkus-native-windows
-          path: target\*-runner.exe
+          name: quarkus-native-linux
+          path: target/*-runner

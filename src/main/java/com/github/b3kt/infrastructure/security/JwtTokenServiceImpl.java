@@ -14,6 +14,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,9 @@ public class JwtTokenServiceImpl implements JwtTokenService {
 
     @ConfigProperty(name = "jwt.expiration.hours", defaultValue = "24")
     long expirationHours;
+    
+    @ConfigProperty(name = "jwt.refresh.expiration.days", defaultValue = "7")
+    long refreshExpirationDays;
 
     @Inject
     RbacProperties rbacProperties;
@@ -102,5 +107,55 @@ public class JwtTokenServiceImpl implements JwtTokenService {
     @Override
     public long getTokenExpirationSeconds() {
         return Duration.ofHours(expirationHours).getSeconds();
+    }
+    
+    @Override
+    public String generateRefreshToken(User user) {
+        // Generate a refresh token with longer expiration (7 days by default)
+        // This token only contains the username and is used solely for refreshing access tokens
+        return Jwt.issuer(issuer)
+                .upn(user.getUsername())
+                .subject(user.getUsername())
+                .claim("type", "refresh")
+                .expiresIn(Duration.ofDays(refreshExpirationDays))
+                .sign();
+    }
+    
+    @Override
+    public String validateRefreshToken(String refreshToken) {
+        try {
+            // Decode the JWT payload to validate it
+            String[] parts = refreshToken.split("\\.");
+            if (parts.length != 3) {
+                return null;
+            }
+            
+            String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+            
+            // Parse the JSON payload manually to extract claims
+            // Check if it's a refresh token and if it's not expired
+            if (!payload.contains("\"type\":\"refresh\"")) {
+                return null;
+            }
+            
+            // Extract expiration time
+            int expStart = payload.indexOf("\"exp\":") + 6;
+            int expEnd = payload.indexOf(",", expStart);
+            if (expEnd == -1) {
+                expEnd = payload.indexOf("}", expStart);
+            }
+            long exp = Long.parseLong(payload.substring(expStart, expEnd).trim());
+            
+            if (Instant.now().getEpochSecond() > exp) {
+                return null; // Token expired
+            }
+            
+            // Extract subject (username)
+            int subStart = payload.indexOf("\"sub\":\"") + 7;
+            int subEnd = payload.indexOf("\"", subStart);
+            return payload.substring(subStart, subEnd);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

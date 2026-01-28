@@ -153,5 +153,41 @@ public class AuthResource {
                     .build();
         }
     }
+    
+    @POST
+    @Path("/refresh")
+    @PermitAll
+    @Operation(
+        summary = "Refresh access token",
+        description = "Use a refresh token to obtain new access and refresh tokens"
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "200",
+            description = "Token refreshed successfully",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "401",
+            description = "Invalid or expired refresh token",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        )
+    })
+    public Response refreshToken(com.github.b3kt.application.dto.RefreshTokenRequest request) {
+        try {
+            LoginResponse response = authService.refreshToken(request.getRefreshToken());
+            return Response.ok(ApiResponse.success("Token refreshed successfully", response)).build();
+        } catch (AuthenticationException e) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(ApiResponse.<LoginResponse>error(e.getMessage()))
+                    .build();
+        }
+    }
 }
 

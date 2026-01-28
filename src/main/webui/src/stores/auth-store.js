@@ -18,6 +18,7 @@ export const useAuthStore = defineStore('auth', {
 
     return {
       token: token || null,
+      refreshToken: localStorage.getItem('refresh_token') || null,
       user: user,
       isAuthenticated: !!token // Set to true if token exists
     }
@@ -39,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
 
         if (tokenObject.data.token) {
           this.token = tokenObject.data.token
+          this.refreshToken = tokenObject.data.refreshToken
           this.user = {
             username: tokenObject.data.username,
             email: tokenObject.data.email,
@@ -48,8 +50,9 @@ export const useAuthStore = defineStore('auth', {
           }
           this.isAuthenticated = true
 
-          // Store token and user in localStorage
+          // Store tokens and user in localStorage
           localStorage.setItem('auth_token', this.token)
+          localStorage.setItem('refresh_token', this.refreshToken)
           localStorage.setItem('auth_user', JSON.stringify(this.user))
 
           // Set default authorization header for all requests
@@ -73,12 +76,44 @@ export const useAuthStore = defineStore('auth', {
         console.error('Logout error:', error)
       } finally {
         this.token = null
+        this.refreshToken = null
         this.user = null
         this.isAuthenticated = false
         localStorage.removeItem('auth_token')
+        localStorage.removeItem('refresh_token')
         localStorage.removeItem('auth_user')
         delete api.defaults.headers.common['Authorization']
       }
+    },
+    
+    async refreshAccessToken() {
+      const refreshToken = this.refreshToken || localStorage.getItem('refresh_token')
+      if (!refreshToken) {
+        return false
+      }
+      
+      try {
+        const response = await api.post('/api/auth/refresh', { refreshToken })
+        const tokenObject = response.data
+        
+        if (tokenObject.data.token) {
+          this.token = tokenObject.data.token
+          this.refreshToken = tokenObject.data.refreshToken
+          
+          // Update localStorage
+          localStorage.setItem('auth_token', this.token)
+          localStorage.setItem('refresh_token', this.refreshToken)
+          
+          // Update authorization header
+          api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
+          
+          return true
+        }
+      } catch (error) {
+        console.error('Token refresh failed:', error)
+        return false
+      }
+      return false
     },
 
     async fetchUserInfo() {

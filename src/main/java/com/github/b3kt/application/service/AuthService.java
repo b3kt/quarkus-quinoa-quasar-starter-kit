@@ -27,5 +27,14 @@ public interface AuthService {
      * @return UserInfo with user details
      */
     UserInfo getUserInfo(JsonWebToken jwt);
+    
+    /**
+     * Refresh access token using a valid refresh token.
+     * 
+     * @param refreshToken the refresh token
+     * @return LoginResponse with new tokens
+     * @throws com.github.b3kt.domain.exception.AuthenticationException if refresh token is invalid
+     */
+    LoginResponse refreshToken(String refreshToken);
 }
 

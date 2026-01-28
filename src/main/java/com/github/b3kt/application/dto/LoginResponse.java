@@ -18,12 +18,23 @@ public class LoginResponse {
     
     @Schema(description = "Token expiration time in seconds", example = "86400")
     private Long expiresIn;
+    
+    @Schema(description = "Refresh token for obtaining new access tokens", example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")
+    private String refreshToken;
 
     public LoginResponse() {
     }
 
     public LoginResponse(String token, String username, String email, Long expiresIn) {
         this.token = token;
+        this.username = username;
+        this.email = email;
+        this.expiresIn = expiresIn;
+    }
+    
+    public LoginResponse(String token, String refreshToken, String username, String email, Long expiresIn) {
+        this.token = token;
+        this.refreshToken = refreshToken;
         this.username = username;
         this.email = email;
         this.expiresIn = expiresIn;
@@ -59,6 +70,14 @@ public class LoginResponse {
 
     public void setExpiresIn(Long expiresIn) {
         this.expiresIn = expiresIn;
+    }
+    
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+    
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 }
 

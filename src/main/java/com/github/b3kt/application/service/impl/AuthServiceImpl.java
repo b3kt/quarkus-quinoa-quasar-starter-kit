@@ -62,12 +62,14 @@ public class AuthServiceImpl implements AuthService {
                     user.setKaryawanNama(karyawan.getNamaKaryawan());
                 });
 
-        // Generate token
+        // Generate tokens
         String token = jwtTokenService.generateToken(user);
+        String refreshToken = jwtTokenService.generateRefreshToken(user);
         UserInfo userInfo = UserMapper.toUserInfo(user);
 
         return new LoginResponse(
                 token,
+                refreshToken,
                 userInfo.getUsername(),
                 userInfo.getEmail(),
                 jwtTokenService.getTokenExpirationSeconds());
@@ -76,5 +78,42 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserInfo getUserInfo(JsonWebToken jwt) {
         return jwtTokenService.extractUserInfo(jwt);
+    }
+    
+    @Override
+    public LoginResponse refreshToken(String refreshToken) {
+        // Validate the refresh token and extract username
+        String username = jwtTokenService.validateRefreshToken(refreshToken);
+        if (username == null) {
+            throw new AuthenticationException("Invalid or expired refresh token");
+        }
+        
+        // Find user by username
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+        
+        // Check if user can still authenticate
+        if (!user.canAuthenticate()) {
+            throw new AuthenticationException("User account is not active");
+        }
+        
+        // Get related karyawan info
+        tbKaryawanRepository.findByUsername(username)
+                .ifPresent(karyawan -> {
+                    user.setKaryawanId(karyawan.getId());
+                    user.setKaryawanNama(karyawan.getNamaKaryawan());
+                });
+        
+        // Generate new tokens
+        String newToken = jwtTokenService.generateToken(user);
+        String newRefreshToken = jwtTokenService.generateRefreshToken(user);
+        UserInfo userInfo = UserMapper.toUserInfo(user);
+        
+        return new LoginResponse(
+                newToken,
+                newRefreshToken,
+                userInfo.getUsername(),
+                userInfo.getEmail(),
+                jwtTokenService.getTokenExpirationSeconds());
     }
 }

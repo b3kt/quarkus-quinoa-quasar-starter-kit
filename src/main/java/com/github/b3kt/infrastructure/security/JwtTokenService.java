@@ -30,5 +30,21 @@ public interface JwtTokenService {
      * @return expiration time in seconds
      */
     long getTokenExpirationSeconds();
+    
+    /**
+     * Generate a refresh token for a user.
+     * 
+     * @param user the user
+     * @return the refresh token string
+     */
+    String generateRefreshToken(User user);
+    
+    /**
+     * Validate a refresh token and return the username.
+     * 
+     * @param refreshToken the refresh token to validate
+     * @return the username from the token, or null if invalid
+     */
+    String validateRefreshToken(String refreshToken);
 }
 

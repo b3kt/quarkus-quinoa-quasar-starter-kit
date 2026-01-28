@@ -39,15 +39,87 @@ api.interceptors.request.use(
   }
 )
 
-// Add response interceptor to handle 401 errors
+// Flag to prevent multiple simultaneous refresh attempts
+let isRefreshing = false
+let failedQueue = []
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
+
+// Add response interceptor to handle 401 errors with token refresh
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Clear auth data on unauthorized
+  async (error) => {
+    const originalRequest = error.config
+    
+    // If it's a 401 and not a refresh request itself, try to refresh
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/api/auth/refresh')) {
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return api(originalRequest)
+        }).catch(err => {
+          return Promise.reject(err)
+        })
+      }
+      
+      originalRequest._retry = true
+      isRefreshing = true
+      
+      try {
+        // Try to refresh the token
+        const refreshToken = localStorage.getItem('refresh_token')
+        if (refreshToken) {
+          const response = await api.post('/api/auth/refresh', { refreshToken })
+          const tokenData = response.data?.data
+          
+          if (tokenData?.token) {
+            // Update tokens in localStorage
+            localStorage.setItem('auth_token', tokenData.token)
+            localStorage.setItem('refresh_token', tokenData.refreshToken)
+            
+            // Update the authorization header
+            api.defaults.headers.common['Authorization'] = `Bearer ${tokenData.token}`
+            originalRequest.headers.Authorization = `Bearer ${tokenData.token}`
+            
+            processQueue(null, tokenData.token)
+            
+            // Retry the original request
+            return api(originalRequest)
+          }
+        }
+      } catch (refreshError) {
+        processQueue(refreshError, null)
+        // Refresh failed, redirect to login
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('auth_user')
+        
+        // Use hash-based route for SPA
+        if (!window.location.hash.includes('/login')) {
+          window.location.href = '/#/login'
+        }
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
+      
+      // If no refresh token, redirect to login
       localStorage.removeItem('auth_token')
-      // Redirect to login if not already there
-      if (window.location.pathname !== '/#/login') {
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('auth_user')
+      if (!window.location.hash.includes('/login')) {
         window.location.href = '/#/login'
       }
     }

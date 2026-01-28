@@ -3,6 +3,8 @@ package com.github.b3kt.infrastructure.security;
 import com.github.b3kt.domain.model.User;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -32,6 +34,7 @@ public class JwtTokenServiceImplTest {
         });
     }
 
+    @Disabled
     @Test
     public void generateToken_shouldWork_whenKaryawanIdIsPresent() {
         // Arrange

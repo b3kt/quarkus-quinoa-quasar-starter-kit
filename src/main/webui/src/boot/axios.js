@@ -47,8 +47,8 @@ api.interceptors.response.use(
       // Clear auth data on unauthorized
       localStorage.removeItem('auth_token')
       // Redirect to login if not already there
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+      if (window.location.pathname !== '/#/login') {
+        window.location.href = '/#/login'
       }
     }
     return Promise.reject(error)

@@ -36,7 +36,7 @@ public class TbKendaraanService extends AbstractCrudService<TbKendaraanEntity, L
         if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
             String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
             query = repository.find(
-                    "lower(nopol) like ?1 or lower(merk) like ?1",
+                    "lower(jenis) like ?1 or lower(merk) like ?1",
                     searchPattern);
         } else {
             query = repository.findAll();
@@ -51,7 +51,7 @@ public class TbKendaraanService extends AbstractCrudService<TbKendaraanEntity, L
             if (pageRequest.getSearch() != null && !pageRequest.getSearch().isEmpty()) {
                 String searchPattern = "%" + pageRequest.getSearch().toLowerCase() + "%";
                 query = repository.find(
-                        "lower(nopol) like ?1 or lower(merk) like ?1",
+                        "lower(jenis) like ?1 or lower(merk) like ?1",
                         sort,
                         searchPattern);
             } else {

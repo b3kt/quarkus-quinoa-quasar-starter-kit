@@ -24,5 +24,19 @@ public class PasswordEncoderImplTest {
         String encodedPassword = "$2a$12$g5vqE9aRiQa64ZQy9.juIOPk/6l7aFFcpQSVmTN8hG2yv54bhbRWW";
         assertTrue(passwordEncoder.matches(rawPassword, encodedPassword));
     }
+
+    @Test
+    void testMatchesInvalidHash() {
+        String rawPassword = "password";
+        String encodedPassword = "plainPassword"; // This should no longer trigger the exception
+        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches(rawPassword, encodedPassword));
+    }
+
+    @Test
+    void testMatchesNulls() {
+        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches(null, "hash"));
+        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches("password", null));
+        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches(null, null));
+    }
     
 }

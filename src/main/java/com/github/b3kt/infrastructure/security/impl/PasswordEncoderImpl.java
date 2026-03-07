@@ -15,8 +15,14 @@ public class PasswordEncoderImpl implements PasswordEncoder {
 
     @Override
     public boolean matches(String rawPassword, String encodedPassword) {
-        return rawPassword != null && 
-        BcryptUtil.matches(rawPassword, encodedPassword);
+        if (rawPassword == null || encodedPassword == null) {
+            return false;
+        }
+        try {
+            return BcryptUtil.matches(rawPassword, encodedPassword);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
 

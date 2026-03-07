@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', {
 
         const tokenObject = response.data
 
-        if (tokenObject.data.token) {
+        if (tokenObject.success && tokenObject.data && tokenObject.data.token) {
           this.token = tokenObject.data.token
           this.user = {
             username: tokenObject.data.username,
@@ -37,12 +37,17 @@ export const useAuthStore = defineStore('auth', {
           api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
 
           return { success: true }
+        } else {
+          return {
+            success: false,
+            error: tokenObject.message || 'Login failed'
+          }
         }
       } catch (error) {
         console.error('Login error:', error)
         return {
           success: false,
-          error: error.response?.data?.error || 'Login failed'
+          error: error.response?.data?.message || error.response?.data?.error || 'Login failed'
         }
       }
     },
@@ -64,9 +69,13 @@ export const useAuthStore = defineStore('auth', {
     async fetchUserInfo() {
       try {
         const response = await api.get('/api/auth/me')
-        this.user = response.data
-        this.isAuthenticated = true
-        return response.data
+        const responseData = response.data
+        if (responseData.success && responseData.data) {
+          this.user = responseData.data
+          this.isAuthenticated = true
+          return responseData.data
+        }
+        throw new Error(responseData.message || 'Failed to fetch user info')
       } catch (error) {
         console.error('Fetch user info error:', error)
         // If token is invalid, logout

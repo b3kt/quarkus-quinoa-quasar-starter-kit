@@ -77,18 +77,15 @@ const onSubmit = async () => {
 
   try {
     const result = await authStore.login(username.value, password.value)
-    console.log(result)
-    if(result) {
-      if (result.success) {
-        $q.notify({
-          type: 'positive',
-          message: 'Login successful!',
-          position: 'top'
-        })
-        router.push('/')
-      } else {
-        error.value = result.error || 'Login failed'
-      }
+    if (result && result.success) {
+      $q.notify({
+        type: 'positive',
+        message: 'Login successful!',
+        position: 'top'
+      })
+      router.push('/')
+    } else {
+      error.value = result?.error || 'Login failed'
     }
   } catch (err) {
     error.value = 'An error occurred during login'

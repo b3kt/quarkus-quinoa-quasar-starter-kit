@@ -43,7 +43,8 @@ public class AuthResourceTest {
     @Test
     public void testRegisterAndChangePassword() {
         // 1. Register a new user
-        String uniqueUser = "testuser_" + System.currentTimeMillis();
+        String uniqueSuffix = String.valueOf(System.currentTimeMillis()).substring(7);
+        String uniqueUser = "user" + uniqueSuffix;
         Map<String, String> registerRequest = new HashMap<>();
         registerRequest.put("username", uniqueUser);
         registerRequest.put("email", uniqueUser + "@example.com");

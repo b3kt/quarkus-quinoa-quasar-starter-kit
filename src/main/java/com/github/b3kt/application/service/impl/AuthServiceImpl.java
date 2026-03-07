@@ -1,6 +1,8 @@
 package com.github.b3kt.application.service.impl;
 
 import com.github.b3kt.application.dto.LoginResponse;
+import com.github.b3kt.application.dto.RegisterRequest;
+import com.github.b3kt.application.dto.ChangePasswordRequest;
 import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.application.mapper.UserMapper;
 import com.github.b3kt.application.service.AuthService;
@@ -11,6 +13,7 @@ import com.github.b3kt.infrastructure.security.JwtTokenService;
 import com.github.b3kt.infrastructure.security.PasswordEncoder;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.util.Collections;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 /**
@@ -60,6 +63,45 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserInfo getUserInfo(JsonWebToken jwt) {
         return jwtTokenService.extractUserInfo(jwt);
+    }
+
+    @Override
+    public UserInfo register(RegisterRequest request) {
+        // Check if user already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new AuthenticationException("Username already exists");
+        }
+
+        // Create new user
+        User user = new User(
+            request.getUsername(),
+            request.getEmail(),
+            passwordEncoder.encode(request.getPassword()),
+            Collections.singleton("user")
+        );
+
+        // Save user
+        User savedUser = userRepository.save(user);
+
+        return UserMapper.toUserInfo(savedUser);
+    }
+
+    @Override
+    public void changePassword(String username, ChangePasswordRequest request) {
+        // Find user
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+
+        // Verify old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new AuthenticationException("Invalid old password");
+        }
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+
+        // Save user
+        userRepository.save(user);
     }
 }
 

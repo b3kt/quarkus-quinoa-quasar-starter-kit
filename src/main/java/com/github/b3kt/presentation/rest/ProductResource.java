@@ -5,6 +5,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import com.github.b3kt.application.dto.ApiResponse;
 
 import java.util.ArrayList;
@@ -25,12 +26,14 @@ public class ProductResource {
 
     @GET
     @RolesAllowed("permission:read")
+    @WithSpan("get_all_products")
     public Response getAll() {
         return Response.ok(ApiResponse.success(products)).build();
     }
 
     @POST
     @RolesAllowed("permission:create")
+    @WithSpan("create_product")
     public Response create(String name) {
         products.add(name);
         return Response.ok(ApiResponse.success("Product created", name)).build();

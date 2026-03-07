@@ -1,6 +1,8 @@
 package com.github.b3kt.application.service;
 
 import com.github.b3kt.application.dto.LoginResponse;
+import com.github.b3kt.application.dto.RegisterRequest;
+import com.github.b3kt.application.dto.ChangePasswordRequest;
 import com.github.b3kt.application.dto.UserInfo;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
@@ -27,5 +29,23 @@ public interface AuthService {
      * @return UserInfo with user details
      */
     UserInfo getUserInfo(JsonWebToken jwt);
+
+    /**
+     * Register a new user.
+     * 
+     * @param request the registration request
+     * @return UserInfo of the registered user
+     * @throws com.github.b3kt.domain.exception.AuthenticationException if registration fails
+     */
+    UserInfo register(RegisterRequest request);
+
+    /**
+     * Change user password.
+     * 
+     * @param username the username of the user
+     * @param request the change password request
+     * @throws com.github.b3kt.domain.exception.AuthenticationException if verification fails
+     */
+    void changePassword(String username, ChangePasswordRequest request);
 }
 

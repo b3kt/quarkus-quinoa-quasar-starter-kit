@@ -3,6 +3,8 @@ package com.github.b3kt.presentation.rest;
 import com.github.b3kt.application.dto.ApiResponse;
 import com.github.b3kt.application.dto.LoginRequest;
 import com.github.b3kt.application.dto.LoginResponse;
+import com.github.b3kt.application.dto.RegisterRequest;
+import com.github.b3kt.application.dto.ChangePasswordRequest;
 import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.application.service.AuthService;
 import com.github.b3kt.domain.exception.AuthenticationException;
@@ -150,6 +152,86 @@ public class AuthResource {
         } catch (Exception e) {
             return Response.status(Response.Status.UNAUTHORIZED)
                     .entity(ApiResponse.<UserInfo>error("Invalid or expired token"))
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("/register")
+    @PermitAll
+    @Operation(
+        summary = "User registration",
+        description = "Register a new user account"
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "201",
+            description = "User registered successfully",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "400",
+            description = "Registration failed - User already exists or validation error",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        )
+    })
+    public Response register(@Valid RegisterRequest registerRequest) {
+        try {
+            UserInfo userInfo = authService.register(registerRequest);
+            return Response.status(Response.Status.CREATED)
+                    .entity(ApiResponse.success("User registered successfully", userInfo))
+                    .build();
+        } catch (AuthenticationException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage()))
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("/change-password")
+    @RolesAllowed("user")
+    @Operation(
+        summary = "Change password",
+        description = "Change the password for the currently authenticated user"
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @APIResponses({
+        @APIResponse(
+            responseCode = "200",
+            description = "Password changed successfully",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "400",
+            description = "Change password failed - Invalid old password or validation error",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "401",
+            description = "Unauthorized - Invalid or missing token"
+        )
+    })
+    public Response changePassword(@Valid ChangePasswordRequest changePasswordRequest) {
+        try {
+            String username = jwt.getName();
+            authService.changePassword(username, changePasswordRequest);
+            return Response.ok(ApiResponse.success("Password changed successfully", null)).build();
+        } catch (AuthenticationException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage()))
                     .build();
         }
     }

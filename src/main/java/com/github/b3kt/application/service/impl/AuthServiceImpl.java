@@ -7,6 +7,7 @@ import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.application.mapper.UserMapper;
 import com.github.b3kt.application.service.AuthService;
 import com.github.b3kt.domain.exception.AuthenticationException;
+import com.github.b3kt.domain.model.Role;
 import com.github.b3kt.domain.model.User;
 import com.github.b3kt.infrastructure.repository.UserRepository;
 import com.github.b3kt.infrastructure.security.JwtTokenService;
@@ -82,9 +83,12 @@ public class AuthServiceImpl implements AuthService {
             passwordEncoder.encode(request.getPassword()),
             Collections.singleton("user")
         );
+        String passwordHash = passwordEncoder.encode(password);
+        Set<String> roles = new HashSet<>();
+        roles.add(Role.USER);
 
         // Save user
-        User savedUser = userRepository.save(user);
+        User savedUser = new User(username, email, passwordHash, roles);
 
         return UserMapper.toUserInfo(savedUser);
     }

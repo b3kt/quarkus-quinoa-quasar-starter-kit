@@ -8,7 +8,9 @@ import jakarta.enterprise.inject.Default;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * JPA implementation of UserRepository.
@@ -48,6 +50,13 @@ public class JpaUserRepository implements UserRepository {
     @Override
     public boolean existsByUsername(String username) {
         return userEntityRepository.existsByUsername(username);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return userEntityRepository.listAll().stream()
+                .map(UserEntity::toDomain)
+                .collect(Collectors.toList());
     }
 }
 

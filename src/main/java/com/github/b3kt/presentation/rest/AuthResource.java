@@ -1,13 +1,17 @@
 package com.github.b3kt.presentation.rest;
 
 import com.github.b3kt.application.dto.ApiResponse;
+import com.github.b3kt.application.dto.ForgotPasswordRequest;
 import com.github.b3kt.application.dto.LoginRequest;
 import com.github.b3kt.application.dto.LoginResponse;
 import com.github.b3kt.application.dto.RegisterRequest;
 import com.github.b3kt.application.dto.ChangePasswordRequest;
 import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.application.service.AuthService;
+import com.github.b3kt.application.service.PasswordResetService;
 import com.github.b3kt.domain.exception.AuthenticationException;
+import com.github.b3kt.domain.exception.InvalidResetTokenException;
+import com.github.b3kt.domain.model.Role;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -44,6 +48,9 @@ public class AuthResource {
     @Inject
     JsonWebToken jwt;
 
+    @Inject
+    PasswordResetService passwordResetService;
+
     @POST
     @Path("/register")
     @PermitAll
@@ -78,6 +85,80 @@ public class AuthResource {
         return Response.status(Response.Status.CREATED)
                 .entity(ApiResponse.success("User registered successfully", userInfo))
                 .build();
+    }
+
+    @POST
+    @Path("/forgot-password")
+    @PermitAll
+    @Operation(
+        summary = "Request password reset",
+        description = "Initiates a password reset flow. If the account exists, a reset token is generated."
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "200",
+            description = "If the account exists, a reset token has been generated",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "400",
+            description = "Validation error",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        )
+    })
+    public Response forgotPassword(@Valid ForgotPasswordRequest request) {
+        String rawToken = passwordResetService.requestReset(request.getUsername());
+        if (rawToken != null) {
+            return Response.ok(ApiResponse.success(
+                    "If the account exists, a reset token has been generated",
+                    java.util.Map.of("token", rawToken)))
+                    .build();
+        }
+        return Response.ok(ApiResponse.success(
+                "If the account exists, a reset token has been generated", null))
+                .build();
+    }
+
+    @POST
+    @Path("/reset-password")
+    @PermitAll
+    @Operation(
+        summary = "Reset password using token",
+        description = "Reset the account password using a valid reset token received from forgot-password"
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "200",
+            description = "Password reset successfully",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "400",
+            description = "Invalid, expired, or already used token",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        )
+    })
+    public Response resetPassword(@Valid ResetPasswordRequest request) {
+        try {
+            passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+            return Response.ok(ApiResponse.success("Password reset successfully", null)).build();
+        } catch (InvalidResetTokenException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(e.getMessage()))
+                    .build();
+        }
     }
 
     @POST
@@ -129,7 +210,7 @@ public class AuthResource {
 
     @POST
     @Path("/logout")
-    @RolesAllowed("user")
+    @RolesAllowed(Role.USER)
     @Operation(
         summary = "User logout",
         description = "Logout the current user. In JWT systems, this is typically handled client-side."
@@ -157,7 +238,7 @@ public class AuthResource {
 
     @GET
     @Path("/me")
-    @RolesAllowed("user")
+    @RolesAllowed(Role.USER)
     @Operation(
         summary = "Get current user info",
         description = "Retrieve information about the currently authenticated user from JWT token"

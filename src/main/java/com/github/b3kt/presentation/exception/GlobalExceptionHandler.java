@@ -2,6 +2,7 @@ package com.github.b3kt.presentation.exception;
 
 import com.github.b3kt.application.dto.ApiResponse;
 import com.github.b3kt.domain.exception.AuthenticationException;
+import com.github.b3kt.domain.exception.InvalidResetTokenException;
 import com.github.b3kt.domain.exception.UserNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -48,6 +49,16 @@ public class GlobalExceptionHandler {
             
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(ApiResponse.error("Validation error: " + message))
+                    .build();
+        }
+    }
+
+    @Provider
+    public static class InvalidResetTokenExceptionMapper implements ExceptionMapper<InvalidResetTokenException> {
+        @Override
+        public Response toResponse(InvalidResetTokenException exception) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(ApiResponse.error(exception.getMessage()))
                     .build();
         }
     }

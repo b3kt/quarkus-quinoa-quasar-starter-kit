@@ -1,11 +1,14 @@
 package com.github.b3kt.infrastructure.repository;
 
+import com.github.b3kt.domain.model.Role;
 import com.github.b3kt.domain.model.User;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -30,8 +33,8 @@ public class InMemoryUserRepository implements UserRepository {
         if ("memory".equalsIgnoreCase(repositoryType)) {
             // Initialize with demo user
             Set<String> roles = new HashSet<>();
-            roles.add("user");
-            roles.add("admin");
+            roles.add(Role.USER);
+            roles.add(Role.ADMIN);
             
             User demoUser = new User(
                 "admin",
@@ -57,6 +60,11 @@ public class InMemoryUserRepository implements UserRepository {
     @Override
     public boolean existsByUsername(String username) {
         return users.containsKey(username);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return new ArrayList<>(users.values());
     }
 }
 

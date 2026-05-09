@@ -1,6 +1,7 @@
 package com.github.b3kt.infrastructure.repository;
 
 import com.github.b3kt.domain.model.User;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,5 +33,12 @@ public interface UserRepository {
      * @return true if user exists
      */
     boolean existsByUsername(String username);
+
+    /**
+     * Find all users.
+     *
+     * @return list of all users
+     */
+    List<User> findAll();
 }
 

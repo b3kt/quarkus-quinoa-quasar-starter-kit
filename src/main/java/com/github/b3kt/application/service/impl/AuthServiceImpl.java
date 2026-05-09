@@ -16,6 +16,9 @@ import jakarta.inject.Inject;
 import java.util.Collections;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Implementation of authentication service.
  * This orchestrates the authentication use cases.

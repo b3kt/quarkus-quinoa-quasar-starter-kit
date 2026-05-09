@@ -5,8 +5,12 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by VARCHAR(255),
+    updated_by VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    mark_for_delete BOOLEAN NOT NULL DEFAULT FALSE,
+    version BIGINT NOT NULL DEFAULT 0
 );
 
 -- Create user_roles table for many-to-many relationship

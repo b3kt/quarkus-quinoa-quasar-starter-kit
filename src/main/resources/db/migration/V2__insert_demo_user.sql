@@ -1,10 +1,9 @@
--- Insert demo user (password: admin123)
--- Note: In production, passwords should be properly hashed (BCrypt, Argon2, etc.)
+-- Insert demo user (password: admin123, BCrypt hashed)
 -- PostgreSQL compatible version
 
 -- Insert demo user if not exists
 INSERT INTO users (username, email, password_hash, active) 
-VALUES ('admin', 'admin@example.com', 'admin123', TRUE)
+VALUES ('admin', 'admin@example.com', '$2a$10$YJVTiVuQZLHLvpnyRBLKbuTTazHDhGg07sU42xzAoAVImtZKqUhhy', TRUE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Insert roles for demo user

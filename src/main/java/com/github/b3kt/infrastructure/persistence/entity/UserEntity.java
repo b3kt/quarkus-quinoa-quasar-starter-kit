@@ -1,7 +1,22 @@
 package com.github.b3kt.infrastructure.persistence.entity;
 
 import com.github.b3kt.domain.model.User;
-import jakarta.persistence.*;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +29,11 @@ import java.util.Set;
     @Index(name = "idx_username", columnList = "username", unique = true),
     @Index(name = "idx_email", columnList = "email")
 })
-public class UserEntity {
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,17 +55,6 @@ public class UserEntity {
 
     @Column(nullable = false)
     private boolean active = true;
-
-    public UserEntity() {
-    }
-
-    public UserEntity(String username, String email, String passwordHash, Set<String> roles) {
-        this.username = username;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.roles = roles != null ? new HashSet<>(roles) : new HashSet<>();
-        this.active = true;
-    }
 
     /**
      * Convert to domain User entity.
@@ -72,55 +80,6 @@ public class UserEntity {
         entity.setRoles(new HashSet<>(user.getRoles()));
         entity.setActive(user.isActive());
         return entity;
-    }
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public Set<String> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<String> roles) {
-        this.roles = roles != null ? new HashSet<>(roles) : new HashSet<>();
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
     }
 }
 

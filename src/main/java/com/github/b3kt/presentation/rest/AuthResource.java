@@ -45,6 +45,42 @@ public class AuthResource {
     JsonWebToken jwt;
 
     @POST
+    @Path("/register")
+    @PermitAll
+    @Operation(
+        summary = "Register a new user",
+        description = "Create a new user account with username, email, and password"
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "201",
+            description = "User registered successfully",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        ),
+        @APIResponse(
+            responseCode = "400",
+            description = "Validation error or username already taken",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class)
+            )
+        )
+    })
+    public Response register(@Valid RegisterRequest registerRequest) {
+        UserInfo userInfo = authService.register(
+            registerRequest.getUsername(),
+            registerRequest.getEmail(),
+            registerRequest.getPassword()
+        );
+        return Response.status(Response.Status.CREATED)
+                .entity(ApiResponse.success("User registered successfully", userInfo))
+                .build();
+    }
+
+    @POST
     @Path("/login")
     @PermitAll
     @Operation(

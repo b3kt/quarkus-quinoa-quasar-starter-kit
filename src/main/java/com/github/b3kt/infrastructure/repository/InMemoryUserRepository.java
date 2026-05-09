@@ -36,7 +36,7 @@ public class InMemoryUserRepository implements UserRepository {
             User demoUser = new User(
                 "admin",
                 "admin@example.com",
-                "admin123", // In production, this should be hashed
+                "$2a$10$YJVTiVuQZLHLvpnyRBLKbuTTazHDhGg07sU42xzAoAVImtZKqUhhy",
                 roles
             );
             users.put("admin", demoUser);

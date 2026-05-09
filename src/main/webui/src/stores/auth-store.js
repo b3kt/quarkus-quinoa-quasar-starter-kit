@@ -9,33 +9,45 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isLoggedIn: (state) => !!state.token && state.isAuthenticated
+    isLoggedIn: (state) => !!state.token && state.isAuthenticated,
+
+    userRoles: (state) => (state.user?.roles ? [...state.user.roles] : []),
+
+    hasRole: (state) => (role) => state.user?.roles?.includes(role) ?? false,
+
+    isAdmin: (state) => state.user?.roles?.includes('admin') ?? false
   },
 
   actions: {
+    async register(username, email, password) {
+      try {
+        await api.post('/api/auth/register', { username, email, password })
+        return { success: true }
+      } catch (error) {
+        return {
+          success: false,
+          error: error.response?.data?.error || 'Registration failed'
+        }
+      }
+    },
+
     async login(username, password) {
       try {
-        const response = await api.post('/api/auth/login', {
-          username,
-          password
-        })
+        const response = await api.post('/api/auth/login', { username, password })
+        const loginData = response.data.data
 
-        const tokenObject = response.data
-
-        if (tokenObject.success && tokenObject.data && tokenObject.data.token) {
-          this.token = tokenObject.data.token
+        if (loginData?.token) {
+          this.token = loginData.token
           this.user = {
-            username: tokenObject.data.username,
-            email: tokenObject.data.email
+            username: loginData.username,
+            email: loginData.email
           }
           this.isAuthenticated = true
 
-          // Store token in localStorage
           localStorage.setItem('auth_token', this.token)
-
-          // Set default authorization header for all requests
           api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
 
+          await this.fetchUserInfo()
           return { success: true }
         } else {
           return {
@@ -44,7 +56,6 @@ export const useAuthStore = defineStore('auth', {
           }
         }
       } catch (error) {
-        console.error('Login error:', error)
         return {
           success: false,
           error: error.response?.data?.message || error.response?.data?.error || 'Login failed'
@@ -69,34 +80,80 @@ export const useAuthStore = defineStore('auth', {
     async fetchUserInfo() {
       try {
         const response = await api.get('/api/auth/me')
-        const responseData = response.data
-        if (responseData.success && responseData.data) {
-          this.user = responseData.data
+        const userData = response.data.data
+        if (userData) {
+          this.user = {
+            ...this.user,
+            username: userData.username,
+            email: userData.email,
+            roles: userData.roles
+          }
           this.isAuthenticated = true
-          return responseData.data
         }
-        throw new Error(responseData.message || 'Failed to fetch user info')
+        return userData
       } catch (error) {
-        console.error('Fetch user info error:', error)
-        // If token is invalid, logout
         if (error.response?.status === 401) {
-          this.logout()
+          await this.logout()
         }
         throw error
       }
     },
 
     initializeAuth() {
-      // Restore token from localStorage on app initialization
       if (this.token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
-        // Optionally fetch user info to verify token is still valid
         this.fetchUserInfo().catch(() => {
-          // Token is invalid, clear it
           this.logout()
         })
+      }
+    },
+
+    async loadUsers() {
+      try {
+        const response = await api.get('/api/admin/users')
+        return { success: true, data: response.data.data }
+      } catch (error) {
+        return {
+          success: false,
+          error: error.response?.data?.error || 'Failed to load users'
+        }
+      }
+    },
+
+    async updateUserRoles(username, roles) {
+      try {
+        const response = await api.put(`/api/admin/users/${username}/roles`, { roles })
+        return { success: true, data: response.data.data }
+      } catch (error) {
+        return {
+          success: false,
+          error: error.response?.data?.error || 'Failed to update roles'
+        }
+      }
+    },
+
+    async activateUser(username) {
+      try {
+        const response = await api.put(`/api/admin/users/${username}/activate`)
+        return { success: true, data: response.data.data }
+      } catch (error) {
+        return {
+          success: false,
+          error: error.response?.data?.error || 'Failed to activate user'
+        }
+      }
+    },
+
+    async deactivateUser(username) {
+      try {
+        const response = await api.put(`/api/admin/users/${username}/deactivate`)
+        return { success: true, data: response.data.data }
+      } catch (error) {
+        return {
+          success: false,
+          error: error.response?.data?.error || 'Failed to deactivate user'
+        }
       }
     }
   }
 })
-

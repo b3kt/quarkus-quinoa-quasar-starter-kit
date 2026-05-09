@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center">
-    <q-card class="login-card" style="min-width: 350px">
+    <q-card class="auth-card">
       <q-card-section>
         <div class="text-h6 text-center q-mb-md">Login</div>
         <q-form @submit="onSubmit" class="q-gutter-md">
@@ -8,8 +8,7 @@
             v-model="username"
             label="Username"
             :rules="[val => !!val || 'Username is required']"
-            outlined
-            dense
+            outlined dense
           >
             <template v-slot:prepend>
               <q-icon name="person" />
@@ -21,8 +20,7 @@
             label="Password"
             type="password"
             :rules="[val => !!val || 'Password is required']"
-            outlined
-            dense
+            outlined dense
           >
             <template v-slot:prepend>
               <q-icon name="lock" />
@@ -47,6 +45,18 @@
             />
           </div>
         </q-form>
+
+        <div class="q-mt-md text-center">
+          <router-link to="/register" class="text-primary text-caption">
+            Create an account
+          </router-link>
+        </div>
+
+        <div class="q-mt-sm text-center">
+          <router-link to="/forgot-password" class="text-primary text-caption">
+            Forgot password?
+          </router-link>
+        </div>
 
         <div class="q-mt-md text-caption text-center text-grey-6">
           Demo credentials: admin / admin123
@@ -77,7 +87,7 @@ const onSubmit = async () => {
 
   try {
     const result = await authStore.login(username.value, password.value)
-    if (result && result.success) {
+    if (result?.success) {
       $q.notify({
         type: 'positive',
         message: 'Login successful!',
@@ -87,9 +97,8 @@ const onSubmit = async () => {
     } else {
       error.value = result?.error || 'Login failed'
     }
-  } catch (err) {
+  } catch {
     error.value = 'An error occurred during login'
-    console.error(err)
   } finally {
     loading.value = false
   }
@@ -97,8 +106,8 @@ const onSubmit = async () => {
 </script>
 
 <style scoped>
-.login-card {
+.auth-card {
+  min-width: 350px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 </style>
-

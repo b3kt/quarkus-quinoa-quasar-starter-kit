@@ -8,6 +8,30 @@ const routes = [
     ]
   },
   {
+    path: '/register',
+    component: () => import('layouts/PublicLayout.vue'),
+    meta: { requiresAuth: false },
+    children: [
+      { path: '', component: () => import('pages/RegisterPage.vue') }
+    ]
+  },
+  {
+    path: '/forgot-password',
+    component: () => import('layouts/PublicLayout.vue'),
+    meta: { requiresAuth: false },
+    children: [
+      { path: '', component: () => import('pages/ForgotPasswordPage.vue') }
+    ]
+  },
+  {
+    path: '/reset-password',
+    component: () => import('layouts/PublicLayout.vue'),
+    meta: { requiresAuth: false },
+    children: [
+      { path: '', component: () => import('pages/ResetPasswordPage.vue') }
+    ]
+  },
+  {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
@@ -15,9 +39,14 @@ const routes = [
       { path: '', component: () => import('pages/IndexPage.vue') }
     ]
   },
-
-  // Always leave this as last one,
-  // but you can also remove it
+  {
+    path: '/admin/users',
+    component: () => import('layouts/MainLayout.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: '', component: () => import('pages/AdminUsersPage.vue') }
+    ]
+  },
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue')

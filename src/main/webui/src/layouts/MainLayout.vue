@@ -35,9 +35,35 @@
       bordered
     >
       <q-list>
-        <q-item-label
-          header
+        <q-item-label header>
+          Navigation
+        </q-item-label>
+
+        <q-item clickable v-ripple to="/">
+          <q-item-section avatar>
+            <q-icon name="home" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Home</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item
+          v-if="authStore.isAdmin"
+          clickable v-ripple to="/admin/users"
         >
+          <q-item-section avatar>
+            <q-icon name="admin_panel_settings" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>User Management</q-item-label>
+            <q-item-label caption>Admin only</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-separator />
+
+        <q-item-label header>
           Essential Links
         </q-item-label>
 

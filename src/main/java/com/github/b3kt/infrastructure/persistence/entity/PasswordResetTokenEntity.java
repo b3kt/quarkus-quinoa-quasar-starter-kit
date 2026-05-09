@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Table(name = "password_reset_tokens", indexes = {
@@ -23,7 +24,7 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PasswordResetTokenEntity {
+public class PasswordResetTokenEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +42,17 @@ public class PasswordResetTokenEntity {
     @Column(nullable = false)
     private boolean used = false;
 
-    @Column(name = "created_at", columnDefinition = "timestamp DEFAULT current_timestamp")
-    private Date createdAt;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PasswordResetTokenEntity that = (PasswordResetTokenEntity) o;
+        return Objects.equals(tokenHash, that.tokenHash) && 
+               Objects.equals(username, that.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tokenHash, username);
+    }
 }

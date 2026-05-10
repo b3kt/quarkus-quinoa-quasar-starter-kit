@@ -61,6 +61,19 @@
           </q-item-section>
         </q-item>
 
+        <q-item
+          v-if="authStore.isAdmin"
+          clickable v-ripple to="/admin/audit-logs"
+        >
+          <q-item-section avatar>
+            <q-icon name="history" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Audit Trail</q-item-label>
+            <q-item-label caption>Admin only</q-item-label>
+          </q-item-section>
+        </q-item>
+
         <q-separator />
 
         <q-item-label header>

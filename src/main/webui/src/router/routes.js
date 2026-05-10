@@ -48,6 +48,14 @@ const routes = [
     ]
   },
   {
+    path: '/admin/audit-logs',
+    component: () => import('layouts/MainLayout.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
+      { path: '', component: () => import('pages/AuditLogsPage.vue') }
+    ]
+  },
+  {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue')
   }

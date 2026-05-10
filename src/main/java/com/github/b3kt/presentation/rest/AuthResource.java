@@ -1,12 +1,6 @@
 package com.github.b3kt.presentation.rest;
 
-import com.github.b3kt.application.dto.ApiResponse;
-import com.github.b3kt.application.dto.ForgotPasswordRequest;
-import com.github.b3kt.application.dto.LoginRequest;
-import com.github.b3kt.application.dto.LoginResponse;
-import com.github.b3kt.application.dto.RegisterRequest;
-import com.github.b3kt.application.dto.ChangePasswordRequest;
-import com.github.b3kt.application.dto.UserInfo;
+import com.github.b3kt.application.dto.*;
 import com.github.b3kt.application.service.AuthService;
 import com.github.b3kt.application.service.PasswordResetService;
 import com.github.b3kt.domain.exception.AuthenticationException;
@@ -50,42 +44,6 @@ public class AuthResource {
 
     @Inject
     PasswordResetService passwordResetService;
-
-    @POST
-    @Path("/register")
-    @PermitAll
-    @Operation(
-        summary = "Register a new user",
-        description = "Create a new user account with username, email, and password"
-    )
-    @APIResponses({
-        @APIResponse(
-            responseCode = "201",
-            description = "User registered successfully",
-            content = @Content(
-                mediaType = MediaType.APPLICATION_JSON,
-                schema = @Schema(implementation = ApiResponse.class)
-            )
-        ),
-        @APIResponse(
-            responseCode = "400",
-            description = "Validation error or username already taken",
-            content = @Content(
-                mediaType = MediaType.APPLICATION_JSON,
-                schema = @Schema(implementation = ApiResponse.class)
-            )
-        )
-    })
-    public Response register(@Valid RegisterRequest registerRequest) {
-        UserInfo userInfo = authService.register(
-            registerRequest.getUsername(),
-            registerRequest.getEmail(),
-            registerRequest.getPassword()
-        );
-        return Response.status(Response.Status.CREATED)
-                .entity(ApiResponse.success("User registered successfully", userInfo))
-                .build();
-    }
 
     @POST
     @Path("/forgot-password")

@@ -25,7 +25,7 @@ import java.util.Set;
  * This orchestrates the authentication use cases.
  */
 @ApplicationScoped
-public class AuthServiceImpl implements AuthService {
+public class        AuthServiceImpl implements AuthService {
 
     @Inject
     UserRepository userRepository;
@@ -77,18 +77,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Create new user
-        User user = new User(
-            request.getUsername(),
-            request.getEmail(),
-            passwordEncoder.encode(request.getPassword()),
-            Collections.singleton("user")
-        );
-        String passwordHash = passwordEncoder.encode(password);
+        String passwordHash = passwordEncoder.encode(request.getPassword());
         Set<String> roles = new HashSet<>();
         roles.add(Role.USER);
 
         // Save user
-        User savedUser = new User(username, email, passwordHash, roles);
+        User savedUser = new User(request.getUsername(),
+                request.getEmail(),
+                passwordHash, roles);
 
         return UserMapper.toUserInfo(savedUser);
     }

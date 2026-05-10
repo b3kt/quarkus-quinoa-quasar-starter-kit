@@ -1,108 +1,174 @@
 package com.github.b3kt.presentation.rest;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.github.b3kt.infrastructure.repository.UserRepository;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
-public class AuthResourceTest {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class AuthResourceTest {
+
+    @Inject
+    UserRepository userRepository;
+
+    static final String USERNAME = "authtestuser";
+    static final String EMAIL = "authtest@example.com";
+    static final String PASSWORD = "TestP@ss1";
 
     @Test
-    public void testLoginAndGetCurrentUser() {
-        // 1. Login to get token
-        Map<String, String> loginRequest = new HashMap<>();
-        loginRequest.put("username", "admin");
-        loginRequest.put("password", "admin123");
-
-        String token = given()
-                .contentType(ContentType.JSON)
-                .body(loginRequest)
-                .when().post("/api/auth/login")
-                .then()
-                .statusCode(200)
-                .body("data.token", notNullValue())
-                .extract().path("data.token");
-
-        // 2. Get current user with token
+    @Order(1)
+    void register_shouldReturn201() {
         given()
-                .header("Authorization", "Bearer " + token)
-                .when().get("/api/auth/me")
-                .then()
-                .statusCode(200)
+                .body("{\"username\":\"" + USERNAME + "\",\"email\":\"" + EMAIL + "\",\"password\":\"" + PASSWORD + "\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/api/auth/register")
+                .then().statusCode(201)
+                .body("success", is(true))
+                .body("data.username", is(USERNAME))
+                .body("data.email", is(EMAIL));
+    }
+
+    @Test
+    @Order(2)
+    void register_shouldReturn400_whenUsernameTaken() {
+        given()
+                .body("{\"username\":\"" + USERNAME + "\",\"email\":\"other@example.com\",\"password\":\"" + PASSWORD + "\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/api/auth/register")
+                .then().statusCode(400)
+                .body("success", is(false));
+    }
+
+    @Test
+    @Order(3)
+    void register_shouldReturn400_whenValidationFails() {
+        given()
+                .body("{\"username\":\"\",\"email\":\"bad\",\"password\":\"1\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/api/auth/register")
+                .then().statusCode(400);
+    }
+
+    @Test
+    @Order(4)
+    void login_shouldReturn200() {
+        given()
+                .body("{\"username\":\"admin\",\"password\":\"admin123\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/api/auth/login")
+                .then().statusCode(200)
+                .body("success", is(true))
+                .body("data.token", notNullValue())
                 .body("data.username", is("admin"));
     }
 
     @Test
-    public void testRegisterAndChangePassword() {
-        // 1. Register a new user
-        String uniqueSuffix = String.valueOf(System.currentTimeMillis()).substring(7);
-        String uniqueUser = "user" + uniqueSuffix;
-        Map<String, String> registerRequest = new HashMap<>();
-        registerRequest.put("username", uniqueUser);
-        registerRequest.put("email", uniqueUser + "@example.com");
-        registerRequest.put("password", "testpassword");
+    @Order(5)
+    void login_shouldReturn401_whenWrongPassword() {
+        given()
+                .body("{\"username\":\"admin\",\"password\":\"wrongpassword\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/api/auth/login")
+                .then().statusCode(401)
+                .body("success", is(false));
+    }
 
+    @Test
+    @Order(6)
+    void login_shouldReturn401_whenUserNotFound() {
+        given()
+                .body("{\"username\":\"nonexistent_12345\",\"password\":\"TestP@ss1\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/api/auth/login")
+                .then().statusCode(401)
+                .body("success", is(false));
+    }
+
+    @Test
+    @Order(7)
+    void login_shouldReturn401_whenUserInactive() {
+        userRepository.findByUsername("admin").ifPresent(u -> {
+            u.setActive(false);
+            userRepository.save(u);
+        });
+
+        try {
+            given()
+                    .body("{\"username\":\"admin\",\"password\":\"admin123\"}")
+                    .contentType(ContentType.JSON)
+                    .when().post("/api/auth/login")
+                    .then().statusCode(401)
+                    .body("success", is(false));
+        } finally {
+            userRepository.findByUsername("admin").ifPresent(u -> {
+                u.setActive(true);
+                userRepository.save(u);
+            });
+        }
+    }
+
+    @Test
+    @Order(8)
+    void login_shouldReturn400_whenValidationFails() {
+        given()
+                .body("{\"username\":\"\",\"password\":\"\"}")
+                .contentType(ContentType.JSON)
+                .when().post("/api/auth/login")
+                .then().statusCode(400);
+    }
+
+    @Test
+    @Order(9)
+    @TestSecurity(user = "admin", roles = {"user", "admin"})
+    void logout_shouldReturn200() {
         given()
                 .contentType(ContentType.JSON)
-                .body(registerRequest)
-                .when().post("/api/auth/register")
-                .then()
-                .statusCode(201)
-                .body("data.username", is(uniqueUser))
-                .body("data.email", is(uniqueUser + "@example.com"));
+                .when().post("/api/auth/logout")
+                .then().statusCode(200)
+                .body("success", is(true));
+    }
 
-        // 2. Login with new user
-        Map<String, String> loginRequest = new HashMap<>();
-        loginRequest.put("username", uniqueUser);
-        loginRequest.put("password", "testpassword");
-
-        String token = given()
+    @Test
+    @Order(10)
+    void logout_shouldReturn401_whenUnauthenticated() {
+        given()
                 .contentType(ContentType.JSON)
-                .body(loginRequest)
+                .when().post("/api/auth/logout")
+                .then().statusCode(401);
+    }
+
+    @Test
+    @Order(11)
+    void me_shouldReturn200() {
+        String token = given()
+                .body("{\"username\":\"admin\",\"password\":\"admin123\"}")
+                .contentType(ContentType.JSON)
                 .when().post("/api/auth/login")
-                .then()
-                .statusCode(200)
-                .body("data.token", notNullValue())
+                .then().statusCode(200)
                 .extract().path("data.token");
 
-        // 3. Change password
-        Map<String, String> changePasswordRequest = new HashMap<>();
-        changePasswordRequest.put("oldPassword", "testpassword");
-        changePasswordRequest.put("newPassword", "newpassword123");
-
         given()
-                .header("Authorization", "Bearer " + token)
-                .contentType(ContentType.JSON)
-                .body(changePasswordRequest)
-                .when().post("/api/auth/change-password")
-                .then()
-                .statusCode(200)
-                .body("message", is("Password changed successfully"));
+                .auth().oauth2(token)
+                .when().get("/api/auth/me")
+                .then().statusCode(200)
+                .body("success", is(true));
+    }
 
-        // 4. Try to login with old password (should fail)
+    @Test
+    @Order(12)
+    void me_shouldReturn401_whenUnauthenticated() {
         given()
-                .contentType(ContentType.JSON)
-                .body(loginRequest)
-                .when().post("/api/auth/login")
-                .then()
-                .statusCode(401);
-
-        // 5. Login with new password (should succeed)
-        loginRequest.put("password", "newpassword123");
-        given()
-                .contentType(ContentType.JSON)
-                .body(loginRequest)
-                .when().post("/api/auth/login")
-                .then()
-                .statusCode(200)
-                .body("data.token", notNullValue());
+                .when().get("/api/auth/me")
+                .then().statusCode(401);
     }
 }

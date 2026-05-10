@@ -1,8 +1,10 @@
 package com.github.b3kt.presentation.rest;
 
 import com.github.b3kt.application.dto.ApiResponse;
+import com.github.b3kt.application.dto.AuditLogResponse;
 import com.github.b3kt.application.dto.UserInfo;
 import com.github.b3kt.application.dto.UserUpdateRequest;
+import com.github.b3kt.application.service.AuditService;
 import com.github.b3kt.application.service.UserService;
 import com.github.b3kt.domain.exception.UserNotFoundException;
 import jakarta.annotation.security.RolesAllowed;
@@ -36,6 +38,9 @@ public class AdminResource {
 
     @Inject
     UserService userService;
+
+    @Inject
+    AuditService auditService;
 
     @GET
     @Path("/users")
@@ -164,5 +169,65 @@ public class AdminResource {
                     .entity(ApiResponse.error(e.getMessage()))
                     .build();
         }
+    }
+
+    @GET
+    @Path("/audit-logs")
+    @Operation(
+        summary = "List audit logs",
+        description = "Retrieve all audit log entries showing before/after values of changes (admin only)"
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "200",
+            description = "Audit logs retrieved successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class))
+        ),
+        @APIResponse(responseCode = "403", description = "Forbidden - requires admin role")
+    })
+    public Response listAuditLogs() {
+        List<AuditLogResponse> logs = auditService.findAll();
+        return Response.ok(ApiResponse.success(logs)).build();
+    }
+
+    @GET
+    @Path("/audit-logs/entity/{entityName}")
+    @Operation(
+        summary = "Get audit logs by entity",
+        description = "Retrieve audit logs filtered by entity name (admin only)"
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "200",
+            description = "Audit logs retrieved successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class))
+        ),
+        @APIResponse(responseCode = "403", description = "Forbidden - requires admin role")
+    })
+    public Response getAuditLogsByEntity(@PathParam("entityName") String entityName) {
+        List<AuditLogResponse> logs = auditService.findByEntityName(entityName);
+        return Response.ok(ApiResponse.success(logs)).build();
+    }
+
+    @GET
+    @Path("/audit-logs/action/{action}")
+    @Operation(
+        summary = "Get audit logs by action",
+        description = "Retrieve audit logs filtered by action type (CREATE, UPDATE, DELETE)"
+    )
+    @APIResponses({
+        @APIResponse(
+            responseCode = "200",
+            description = "Audit logs retrieved successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = ApiResponse.class))
+        ),
+        @APIResponse(responseCode = "403", description = "Forbidden - requires admin role")
+    })
+    public Response getAuditLogsByAction(@PathParam("action") String action) {
+        List<AuditLogResponse> logs = auditService.findByAction(action.toUpperCase());
+        return Response.ok(ApiResponse.success(logs)).build();
     }
 }

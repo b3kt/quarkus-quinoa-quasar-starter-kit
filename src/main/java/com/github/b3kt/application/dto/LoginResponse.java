@@ -1,11 +1,17 @@
 package com.github.b3kt.application.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 /**
  * DTO for login response containing JWT token and user info.
  */
 @Schema(description = "Login response containing JWT token and user information")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginResponse {
     @Schema(description = "JWT authentication token", example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String token;
@@ -19,46 +25,5 @@ public class LoginResponse {
     @Schema(description = "Token expiration time in seconds", example = "86400")
     private Long expiresIn;
 
-    public LoginResponse() {
-    }
-
-    public LoginResponse(String token, String username, String email, Long expiresIn) {
-        this.token = token;
-        this.username = username;
-        this.email = email;
-        this.expiresIn = expiresIn;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Long getExpiresIn() {
-        return expiresIn;
-    }
-
-    public void setExpiresIn(Long expiresIn) {
-        this.expiresIn = expiresIn;
-    }
 }
 

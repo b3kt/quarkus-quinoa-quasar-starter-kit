@@ -1,7 +1,9 @@
 package com.github.b3kt.infrastructure.persistence.entity;
 
+import com.github.b3kt.infrastructure.persistence.listener.AuditEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,6 +18,7 @@ import java.util.Date;
 import java.util.Objects;
 
 @Entity
+@EntityListeners(AuditEntityListener.class)
 @Table(name = "password_reset_tokens", indexes = {
     @Index(name = "idx_password_reset_token_hash", columnList = "token_hash"),
     @Index(name = "idx_password_reset_username", columnList = "username")

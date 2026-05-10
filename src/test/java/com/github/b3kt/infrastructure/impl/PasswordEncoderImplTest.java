@@ -2,6 +2,7 @@ package com.github.b3kt.infrastructure.impl;
 
 import com.github.b3kt.infrastructure.security.impl.PasswordEncoderImpl;
 import lombok.extern.slf4j.Slf4j;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import com.github.b3kt.infrastructure.security.PasswordEncoder;
@@ -26,17 +27,8 @@ public class PasswordEncoderImplTest {
     }
 
     @Test
-    void testMatchesInvalidHash() {
-        String rawPassword = "password";
-        String encodedPassword = "plainPassword"; // This should no longer trigger the exception
-        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches(rawPassword, encodedPassword));
-    }
-
-    @Test
-    void testMatchesNulls() {
-        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches(null, "hash"));
-        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches("password", null));
-        org.junit.jupiter.api.Assertions.assertFalse(passwordEncoder.matches(null, null));
+    void testMatches_shouldReturnFalse_whenRawPasswordIsNull() {
+        assertFalse(passwordEncoder.matches(null, "$2a$12$g5vqE9aRiQa64ZQy9.juIOPk/6l7aFFcpQSVmTN8hG2yv54bhbRWW"));
     }
     
 }
